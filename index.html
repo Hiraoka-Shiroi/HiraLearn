@@ -1,0 +1,51 @@
+
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>HiraLearn | The Path of Mastery</title>
+
+    <!-- Emergency Error Catcher -->
+    <script>
+      window.onerror = function(msg, url, line, col, error) {
+        var errorBox = document.getElementById('emergency-error');
+        if (errorBox) {
+          errorBox.style.display = 'block';
+          errorBox.innerHTML = '<b>Критическая ошибка (Pre-flight):</b><br>' + msg +
+                               '<br><br><small>URL: ' + url + ' L:' + line + '</small>' +
+                               '<br><br>Попробуйте открыть файл в <b>Firefox</b> или используйте локальный сервер.';
+        }
+        return false;
+      };
+      console.log("Pre-flight check: OK");
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+      #emergency-error {
+        display: none;
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 9999;
+        background: #ef4444;
+        color: white;
+        padding: 20px;
+        border-radius: 12px;
+        font-family: sans-serif;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="emergency-error"></div>
+    <!-- IMPORTANT: Root must be here before the script executes in Classic mode -->
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
