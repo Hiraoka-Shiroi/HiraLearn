@@ -8,13 +8,15 @@ import * as z from 'zod';
 import { AuthService } from '@/features/auth/AuthService';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
 import { useLanguage } from '@/i18n/useLanguage';
+import type { TranslationKey } from '@/i18n/translations';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ModeToggle } from '@/components/ModeToggle';
 
 const authSchema = z.object({
-  email: z.string().email('Некорректный email'),
-  password: z.string().min(6, 'Минимум 6 символов'),
-  fullName: z.string().min(2, 'Минимум 2 символа').optional(),
+  email: z.string().email('auth_invalid_email'),
+  password: z.string().min(6, 'auth_min_password'),
+  fullName: z.string().min(2, 'auth_min_name').optional(),
 });
 
 type AuthFormData = z.infer<typeof authSchema>;
@@ -32,7 +34,7 @@ export const AuthPage = () => {
 
   const onSubmit = async (data: AuthFormData) => {
     if (!isSupabaseConfigured) {
-      setError("Ошибка: Supabase не настроен. Пожалуйста, создайте файл .env и добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY.");
+      setError(t('auth_err_supabase_not_configured'));
       return;
     }
 
@@ -49,9 +51,9 @@ export const AuthPage = () => {
       console.error("Auth Error:", err);
       const message = err instanceof Error ? err.message : String(err);
       if (message === 'Failed to fetch' || (err instanceof TypeError)) {
-        setError("Сетевая ошибка: Не удалось связаться с Supabase. Проверьте правильность URL в .env или настройки CORS.");
+        setError(t('auth_err_network'));
       } else {
-        setError(message || 'Произошла ошибка');
+        setError(message || t('auth_err_generic'));
       }
     } finally {
       setLoading(false);
@@ -60,7 +62,7 @@ export const AuthPage = () => {
 
   const handleGithubLogin = async () => {
     if (!isSupabaseConfigured) {
-      setError("Supabase не настроен для работы с GitHub.");
+      setError(t('auth_err_github'));
       return;
     }
     try {
@@ -80,6 +82,7 @@ export const AuthPage = () => {
 
       <div className="absolute top-6 right-6 flex gap-3 z-20">
         <LanguageToggle />
+        <ModeToggle />
         <ThemeToggle />
       </div>
 
@@ -106,7 +109,7 @@ export const AuthPage = () => {
         {!isSupabaseConfigured && (
            <div className="mb-6 p-4 bg-accent-danger/10 border border-accent-danger/20 rounded-xl text-accent-danger text-xs flex gap-3 items-center">
               <AlertCircle className="shrink-0" size={20} />
-              <p><b>Supabase не настроен!</b> {t('auth_supabase_warning')}</p>
+              <p><b>{t('auth_supabase_not_configured')}</b> {t('auth_supabase_warning')}</p>
            </div>
         )}
 
@@ -130,7 +133,7 @@ export const AuthPage = () => {
                   className="w-full bg-background border border-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent-primary transition-colors"
                 />
               </div>
-              {errors.fullName && <p className="text-red-500 text-[10px] ml-2">{errors.fullName.message}</p>}
+              {errors.fullName && <p className="text-red-500 text-[10px] ml-2">{t(errors.fullName.message as TranslationKey)}</p>}
             </div>
           )}
 
@@ -145,7 +148,7 @@ export const AuthPage = () => {
                 className="w-full bg-background border border-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent-primary transition-colors"
               />
             </div>
-            {errors.email && <p className="text-red-500 text-[10px] ml-2">{errors.email.message}</p>}
+            {errors.email && <p className="text-red-500 text-[10px] ml-2">{t(errors.email.message as TranslationKey)}</p>}
           </div>
 
           <div className="space-y-1">
@@ -159,7 +162,7 @@ export const AuthPage = () => {
                 className="w-full bg-background border border-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent-primary transition-colors"
               />
             </div>
-            {errors.password && <p className="text-red-500 text-[10px] ml-2">{errors.password.message}</p>}
+            {errors.password && <p className="text-red-500 text-[10px] ml-2">{t(errors.password.message as TranslationKey)}</p>}
           </div>
 
           <button

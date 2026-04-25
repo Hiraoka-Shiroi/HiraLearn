@@ -8,11 +8,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Play, Lightbulb, CheckCircle2, XCircle, Info, ArrowRight } from 'lucide-react';
 import { checkHTML, ValidationResult } from '@/lib/validators/htmlChecker';
 import { trackEvent } from '@/lib/firebase/analytics';
+import { useLanguage } from '@/i18n/useLanguage';
 
 export const LessonPage: React.FC = () => {
   const { lessonId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuthStore();
+  const { t } = useLanguage();
 
   const [lesson, setLesson] = useState<Lesson & { tasks: Task[] } | null>(null);
   const [code, setCode] = useState('');
@@ -60,8 +62,8 @@ export const LessonPage: React.FC = () => {
     }
   };
 
-  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-accent-primary">Загрузка урока...</div>;
-  if (!lesson) return <div>Урок не найден</div>;
+  if (loading) return <div className="min-h-screen bg-background flex items-center justify-center text-accent-primary">{t('lesson_loading')}</div>;
+  if (!lesson) return <div className="min-h-screen bg-background flex items-center justify-center text-muted">{t('lesson_not_found')}</div>;
 
   return (
     <div className="h-screen bg-background flex flex-col">
@@ -73,7 +75,7 @@ export const LessonPage: React.FC = () => {
           </button>
           <div>
             <h1 className="font-bold text-sm md:text-base">{lesson.title}</h1>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Модуль HTML Basics</p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{t('lesson_module')}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -96,7 +98,7 @@ export const LessonPage: React.FC = () => {
                 <Info size={20} />
               </div>
               <div>
-                <h3 className="font-bold text-sm mb-1 text-accent-primary">Теория</h3>
+                <h3 className="font-bold text-sm mb-1 text-accent-primary">{t('lesson_theory')}</h3>
                 <p className="text-sm leading-relaxed text-muted-foreground">
                   {lesson.theory}
                 </p>
@@ -104,7 +106,7 @@ export const LessonPage: React.FC = () => {
             </div>
 
             <div className="mb-10">
-              <h2 className="text-2xl font-bold mb-4">Задание</h2>
+              <h2 className="text-2xl font-bold mb-4">{t('lesson_task')}</h2>
               <p className="text-foreground/80 leading-relaxed">
                 {lesson.tasks[0]?.description}
               </p>
@@ -120,10 +122,10 @@ export const LessonPage: React.FC = () => {
                   className="bg-accent-warning/5 border border-accent-warning/20 rounded-2xl p-4 mb-6"
                 >
                   <div className="flex items-center gap-2 text-accent-warning font-bold text-xs uppercase mb-2">
-                    <Lightbulb size={14} /> Подсказка от Сэнсэя
+                    <Lightbulb size={14} /> {t('lesson_hint_title')}
                   </div>
                   <p className="text-sm text-foreground/70">
-                    Убедись, что ты правильно используешь тег и не забыл закрыть его. Например: &lt;h1&gt;Текст&lt;/h1&gt;
+                    {lesson.tasks?.[0]?.hints?.[0] ?? ''}
                   </p>
                 </motion.div>
               )}
@@ -169,7 +171,7 @@ export const LessonPage: React.FC = () => {
                     )}
                     <div>
                       <p className={`text-sm font-bold ${result.isCorrect ? 'text-accent-success' : 'text-accent-danger'}`}>
-                        {result.isCorrect ? 'Идеально!' : 'Что-то не так'}
+                        {result.isCorrect ? t('lesson_correct') : t('lesson_errors')}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">{result.feedback}</p>
                     </div>
@@ -182,7 +184,7 @@ export const LessonPage: React.FC = () => {
                   onClick={() => setShowHint(!showHint)}
                   className="px-4 py-2 border border-border rounded-xl hover:bg-card transition-colors flex items-center gap-2 text-sm font-medium"
                 >
-                  <Lightbulb size={16} /> Подсказка
+                  <Lightbulb size={16} /> {showHint ? t('lesson_hide_hint') : t('lesson_show_hint')}
                 </button>
 
                 {result?.isCorrect ? (
@@ -191,14 +193,14 @@ export const LessonPage: React.FC = () => {
                     disabled={submitting}
                     className="flex-1 bg-accent-success hover:bg-accent-success/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-success/20"
                   >
-                    {submitting ? 'Сохраняем...' : 'Завершить урок'} <ArrowRight size={18} />
+                    {submitting ? t('lesson_completing') : t('lesson_complete')} <ArrowRight size={18} />
                   </button>
                 ) : (
                   <button
                     onClick={handleCheck}
                     className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-primary/20"
                   >
-                    <Play size={16} fill="currentColor" /> Проверить код
+                    <Play size={16} fill="currentColor" /> {t('lesson_check')}
                   </button>
                 )}
              </div>

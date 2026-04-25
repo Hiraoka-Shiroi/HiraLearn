@@ -5,20 +5,23 @@ import { motion } from 'framer-motion';
 import { User, Settings, Award, LogOut, ChevronRight, Zap, Trophy, Target } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { useLanguage } from '@/i18n/useLanguage';
+import { TranslationKey } from '@/i18n/translations';
 
 export const ProfilePage: React.FC = () => {
   const { profile, signOut } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
 
-  const achievements = [
-    { id: 1, title: 'Первый шаг', desc: 'Завершил первый урок', icon: <Zap className="text-accent-warning" /> },
-    { id: 2, title: 'Код-ниндзя', desc: 'Решил 5 задач без подсказок', icon: <Target className="text-accent-primary" /> },
-    { id: 3, title: 'Стрик-мастер', desc: 'Занимался 3 дня подряд', icon: <Trophy className="text-accent-success" /> },
+  const achievements: { id: number; titleKey: TranslationKey; descKey: TranslationKey; icon: React.ReactNode }[] = [
+    { id: 1, titleKey: 'ach_first_step', descKey: 'ach_first_step_desc', icon: <Zap className="text-accent-warning" /> },
+    { id: 2, titleKey: 'ach_ninja', descKey: 'ach_ninja_desc', icon: <Target className="text-accent-primary" /> },
+    { id: 3, titleKey: 'ach_streak', descKey: 'ach_streak_desc', icon: <Trophy className="text-accent-success" /> },
   ];
 
   return (
@@ -35,8 +38,8 @@ export const ProfilePage: React.FC = () => {
                 {profile?.full_name?.charAt(0) || 'U'}
               </div>
               <div className="text-center md:text-left">
-                <h1 className="text-4xl font-black mb-2 tracking-tight">{profile?.full_name || 'Ученик'}</h1>
-                <p className="text-muted-foreground font-medium mb-6">Уровень {profile?.level} • {profile?.xp} XP Мастерства</p>
+                <h1 className="text-4xl font-black mb-2 tracking-tight">{profile?.full_name || t('profile_default_name')}</h1>
+                <p className="text-muted-foreground font-medium mb-6">{t('profile_xp_level').replace('{level}', String(profile?.level ?? 1)).replace('{xp}', String(profile?.xp ?? 0))}</p>
                 <div className="flex gap-3 justify-center md:justify-start">
                    <span className="px-5 py-2 bg-accent-primary/10 text-accent-primary border border-accent-primary/20 rounded-2xl text-[10px] font-black uppercase tracking-widest">
                       {profile?.current_goal || 'Frontend'}
@@ -54,7 +57,7 @@ export const ProfilePage: React.FC = () => {
           <div className="md:col-span-2 space-y-8">
             <section>
                <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
-                 <Settings className="text-muted-foreground" size={24} /> Настройки обучения
+                 <Settings className="text-muted-foreground" size={24} /> {t('profile_settings')}
                </h2>
                <div className="bg-card border border-border rounded-[2rem] divide-y divide-border overflow-hidden shadow-lg">
                   <div className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
@@ -63,7 +66,7 @@ export const ProfilePage: React.FC = () => {
                           <Target size={24} />
                        </div>
                        <div>
-                         <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-0.5">Цель обучения</p>
+                         <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-0.5">{t('profile_goal_label')}</p>
                          <p className="text-lg font-bold">{profile?.current_goal || 'Frontend'}</p>
                        </div>
                     </div>
@@ -75,8 +78,8 @@ export const ProfilePage: React.FC = () => {
                           <Zap size={24} />
                        </div>
                        <div>
-                         <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-0.5">Дневная цель</p>
-                         <p className="text-lg font-bold">{profile?.daily_minutes} минут в день</p>
+                         <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-0.5">{t('profile_daily_label')}</p>
+                         <p className="text-lg font-bold">{t('profile_daily_value').replace('{n}', String(profile?.daily_minutes ?? 30))}</p>
                        </div>
                     </div>
                     <ChevronRight className="text-muted-foreground" size={20} />
@@ -87,7 +90,7 @@ export const ProfilePage: React.FC = () => {
                           <Award size={24} />
                        </div>
                        <div>
-                         <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-0.5">Стиль объяснения</p>
+                         <p className="text-sm font-black uppercase tracking-widest text-muted-foreground mb-0.5">{t('profile_style_label')}</p>
                          <p className="text-lg font-bold capitalize">{profile?.explanation_style}</p>
                        </div>
                     </div>
@@ -100,14 +103,14 @@ export const ProfilePage: React.FC = () => {
               onClick={handleLogout}
               className="w-full p-8 bg-accent-danger/5 border-2 border-dashed border-accent-danger/20 rounded-[2rem] text-accent-danger font-black uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-accent-danger hover:text-white transition-all shadow-xl shadow-accent-danger/5"
             >
-              <LogOut size={24} /> Выйти из аккаунта
+              <LogOut size={24} /> {t('profile_logout')}
             </button>
           </div>
 
           {/* Achievements */}
           <div>
             <h2 className="text-xl font-bold mb-6 flex items-center gap-3">
-              <Award className="text-muted-foreground" size={24} /> Достижения
+              <Award className="text-muted-foreground" size={24} /> {t('profile_achievements')}
             </h2>
             <div className="space-y-4">
                {achievements.map((ach) => (
@@ -120,13 +123,13 @@ export const ProfilePage: React.FC = () => {
                       {ach.icon}
                    </div>
                    <div>
-                      <p className="text-base font-bold mb-0.5">{ach.title}</p>
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">{ach.desc}</p>
+                      <p className="text-base font-bold mb-0.5">{t(ach.titleKey)}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-tight">{t(ach.descKey)}</p>
                    </div>
                  </motion.div>
                ))}
                <div className="p-8 bg-accent-primary/5 border-2 border-dashed border-accent-primary/20 rounded-3xl text-center">
-                  <p className="text-xs font-bold text-accent-primary uppercase tracking-widest">Больше скоро...</p>
+                  <p className="text-xs font-bold text-accent-primary uppercase tracking-widest">{t('profile_more_soon')}</p>
                </div>
             </div>
           </div>

@@ -71,7 +71,7 @@ export const identifyUser = async (userId: string | null): Promise<void> => {
   const a = await initAnalytics();
   if (!a) return;
   try {
-    setUserId(a, userId ?? '');
+    setUserId(a, userId);
   } catch (e) {
     console.warn('Analytics setUserId failed:', e);
   }

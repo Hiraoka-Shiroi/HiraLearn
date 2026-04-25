@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
 import { LanguageToggle } from './LanguageToggle';
 import { ThemeToggle } from './ThemeToggle';
+import { ModeToggle } from './ModeToggle';
 import { TranslationKey } from '@/i18n/translations';
 
 const navItems: { labelKey: TranslationKey; sectionId: string }[] = [
@@ -60,6 +61,7 @@ export const Navbar = () => {
             </button>
           ))}
           <LanguageToggle />
+          <ModeToggle />
           <ThemeToggle />
           <Link
             to="/login"
@@ -96,6 +98,7 @@ export const Navbar = () => {
           ))}
           <div className="flex gap-3">
             <LanguageToggle />
+            <ModeToggle />
             <ThemeToggle />
           </div>
           <Link

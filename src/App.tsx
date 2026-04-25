@@ -52,7 +52,8 @@ function App() {
           void supabase
             .from('profiles')
             .update({ last_active_at: new Date().toISOString() })
-            .eq('id', session.user.id);
+            .eq('id', session.user.id)
+            .then(() => {}, () => {});
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')

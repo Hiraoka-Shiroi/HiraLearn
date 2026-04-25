@@ -1,6 +1,7 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { RefreshCw, ChevronRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/i18n/useLanguage';
 import { useAdminMetrics } from './hooks/useAdminMetrics';
 import { AdminStats } from './components/AdminStats';
 import { ErrorMonitor } from './components/ErrorMonitor';
@@ -9,6 +10,7 @@ import { UserTable } from './components/UserTable';
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const {
     summary,
     errorBuckets,
@@ -25,10 +27,8 @@ export const AdminDashboard = () => {
       <div className="p-8 md:p-12 space-y-8">
         <header className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Admin Console</h1>
-            <p className="text-muted">
-              Состояние HiraLearn в реальном времени.
-            </p>
+            <h1 className="text-3xl font-bold mb-2">{t('admin_console')}</h1>
+            <p className="text-muted">{t('admin_console_subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             <button
@@ -37,13 +37,13 @@ export const AdminDashboard = () => {
               className="flex items-center gap-2 bg-card border border-border rounded-2xl px-4 py-2 text-sm font-bold hover:border-accent-primary transition-colors disabled:opacity-50"
             >
               <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
-              Обновить
+              {t('admin_refresh')}
             </button>
             <button
               onClick={() => navigate('/admin/lessons')}
               className="flex items-center gap-1 bg-accent-primary text-white px-5 py-2 rounded-2xl text-sm font-bold hover:scale-[1.02] transition-all"
             >
-              Уроки
+              {t('admin_lessons_link')}
               <ChevronRight size={16} />
             </button>
           </div>

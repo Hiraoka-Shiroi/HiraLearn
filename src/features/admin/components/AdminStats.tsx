@@ -1,5 +1,6 @@
 import { Users, Wallet, Activity, AlertTriangle } from 'lucide-react';
 import { StatCard } from './StatCard';
+import { useLanguage } from '@/i18n/useLanguage';
 import type { AdminSummary } from '../hooks/useAdminMetrics';
 
 interface AdminStatsProps {
@@ -7,43 +8,41 @@ interface AdminStatsProps {
   loading: boolean;
 }
 
-const tengeFormatter = new Intl.NumberFormat('ru-RU');
+const numberFormatter = new Intl.NumberFormat('ru-RU');
 
 export const AdminStats = ({ summary, loading }: AdminStatsProps) => {
+  const { t } = useLanguage();
   const cards = [
     {
-      label: 'Total Users',
+      label: t('admin_total_users'),
       value: loading || !summary ? '—' : summary.totalUsers.toLocaleString('ru-RU'),
-      hint: 'Все зарегистрированные ученики',
       icon: <Users size={18} />,
       accent: 'primary' as const,
     },
     {
-      label: 'Revenue',
+      label: t('admin_revenue'),
       value:
         loading || !summary
           ? '—'
-          : `${tengeFormatter.format(Math.round(summary.totalRevenue))} ₸`,
-      hint: 'Сумма успешных платежей',
+          : `${numberFormatter.format(Math.round(summary.totalRevenue))} ₸`,
       icon: <Wallet size={18} />,
       accent: 'success' as const,
     },
     {
-      label: 'System Pulse',
+      label: t('admin_system_pulse'),
       value:
         loading || !summary
           ? '—'
           : summary.avgLoadMs !== null
             ? `${summary.avgLoadMs} ms`
-            : 'нет данных',
-      hint: 'Средняя скорость загрузки за 24ч',
+            : '—',
+      hint: t('admin_system_pulse_hint'),
       icon: <Activity size={18} />,
       accent: 'primary' as const,
     },
     {
-      label: 'Error Rate',
+      label: t('admin_error_rate'),
       value: loading || !summary ? '—' : summary.errorsLast24h.toLocaleString('ru-RU'),
-      hint: 'Ошибок за последние 24 часа',
       icon: <AlertTriangle size={18} />,
       accent: 'danger' as const,
     },

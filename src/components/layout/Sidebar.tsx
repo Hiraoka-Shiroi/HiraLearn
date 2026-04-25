@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { useLanguage } from '@/i18n/useLanguage';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { ModeToggle } from '@/components/ModeToggle';
 import { TranslationKey } from '@/i18n/translations';
 
 const menuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
@@ -58,6 +59,7 @@ export const Sidebar: React.FC = () => {
       <div className="mt-auto space-y-4">
         <div className="hidden md:flex gap-2 px-2">
           <LanguageToggle />
+          <ModeToggle />
           <ThemeToggle />
         </div>
 

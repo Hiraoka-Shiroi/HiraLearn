@@ -7,6 +7,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
+import { useLanguage } from '@/i18n/useLanguage';
 import type { ErrorBucket } from '../hooks/useAdminMetrics';
 import type { ErrorLog } from '@/types/database';
 
@@ -21,20 +22,20 @@ const formatHour = (iso: string): string => {
   return `${String(d.getHours()).padStart(2, '0')}:00`;
 };
 
-const formatTime = (iso: string): string => {
-  const d = new Date(iso);
-  return d.toLocaleString('ru-RU', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
-};
-
 export const ErrorMonitor = ({ buckets, recent, loading }: ErrorMonitorProps) => {
+  const { t, language } = useLanguage();
   const data = buckets.map((b) => ({ hour: formatHour(b.hour), count: b.count }));
+  const formatTime = (iso: string): string => {
+    const d = new Date(iso);
+    return d.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="bg-card border border-border rounded-[2.5rem] p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-bold mb-1">Error Rate (24h)</h2>
-          <p className="text-xs text-muted">Количество ошибок по часам</p>
+          <h2 className="text-lg font-bold mb-1">{t('admin_error_rate')}</h2>
+          <p className="text-xs text-muted">&nbsp;</p>
         </div>
       </div>
 
@@ -86,12 +87,12 @@ export const ErrorMonitor = ({ buckets, recent, loading }: ErrorMonitorProps) =>
 
       <div className="mt-8">
         <h3 className="text-xs font-bold uppercase tracking-widest text-muted mb-4">
-          Последние ошибки
+          {t('admin_recent_errors')}
         </h3>
         {loading ? (
-          <p className="text-sm text-muted">Загрузка…</p>
+          <p className="text-sm text-muted">{t('common_loading')}</p>
         ) : recent.length === 0 ? (
-          <p className="text-sm text-muted">Ошибок нет.</p>
+          <p className="text-sm text-muted">{t('admin_no_errors')}</p>
         ) : (
           <ul className="divide-y divide-border max-h-72 overflow-y-auto custom-scrollbar pr-2">
             {recent.map((e) => (
