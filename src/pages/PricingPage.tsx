@@ -37,7 +37,11 @@ export const PricingPage = () => {
     }
   }, [user, fetchSubscription]);
 
-  const currentPlan = subscription?.status === 'active' ? subscription.plan : 'free';
+  const currentPlan = (() => {
+    if (!subscription || subscription.status !== 'active') return 'free';
+    if (subscription.expires_at && new Date(subscription.expires_at) < new Date()) return 'free';
+    return subscription.plan;
+  })();
 
   const handleSelectPlan = (planId: Exclude<SubscriptionPlan, 'free'>) => {
     if (!user) {

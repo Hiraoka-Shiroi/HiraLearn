@@ -116,6 +116,7 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
 
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own subscription" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own subscription" ON public.subscriptions FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Admins can manage subscriptions" ON public.subscriptions FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
