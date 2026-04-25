@@ -9,20 +9,20 @@ import { ValidationResult } from "./components/ValidationResult";
 
 const lessonMock: Lesson = {
   id: "lesson-html-text-1",
-  title: "HTML: Заголовки, абзацы и ссылки",
+  title: "HTML: Заголовки и абзацы",
   explanation:
-    "В этом уроке ты закрепишь базовую структуру контента: один главный заголовок, один абзац и корректная ссылка.",
+    "В этом уроке ты научишься использовать заголовок <h1>, абзац <p> и ссылку <a>. Сначала создай заголовок страницы, затем добавь абзац и ссылку на любой сайт.",
   exampleCode: `<h1>Моя первая страница</h1>\n<p>Я изучаю HTML шаг за шагом.</p>\n<a href="https://example.com">Перейти на сайт</a>`,
   task: {
-    title: "Собери визитку ученика",
+    title: "Собери простой блок контента",
     instructions:
-      "Создай HTML-фрагмент с одним <h1>, одним <p> и одной ссылкой <a> с атрибутом href.",
+      "Добавь в ответ: 1) один <h1>, 2) один <p>, 3) одну ссылку <a> с href.",
     requiredRules: ["include-h1", "include-p", "include-a"],
   },
 };
 
 export const LessonPage = () => {
-  const [answerCode, setAnswerCode] = useState(`<h1></h1>\n<p></p>\n<a href=""></a>`);
+  const [answerCode, setAnswerCode] = useState("");
   const [isChecking, setIsChecking] = useState(false);
   const [result, setResult] = useState<ReturnType<typeof validateLessonAnswer> | null>(
     null,
@@ -30,7 +30,7 @@ export const LessonPage = () => {
 
   const progress = useMemo(() => {
     if (!result) {
-      return answerCode.trim().length > 0 ? 40 : 10;
+      return answerCode.trim().length > 0 ? 35 : 10;
     }
 
     return result.isCorrect ? 100 : Math.max(60, result.score);
@@ -38,23 +38,12 @@ export const LessonPage = () => {
 
   const handleAnswerChange = (nextCode: string) => {
     setAnswerCode(nextCode);
-
     if (result) {
       setResult(null);
     }
   };
 
   const handleCheck = () => {
-    if (answerCode.trim().length === 0) {
-      setResult(
-        validateLessonAnswer(
-          answerCode,
-          lessonMock.task.requiredRules,
-        ),
-      );
-      return;
-    }
-
     setIsChecking(true);
 
     const validationResult = validateLessonAnswer(
@@ -67,19 +56,18 @@ export const LessonPage = () => {
   };
 
   return (
-    <main className="flex w-full flex-col gap-5">
-      <header className="rounded-2xl border border-zinc-800 bg-zinc-900/70 p-5">
-        <p className="mb-2 text-xs uppercase tracking-[0.2em] text-cyan-400">Урок 2 из 8 • HTML</p>
-        <h2 className="text-2xl font-bold tracking-tight">{lessonMock.title}</h2>
-        <p className="mt-2 text-zinc-300">{lessonMock.explanation}</p>
+    <main className="mx-auto flex w-full max-w-4xl flex-col gap-6 px-4 py-8 text-zinc-100">
+      <header className="space-y-3">
+        <h1 className="text-3xl font-bold tracking-tight">{lessonMock.title}</h1>
+        <p className="text-zinc-300">{lessonMock.explanation}</p>
       </header>
 
       <ProgressBar progress={progress} />
 
       <CodeExample code={lessonMock.exampleCode} />
 
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-900 p-4">
-        <h3 className="mb-2 text-lg font-semibold">Задание: {lessonMock.task.title}</h3>
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
+        <h3 className="mb-2 text-lg font-semibold">Задание</h3>
         <p className="text-sm text-zinc-300">{lessonMock.task.instructions}</p>
       </section>
 

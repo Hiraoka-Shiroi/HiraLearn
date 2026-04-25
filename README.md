@@ -37,3 +37,20 @@ npm run github:push -- https://github.com/<your-username>/<your-repo>.git main
 1. добавит/обновит `origin`;
 2. переключит ветку в `main`;
 3. выполнит `git push -u origin main`.
+
+## Если PR показывает conflict в `src/features/lesson/LessonPage.tsx`
+
+Сделай так в своей ветке:
+
+```bash
+git fetch origin
+git merge origin/main
+```
+
+Оставь версию `LessonPage.tsx` из текущей ветки, затем:
+
+```bash
+git add src/features/lesson/LessonPage.tsx
+git commit -m "fix: resolve LessonPage merge conflict"
+git push
+```
