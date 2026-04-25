@@ -10,6 +10,7 @@ export type Profile = {
   current_goal: string;
   daily_minutes: number;
   explanation_style: string;
+  last_active_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -70,6 +71,71 @@ export type UserProgress = {
   completed_at: string | null;
 };
 
+export type ErrorLog = {
+  id: string;
+  user_id: string | null;
+  error_message: string;
+  stack_trace: string | null;
+  browser: string | null;
+  os: string | null;
+  url: string | null;
+  user_agent: string | null;
+  created_at: string;
+};
+
+export type PageMetric = {
+  id: string;
+  user_id: string | null;
+  url: string;
+  load_time_ms: number;
+  dom_content_loaded_ms: number | null;
+  ttfb_ms: number | null;
+  created_at: string;
+};
+
+export type SubscriptionPlan = 'student' | 'pro' | 'lifetime';
+export type SubscriptionStatus = 'pending' | 'active' | 'past_due' | 'canceled' | 'expired';
+
+export type Subscription = {
+  id: string;
+  user_id: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  provider: string;
+  provider_customer_id: string | null;
+  provider_subscription_id: string | null;
+  current_period_end: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type PaymentStatus = 'completed' | 'refunded' | 'failed';
+
+export type Payment = {
+  id: string;
+  user_id: string | null;
+  subscription_id: string | null;
+  provider: string;
+  provider_event_id: string | null;
+  amount: number;
+  currency: string;
+  status: PaymentStatus;
+  raw_payload: Record<string, unknown> | null;
+  created_at: string;
+};
+
+export type AdminUserRow = {
+  id: string;
+  username: string | null;
+  full_name: string | null;
+  role: 'student' | 'admin';
+  level: number;
+  xp: number;
+  last_active_at: string | null;
+  created_at: string;
+  email: string;
+};
+
 type TableDef<T> = {
   Row: T;
   Insert: Partial<T>;
@@ -86,9 +152,14 @@ export type Database = {
       lessons: TableDef<Lesson>;
       tasks: TableDef<Task>;
       user_progress: TableDef<UserProgress>;
-      subscriptions: TableDef<Record<string, unknown>>;
+      error_logs: TableDef<ErrorLog>;
+      page_metrics: TableDef<PageMetric>;
+      subscriptions: TableDef<Subscription>;
+      payments: TableDef<Payment>;
     };
-    Views: Record<string, never>;
+    Views: {
+      admin_user_list: { Row: AdminUserRow; Relationships: [] };
+    };
     Functions: Record<string, never>;
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;

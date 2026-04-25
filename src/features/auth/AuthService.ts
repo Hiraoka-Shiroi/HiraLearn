@@ -1,5 +1,6 @@
 
 import { supabase } from '@/lib/supabase/client';
+import { trackEvent } from '@/lib/firebase/analytics';
 
 export const AuthService = {
   async signUp(email: string, password: string, fullName: string) {
@@ -14,6 +15,7 @@ export const AuthService = {
     });
 
     if (error) throw error;
+    void trackEvent('registration_complete', { method: 'email' });
     return data;
   },
 

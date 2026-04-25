@@ -8,13 +8,16 @@ import { PricingPage } from '@/pages/PricingPage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { AdminPage } from '@/pages/AdminPage'
+import { AdminLessonsPage } from '@/pages/AdminLessonsPage'
 import { GamesPage } from '@/pages/GamesPage'
 import { CoursesPage } from '@/pages/CoursesPage'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { useThemeStore } from '@/store/useThemeStore'
+import { identifyUser } from '@/lib/firebase/analytics'
 
 function App() {
   const { setUser, setProfile } = useAuthStore()
@@ -45,6 +48,11 @@ function App() {
 
         if (session) {
           setUser(session.user);
+          void identifyUser(session.user.id);
+          void supabase
+            .from('profiles')
+            .update({ last_active_at: new Date().toISOString() })
+            .eq('id', session.user.id);
           const { data: profile } = await supabase
             .from('profiles')
             .select('*')
@@ -69,6 +77,7 @@ function App() {
       if (!mounted) return;
       if (session) {
         setUser(session.user)
+        void identifyUser(session.user.id);
         supabase.from('profiles').select('*').eq('id', session.user.id).single()
           .then(({ data }) => {
             if (mounted) setProfile(data)
@@ -76,6 +85,7 @@ function App() {
       } else {
         setUser(null)
         setProfile(null)
+        void identifyUser(null);
       }
     })
 
@@ -86,9 +96,10 @@ function App() {
   }, [setUser, setProfile])
 
   return (
-    <Router>
-      <div className="min-h-screen bg-background text-foreground font-sans">
-        <Routes>
+    <ErrorBoundary>
+      <Router>
+        <div className="min-h-screen bg-background text-foreground font-sans">
+          <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/register" element={<AuthPage />} />
@@ -156,11 +167,21 @@ function App() {
             }
           />
 
+          <Route
+            path="/admin/lessons"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminLessonsPage />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
-      </div>
-    </Router>
+          </Routes>
+        </div>
+      </Router>
+    </ErrorBoundary>
   )
 }
 

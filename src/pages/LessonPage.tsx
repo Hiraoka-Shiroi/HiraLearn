@@ -7,6 +7,7 @@ import { Lesson, Task } from '@/types/database';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Play, Lightbulb, CheckCircle2, XCircle, Info, ArrowRight } from 'lucide-react';
 import { checkHTML, ValidationResult } from '@/lib/validators/htmlChecker';
+import { trackEvent } from '@/lib/firebase/analytics';
 
 export const LessonPage: React.FC = () => {
   const { lessonId } = useParams();
@@ -22,6 +23,7 @@ export const LessonPage: React.FC = () => {
 
   useEffect(() => {
     if (lessonId) {
+      void trackEvent('lesson_start', { lesson_id: lessonId });
       contentCardService.getLessonWithTasks(lessonId).then(data => {
         setLesson(data);
         if (data.tasks.length > 0) {
@@ -49,6 +51,7 @@ export const LessonPage: React.FC = () => {
     setSubmitting(true);
     try {
       await progressService.completeLesson(user.id, lesson.id, lesson.xp_reward);
+      void trackEvent('lesson_complete', { lesson_id: lesson.id, xp: lesson.xp_reward });
       navigate('/dashboard');
     } catch (error) {
       console.error("Error completing lesson:", error);
