@@ -36,7 +36,25 @@ export const LessonPage = () => {
     return result.isCorrect ? 100 : Math.max(60, result.score);
   }, [answerCode, result]);
 
+  const handleAnswerChange = (nextCode: string) => {
+    setAnswerCode(nextCode);
+
+    if (result) {
+      setResult(null);
+    }
+  };
+
   const handleCheck = () => {
+    if (answerCode.trim().length === 0) {
+      setResult(
+        validateLessonAnswer(
+          answerCode,
+          lessonMock.task.requiredRules,
+        ),
+      );
+      return;
+    }
+
     setIsChecking(true);
 
     const validationResult = validateLessonAnswer(
@@ -67,7 +85,7 @@ export const LessonPage = () => {
 
       <TaskEditor
         value={answerCode}
-        onChange={setAnswerCode}
+        onChange={handleAnswerChange}
         onCheck={handleCheck}
         isChecking={isChecking}
       />
