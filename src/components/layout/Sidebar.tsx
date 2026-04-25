@@ -1,20 +1,24 @@
-
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
+import { useLanguage } from '@/i18n/useLanguage';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { TranslationKey } from '@/i18n/translations';
 
-const menuItems = [
-  { id: 'dashboard', label: 'Путь', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
-  { id: 'courses', label: 'Курсы', icon: <BookOpen size={20} />, path: '/courses' },
-  { id: 'games', label: 'Аркада', icon: <Gamepad2 size={20} />, path: '/games' },
-  { id: 'profile', label: 'Профиль', icon: <User size={20} />, path: '/profile' },
+const menuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
+  { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
+  { id: 'courses', labelKey: 'sidebar_courses', icon: <BookOpen size={20} />, path: '/courses' },
+  { id: 'games', labelKey: 'sidebar_arcade', icon: <Gamepad2 size={20} />, path: '/games' },
+  { id: 'profile', labelKey: 'sidebar_profile', icon: <User size={20} />, path: '/profile' },
 ];
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
   const { signOut, profile } = useAuthStore();
+  const { t } = useLanguage();
 
   return (
     <aside className="w-20 md:w-64 h-screen bg-card border-r border-border flex flex-col py-8 px-4 shrink-0 transition-all">
@@ -39,7 +43,7 @@ export const Sidebar: React.FC = () => {
               }`}
             >
               <div className="shrink-0">{item.icon}</div>
-              <span className="font-bold hidden md:block">{item.label}</span>
+              <span className="font-bold hidden md:block">{t(item.labelKey)}</span>
               {isActive && (
                 <motion.div
                   layoutId="active-pill"
@@ -52,8 +56,13 @@ export const Sidebar: React.FC = () => {
       </nav>
 
       <div className="mt-auto space-y-4">
+        <div className="hidden md:flex gap-2 px-2">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
+
         <div className="hidden md:block p-4 bg-background border border-border rounded-2xl">
-           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">Уровень {profile?.level || 1}</p>
+           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('sidebar_level')} {profile?.level || 1}</p>
            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
               <div className="h-full bg-accent-primary w-1/3" />
            </div>
@@ -64,7 +73,7 @@ export const Sidebar: React.FC = () => {
           className="w-full flex items-center gap-4 p-4 rounded-2xl text-muted-foreground hover:bg-accent-danger/5 hover:text-accent-danger transition-all group"
         >
           <LogOut size={20} />
-          <span className="font-bold hidden md:block">Выйти</span>
+          <span className="font-bold hidden md:block">{t('sidebar_logout')}</span>
         </button>
       </div>
     </aside>

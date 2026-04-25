@@ -9,7 +9,7 @@ export const aiService = {
   /**
    * Invokes the 'get-sensei-feedback' edge function
    */
-  async getFeedback(userMessage: string, userCode: string, context?: any): Promise<string> {
+  async getFeedback(userMessage: string, userCode: string, context?: Record<string, unknown>): Promise<string> {
     try {
       const { data, error } = await supabase.functions.invoke('get-sensei-feedback', {
         body: {

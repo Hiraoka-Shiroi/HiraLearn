@@ -7,9 +7,11 @@ import { motion } from 'framer-motion';
 import { BookOpen, Star, Zap, Trophy, User as UserIcon, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { useLanguage } from '@/i18n/useLanguage';
 
 export const Dashboard: React.FC = () => {
   const { profile } = useAuthStore();
+  const { t } = useLanguage();
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +42,7 @@ export const Dashboard: React.FC = () => {
 
   if (loading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
-      <div className="animate-pulse text-accent-primary font-bold text-xl uppercase tracking-widest">Загружаем твой путь...</div>
+      <div className="animate-pulse text-accent-primary font-bold text-xl uppercase tracking-widest">{t('dash_loading')}</div>
     </div>
   );
 
@@ -69,15 +71,15 @@ export const Dashboard: React.FC = () => {
           <div className="flex gap-8 mt-8 md:mt-0 relative z-10">
             <div className="text-center">
               <div className="flex items-center gap-2 text-accent-warning font-black text-2xl">
-                <Zap size={24} fill="currentColor" /> 3
+                <Zap size={24} fill="currentColor" /> {profile?.streak ?? 0}
               </div>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Стрик</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{t('dash_streak')}</p>
             </div>
             <div className="text-center">
               <div className="flex items-center gap-2 text-accent-success font-black text-2xl">
                 <Trophy size={24} /> {progress.length}
               </div>
-              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">Уроков</p>
+              <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-widest">{t('dash_lessons_done')}</p>
             </div>
           </div>
         </header>
@@ -86,9 +88,9 @@ export const Dashboard: React.FC = () => {
         <section>
           <div className="flex items-center justify-between mb-10">
              <h2 className="text-2xl font-bold flex items-center gap-3">
-               <BookOpen className="text-accent-primary" size={28} /> Твоё обучение
+               <BookOpen className="text-accent-primary" size={28} /> {t('dash_your_learning')}
              </h2>
-             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">HTML / CSS Путь</span>
+             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('dash_html_path')}</span>
           </div>
 
           <div className="space-y-16 relative">

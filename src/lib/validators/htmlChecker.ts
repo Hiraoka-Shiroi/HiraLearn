@@ -1,3 +1,7 @@
+export interface ValidationRules {
+  requiredTags?: string[];
+  requiredText?: string[];
+}
 
 export interface ValidationResult {
   score: number;
@@ -7,7 +11,7 @@ export interface ValidationResult {
   feedback: string;
 }
 
-export const checkHTML = (code: string, rules: any): ValidationResult => {
+export const checkHTML = (code: string, rules: ValidationRules): ValidationResult => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(code, 'text/html');
   const passed: string[] = [];

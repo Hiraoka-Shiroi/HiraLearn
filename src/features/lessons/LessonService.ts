@@ -1,11 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
-import { Database } from '@/types/database';
-
-type Course = Database['public']['Tables']['courses']['Row'];
-type Module = Database['public']['Tables']['modules']['Row'];
-type Lesson = Database['public']['Tables']['lessons']['Row'];
-type Task = Database['public']['Tables']['tasks']['Row'];
-type UserProgress = Database['public']['Tables']['user_progress']['Row'];
+import { Course, Module, Lesson, Task, UserProgress } from '@/types/database';
 
 export const LessonService = {
   async getCourses(): Promise<Course[]> {
@@ -14,7 +8,7 @@ export const LessonService = {
       .select('*')
       .eq('is_published', true);
     if (error) throw error;
-    return (data as any) || [];
+    return (data as Course[]) || [];
   },
 
   async getModules(courseId: string): Promise<Module[]> {
@@ -25,7 +19,7 @@ export const LessonService = {
       .eq('is_published', true)
       .order('order_index');
     if (error) throw error;
-    return (data as any) || [];
+    return (data as Module[]) || [];
   },
 
   async getLessons(moduleId: string): Promise<Lesson[]> {
@@ -36,7 +30,7 @@ export const LessonService = {
       .eq('is_published', true)
       .order('order_index');
     if (error) throw error;
-    return (data as any) || [];
+    return (data as Lesson[]) || [];
   },
 
   async getLessonTasks(lessonId: string): Promise<Task[]> {
@@ -46,7 +40,7 @@ export const LessonService = {
       .eq('lesson_id', lessonId)
       .order('order_index');
     if (error) throw error;
-    return (data as any) || [];
+    return (data as Task[]) || [];
   },
 
   async saveProgress(userId: string, lessonId: string) {
@@ -57,7 +51,7 @@ export const LessonService = {
         lesson_id: lessonId,
         status: 'completed',
         completed_at: new Date().toISOString(),
-      } as any, { onConflict: 'user_id, lesson_id' });
+      }, { onConflict: 'user_id, lesson_id' });
     if (error) throw error;
     return data;
   },
@@ -68,6 +62,6 @@ export const LessonService = {
       .select('*')
       .eq('user_id', userId);
     if (error) throw error;
-    return (data as any) || [];
+    return (data as UserProgress[]) || [];
   }
 };

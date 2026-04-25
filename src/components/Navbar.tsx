@@ -2,10 +2,21 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Menu, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useLanguage } from '@/i18n/useLanguage';
+import { LanguageToggle } from './LanguageToggle';
+import { ThemeToggle } from './ThemeToggle';
+import { TranslationKey } from '@/i18n/translations';
+
+const navItems: { labelKey: TranslationKey; sectionId: string }[] = [
+  { labelKey: 'nav_path', sectionId: 'the-path' },
+  { labelKey: 'nav_features', sectionId: 'the-path' },
+  { labelKey: 'nav_pricing', sectionId: 'pricing' },
+];
 
 export const Navbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { t } = useLanguage();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -14,6 +25,14 @@ export const Navbar = () => {
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const scrollToSection = (sectionId: string) => {
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
     <nav
@@ -30,21 +49,23 @@ export const Navbar = () => {
         </div>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex items-center space-x-8">
-          {['The Path', 'Features', 'Pricing'].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase().replace(' ', '-')}`}
+        <div className="hidden md:flex items-center space-x-6">
+          {navItems.map((item) => (
+            <button
+              key={item.labelKey}
+              onClick={() => scrollToSection(item.sectionId)}
               className="text-sm text-muted hover:text-foreground transition-colors"
             >
-              {item}
-            </a>
+              {t(item.labelKey)}
+            </button>
           ))}
+          <LanguageToggle />
+          <ThemeToggle />
           <Link
             to="/login"
             className="bg-accent-primary hover:bg-accent-primary/90 text-white px-5 py-2 rounded-full text-sm font-medium transition-all"
           >
-            Start the Path
+            {t('nav_start')}
           </Link>
         </div>
 
@@ -64,22 +85,25 @@ export const Navbar = () => {
           animate={{ opacity: 1, y: 0 }}
           className="absolute top-full left-0 w-full bg-card border-b border-border p-6 flex flex-col space-y-4 md:hidden"
         >
-          {['The Path', 'Features', 'Pricing'].map((item) => (
-            <a
-              key={item}
-              href={`#${item.toLowerCase().replace(' ', '-')}`}
-              className="text-lg text-muted hover:text-foreground"
-              onClick={() => setIsMobileMenuOpen(false)}
+          {navItems.map((item) => (
+            <button
+              key={item.labelKey}
+              onClick={() => scrollToSection(item.sectionId)}
+              className="text-lg text-muted hover:text-foreground text-left"
             >
-              {item}
-            </a>
+              {t(item.labelKey)}
+            </button>
           ))}
+          <div className="flex gap-3">
+            <LanguageToggle />
+            <ThemeToggle />
+          </div>
           <Link
             to="/login"
-            className="bg-accent-primary hover:bg-accent-primary/90 text-white px-5 py-2 rounded-full text-sm font-medium transition-all"
+            className="bg-accent-primary hover:bg-accent-primary/90 text-white px-5 py-2 rounded-full text-sm font-medium transition-all text-center"
             onClick={() => setIsMobileMenuOpen(false)}
           >
-            Start the Path
+            {t('nav_start')}
           </Link>
         </motion.div>
       )}

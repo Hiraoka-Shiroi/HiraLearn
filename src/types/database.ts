@@ -6,6 +6,7 @@ export type Profile = {
   role: 'student' | 'admin';
   level: number;
   xp: number;
+  streak: number;
   current_goal: string;
   daily_minutes: number;
   explanation_style: string;
