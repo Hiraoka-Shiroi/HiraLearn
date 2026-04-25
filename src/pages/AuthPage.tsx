@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
@@ -8,6 +7,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { AuthService } from '@/features/auth/AuthService';
 import { isSupabaseConfigured } from '@/lib/supabase/client';
+import { useLanguage } from '@/i18n/useLanguage';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const authSchema = z.object({
   email: z.string().email('Некорректный email'),
@@ -22,6 +24,7 @@ export const AuthPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const { register, handleSubmit, formState: { errors } } = useForm<AuthFormData>({
     resolver: zodResolver(authSchema),
@@ -42,12 +45,13 @@ export const AuthPage = () => {
         await AuthService.signUp(data.email, data.password, data.fullName || '');
       }
       navigate('/dashboard');
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Auth Error:", err);
-      if (err.message === 'Failed to fetch' || err.name === 'TypeError') {
+      const message = err instanceof Error ? err.message : String(err);
+      if (message === 'Failed to fetch' || (err instanceof TypeError)) {
         setError("Сетевая ошибка: Не удалось связаться с Supabase. Проверьте правильность URL в .env или настройки CORS.");
       } else {
-        setError(err.message || 'Произошла ошибка');
+        setError(message || 'Произошла ошибка');
       }
     } finally {
       setLoading(false);
@@ -61,8 +65,9 @@ export const AuthPage = () => {
     }
     try {
       await AuthService.signInWithGithub();
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message);
     }
   };
 
@@ -71,6 +76,11 @@ export const AuthPage = () => {
       <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent-success/5 rounded-full blur-[120px]" />
+      </div>
+
+      <div className="absolute top-6 right-6 flex gap-3 z-20">
+        <LanguageToggle />
+        <ThemeToggle />
       </div>
 
       <motion.div
@@ -86,17 +96,17 @@ export const AuthPage = () => {
             <span className="text-xl font-bold tracking-tight">HiraLearn</span>
           </Link>
           <h1 className="text-3xl font-bold mb-2">
-            {isLogin ? 'Welcome Back' : 'Begin Your Path'}
+            {isLogin ? t('auth_welcome') : t('auth_begin')}
           </h1>
           <p className="text-muted text-sm">
-            {isLogin ? 'Continue your journey to mastery' : 'Start learning frontend today'}
+            {isLogin ? t('auth_subtitle_login') : t('auth_subtitle_register')}
           </p>
         </div>
 
         {!isSupabaseConfigured && (
            <div className="mb-6 p-4 bg-accent-danger/10 border border-accent-danger/20 rounded-xl text-accent-danger text-xs flex gap-3 items-center">
               <AlertCircle className="shrink-0" size={20} />
-              <p><b>Supabase не настроен!</b> Создайте файл <code>.env</code> в корне проекта и добавьте ключи из вашего проекта Supabase.</p>
+              <p><b>Supabase не настроен!</b> {t('auth_supabase_warning')}</p>
            </div>
         )}
 
@@ -110,7 +120,7 @@ export const AuthPage = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           {!isLogin && (
             <div className="space-y-1">
-              <label className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">Full Name</label>
+              <label className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">{t('auth_fullname')}</label>
               <div className="relative">
                 <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
                 <input
@@ -125,7 +135,7 @@ export const AuthPage = () => {
           )}
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">Email</label>
+            <label className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">{t('auth_email')}</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
               <input
@@ -139,7 +149,7 @@ export const AuthPage = () => {
           </div>
 
           <div className="space-y-1">
-            <label className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">Password</label>
+            <label className="text-xs font-bold text-muted ml-2 uppercase tracking-widest">{t('auth_password')}</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted" size={18} />
               <input
@@ -156,7 +166,7 @@ export const AuthPage = () => {
             disabled={loading || !isSupabaseConfigured}
             className="w-full bg-foreground text-background py-4 rounded-2xl font-bold flex items-center justify-center group hover:bg-accent-primary hover:text-white transition-all disabled:opacity-50"
           >
-            {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}
+            {loading ? t('auth_processing') : isLogin ? t('auth_signin') : t('auth_signup')}
             {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />}
           </button>
         </form>
@@ -166,7 +176,7 @@ export const AuthPage = () => {
             <div className="w-full border-t border-border"></div>
           </div>
           <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-card px-2 text-muted">Or continue with</span>
+            <span className="bg-card px-2 text-muted">{t('auth_or_continue')}</span>
           </div>
         </div>
 
@@ -180,12 +190,12 @@ export const AuthPage = () => {
         </button>
 
         <p className="text-center text-sm text-muted">
-          {isLogin ? "Don't have an account?" : "Already have an account?"}{' '}
+          {isLogin ? t('auth_no_account') : t('auth_has_account')}{' '}
           <button
             onClick={() => setIsLogin(!isLogin)}
             className="text-accent-primary font-bold hover:underline"
           >
-            {isLogin ? 'Sign Up' : 'Sign In'}
+            {isLogin ? t('auth_register') : t('auth_login')}
           </button>
         </p>
       </motion.div>

@@ -42,7 +42,20 @@ export const OnboardingPage: React.FC = () => {
     }
   };
 
-  const steps: Record<OnboardingStep, any> = {
+  interface StepOption {
+    id: string | number;
+    label: string;
+    desc: string;
+    icon: React.ReactElement;
+  }
+
+  interface StepConfig {
+    title: string;
+    options: StepOption[];
+    next: OnboardingStep | 'complete';
+  }
+
+  const steps: Record<OnboardingStep, StepConfig> = {
     level: {
       title: 'Твой уровень в кодинге?',
       options: [
@@ -83,7 +96,7 @@ export const OnboardingPage: React.FC = () => {
 
   const currentStepData = steps[step];
 
-  const handleSelect = (id: any) => {
+  const handleSelect = (id: string | number) => {
     setData({ ...data, [step === 'time' ? 'daily_minutes' : step === 'style' ? 'explanation_style' : step]: id });
     if (currentStepData.next === 'complete') {
       handleComplete();
@@ -122,7 +135,7 @@ export const OnboardingPage: React.FC = () => {
             <h1 className="text-3xl md:text-4xl font-bold mb-10 text-foreground">{currentStepData.title}</h1>
 
             <div className="grid grid-cols-1 gap-4">
-              {currentStepData.options.map((option: any) => (
+              {currentStepData.options.map((option) => (
                 <button
                   key={option.id}
                   onClick={() => handleSelect(option.id)}

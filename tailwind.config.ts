@@ -13,7 +13,7 @@ export default {
         foreground: "#f8fafc", // Slate 50
         card: "#0f172a", // Slate 900
         accent: {
-          primary: "#6366f1", // Indigo 500
+          primary: "var(--accent-primary)", // Dynamic via CSS variable
           success: "#10b981", // Emerald 500
           warning: "#f59e0b", // Amber 500
           danger: "#ef4444", // Red 500

@@ -1,17 +1,11 @@
-
 import { supabase } from '@/lib/supabase/client';
 
 export const billingService = {
-  /**
-   * Для Казахстана лучше всего использовать CloudPayments.kz или Kaspi Pay.
-   * Для MVP мы подготовили интеграцию с CloudPayments, так как она проще автоматизируется.
-   */
-  async getPaymentLink(planId: 'student' | 'pro' | 'lifetime', userId: string, userEmail: string) {
-    // Цены в тенге (KZT)
+  getPaymentInfo(planId: 'student' | 'pro' | 'lifetime') {
     const prices = {
-      student: 7500,  // Примерно $15
-      pro: 14500,     // Примерно $29
-      lifetime: 95000 // Примерно $199
+      student: '7 500',
+      pro: '14 500',
+      lifetime: '95 000'
     };
 
     const descriptions = {
@@ -20,18 +14,11 @@ export const billingService = {
       lifetime: 'HiraLearn: Пожизненный доступ'
     };
 
-    // В будущем здесь будет вызов CloudPayments SDK.
-    // Сейчас мы возвращаем объект данных для виджета.
     return {
-      publicId: 'test_api_00000000000000000000001', // ЗАМЕНИТЕ НА ВАШ Public ID из CloudPayments.kz
       description: descriptions[planId],
-      amount: prices[planId],
+      price: prices[planId],
       currency: 'KZT',
-      accountId: userEmail,
-      data: {
-        userId: userId,
-        planId: planId
-      }
+      kaspiPhone: '+7 708 261 77 89',
     };
   },
 

@@ -14,9 +14,15 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
+import { useThemeStore } from '@/store/useThemeStore'
 
 function App() {
   const { setUser, setProfile } = useAuthStore()
+  const { color } = useThemeStore()
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', color);
+  }, [color]);
 
   useEffect(() => {
     let mounted = true;

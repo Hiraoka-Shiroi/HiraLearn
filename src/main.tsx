@@ -8,19 +8,23 @@ import './index.css'
 window.onerror = function(message) {
   const root = document.getElementById('root');
   if (root) {
-    root.innerHTML = `
-      <div style="background: #020617; color: #ef4444; padding: 20px; font-family: sans-serif; border-radius: 12px; border: 1px solid #ef444433; margin: 20px;">
-        <h1 style="font-size: 18px; margin-bottom: 10px;">Критическая ошибка запуска</h1>
-        <p style="font-size: 14px; margin-bottom: 15px;">${message}</p>
-        <p style="font-size: 12px; color: #64748b; margin-bottom: 20px;">
-          Вероятная причина: Ваш браузер блокирует выполнение скриптов при открытии файла напрямую через <b>file://</b>.<br><br>
-          <b>Как исправить:</b><br>
-          1. Используйте локальный сервер (например, расширение Live Server в VS Code).<br>
-          2. Попробуйте другой браузер (Firefox обычно более лоялен к локальным файлам).
-        </p>
-        <button onclick="window.location.reload()" style="background: #6366f1; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">Попробовать снова</button>
-      </div>
-    `;
+    root.textContent = '';
+    const container = document.createElement('div');
+    container.style.cssText = 'background:#020617;color:#ef4444;padding:20px;font-family:sans-serif;border-radius:12px;border:1px solid #ef444433;margin:20px;';
+    const h1 = document.createElement('h1');
+    h1.style.cssText = 'font-size:18px;margin-bottom:10px;';
+    h1.textContent = 'Критическая ошибка запуска';
+    const p1 = document.createElement('p');
+    p1.style.cssText = 'font-size:14px;margin-bottom:15px;';
+    p1.textContent = String(message);
+    const btn = document.createElement('button');
+    btn.style.cssText = 'background:var(--accent-primary,#6366f1);color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-weight:bold;';
+    btn.textContent = 'Попробовать снова';
+    btn.onclick = () => window.location.reload();
+    container.appendChild(h1);
+    container.appendChild(p1);
+    container.appendChild(btn);
+    root.appendChild(container);
   }
   return false;
 };
@@ -47,7 +51,11 @@ function initApp() {
   } catch (err: unknown) {
     console.error("Mount error:", err);
     const message = err instanceof Error ? err.message : String(err);
-    rootElement.innerHTML = `<div style="color: #ef4444; padding: 20px;">Ошибка рендеринга: ${message}</div>`;
+    const errDiv = document.createElement('div');
+    errDiv.style.cssText = 'color:#ef4444;padding:20px;';
+    errDiv.textContent = 'Ошибка рендеринга: ' + message;
+    rootElement.textContent = '';
+    rootElement.appendChild(errDiv);
   }
 }
 

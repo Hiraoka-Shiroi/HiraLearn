@@ -1,11 +1,20 @@
-import { DashboardSidebar } from '@/components/DashboardSidebar';
+import { MainLayout } from '@/components/layout/MainLayout';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
 import { Plus, Edit2, Trash2, Eye } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { useLanguage } from '@/i18n/useLanguage';
+import { Lesson } from '@/types/database';
+
+interface LessonWithModule extends Lesson {
+  modules: { title: string } | null;
+}
 
 export const AdminPage = () => {
-  const [lessons, setLessons] = useState<any[]>([]);
+  const [lessons, setLessons] = useState<LessonWithModule[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadLessons();
@@ -16,23 +25,34 @@ export const AdminPage = () => {
       .from('lessons')
       .select('*, modules(title)')
       .order('order_index');
-    setLessons(data || []);
+    setLessons((data as LessonWithModule[]) || []);
     setLoading(false);
   };
 
-  return (
-    <div className="flex min-h-screen bg-background text-foreground">
-      <DashboardSidebar />
+  const handleDelete = async (lessonId: string) => {
+    if (!confirm('Вы уверены, что хотите удалить этот урок?')) return;
+    const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
+    if (error) {
+      alert('Ошибка при удалении: ' + error.message);
+    } else {
+      setLessons(lessons.filter(l => l.id !== lessonId));
+    }
+  };
 
-      <main className="flex-1 p-8 md:p-12 overflow-y-auto">
+  return (
+    <MainLayout>
+      <div className="p-8 md:p-12">
         <header className="flex justify-between items-center mb-12">
           <div>
-            <h1 className="text-3xl font-bold mb-2">Admin Panel</h1>
-            <p className="text-muted">Manage courses, lessons and user data.</p>
+            <h1 className="text-3xl font-bold mb-2">{t('admin_title')}</h1>
+            <p className="text-muted">{t('admin_subtitle')}</p>
           </div>
-          <button className="bg-accent-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:scale-105 transition-all">
+          <button
+            onClick={() => alert('Создание уроков скоро будет доступно')}
+            className="bg-accent-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:scale-105 transition-all"
+          >
             <Plus size={20} />
-            <span>Create Lesson</span>
+            <span>{t('admin_create')}</span>
           </button>
         </header>
 
@@ -48,9 +68,9 @@ export const AdminPage = () => {
             </thead>
             <tbody className="divide-y divide-border">
               {loading ? (
-                <tr><td colSpan={4} className="p-12 text-center text-muted">Loading lessons...</td></tr>
+                <tr><td colSpan={4} className="p-12 text-center text-muted">{t('admin_loading')}</td></tr>
               ) : lessons.length === 0 ? (
-                <tr><td colSpan={4} className="p-12 text-center text-muted">No lessons found.</td></tr>
+                <tr><td colSpan={4} className="p-12 text-center text-muted">{t('admin_empty')}</td></tr>
               ) : (
                 lessons.map((lesson) => (
                   <tr key={lesson.id} className="hover:bg-background/30 transition-colors">
@@ -59,13 +79,25 @@ export const AdminPage = () => {
                     <td className="p-6 text-sm font-mono">{lesson.order_index}</td>
                     <td className="p-6">
                       <div className="flex justify-end space-x-2">
-                        <button className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all">
+                        <button
+                          onClick={() => navigate(`/lessons/${lesson.id}`)}
+                          className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all"
+                          title="Просмотр"
+                        >
                           <Eye size={18} />
                         </button>
-                        <button className="p-2 rounded-lg hover:bg-border text-muted hover:text-accent-primary transition-all">
+                        <button
+                          onClick={() => alert('Редактирование скоро будет доступно')}
+                          className="p-2 rounded-lg hover:bg-border text-muted hover:text-accent-primary transition-all"
+                          title="Редактировать"
+                        >
                           <Edit2 size={18} />
                         </button>
-                        <button className="p-2 rounded-lg hover:bg-border text-muted hover:text-danger transition-all">
+                        <button
+                          onClick={() => handleDelete(lesson.id)}
+                          className="p-2 rounded-lg hover:bg-border text-muted hover:text-accent-danger transition-all"
+                          title="Удалить"
+                        >
                           <Trash2 size={18} />
                         </button>
                       </div>
@@ -76,7 +108,7 @@ export const AdminPage = () => {
             </tbody>
           </table>
         </div>
-      </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 };

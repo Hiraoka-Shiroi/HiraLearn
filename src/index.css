@@ -4,6 +4,33 @@
 
 :root {
   color-scheme: dark;
+  --accent-primary: #6366f1;
+  --accent-primary-rgb: 99, 102, 241;
+}
+
+[data-theme="indigo"] {
+  --accent-primary: #6366f1;
+  --accent-primary-rgb: 99, 102, 241;
+}
+
+[data-theme="emerald"] {
+  --accent-primary: #10b981;
+  --accent-primary-rgb: 16, 185, 129;
+}
+
+[data-theme="rose"] {
+  --accent-primary: #f43f5e;
+  --accent-primary-rgb: 244, 63, 94;
+}
+
+[data-theme="amber"] {
+  --accent-primary: #f59e0b;
+  --accent-primary-rgb: 245, 158, 11;
+}
+
+[data-theme="cyan"] {
+  --accent-primary: #06b6d4;
+  --accent-primary-rgb: 6, 182, 212;
 }
 
 body {

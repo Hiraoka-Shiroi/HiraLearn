@@ -2,8 +2,11 @@ import { Navbar } from '@/components/Navbar';
 import { Hero } from '@/components/Hero';
 import { Methodology } from '@/components/Methodology';
 import { Pricing } from '@/components/Pricing';
+import { useLanguage } from '@/i18n/useLanguage';
 
 export const LandingPage = () => {
+  const { t } = useLanguage();
+
   return (
     <div className="min-h-screen">
       <Navbar />
@@ -22,11 +25,11 @@ export const LandingPage = () => {
               <span className="text-lg font-bold">HiraLearn</span>
             </div>
             <p className="text-muted text-sm max-w-xs">
-              Master the path of engineering with clarity and focus.
+              {t('footer_description')}
             </p>
           </div>
           <div className="text-muted text-sm">
-            © 2026 HiraLearn. All rights reserved.
+            {t('footer_copyright')}
           </div>
         </div>
       </footer>
