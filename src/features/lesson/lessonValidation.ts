@@ -15,7 +15,7 @@ const checkRule = (code: string, rule: string): boolean => {
     case "include-a":
       return /<a[^>]*href=["'][^"']+["'][^>]*>.*<\/a>/is.test(code);
     default:
-      return true;
+      return false;
   }
 };
 
@@ -27,11 +27,11 @@ export const validateLessonAnswer = (
     .filter((rule) => !checkRule(code, rule))
     .map((rule) => ({
       rule,
-      message: RULE_MESSAGES[rule] ?? "Условие задания не выполнено.",
+      message: RULE_MESSAGES[rule] ?? `Неизвестное правило проверки: "${rule}".`,
     }));
 
   const passedCount = requiredRules.length - issues.length;
-  const score = Math.round((passedCount / requiredRules.length) * 100);
+  const score = requiredRules.length === 0 ? 100 : Math.round((passedCount / requiredRules.length) * 100);
 
   return {
     isCorrect: issues.length === 0,

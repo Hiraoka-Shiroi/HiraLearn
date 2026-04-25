@@ -3,7 +3,9 @@ type ProgressBarProps = {
 };
 
 export const ProgressBar = ({ progress }: ProgressBarProps) => {
-  const safeProgress = Math.max(0, Math.min(100, progress));
+  const safeProgress = Number.isFinite(progress)
+    ? Math.max(0, Math.min(100, progress))
+    : 0;
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900 p-4">
