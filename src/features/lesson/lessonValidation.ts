@@ -15,7 +15,7 @@ const checkRule = (code: string, rule: string): boolean => {
     case "include-a":
       return /<a[^>]*href=["'][^"']+["'][^>]*>.*<\/a>/is.test(code);
     default:
-      return true;
+      return false;
   }
 };
 
@@ -27,7 +27,9 @@ export const validateLessonAnswer = (
     .filter((rule) => !checkRule(code, rule))
     .map((rule) => ({
       rule,
-      message: RULE_MESSAGES[rule] ?? "Условие задания не выполнено.",
+      message:
+        RULE_MESSAGES[rule] ??
+        "Неизвестное правило проверки. Сообщи преподавателю об ошибке в конфигурации задания.",
     }));
 
   const passedCount = requiredRules.length - issues.length;
