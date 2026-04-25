@@ -11,7 +11,7 @@ const lessonMock: Lesson = {
   id: "lesson-html-text-1",
   title: "HTML: Заголовки, абзацы и ссылки",
   explanation:
-    "Сейчас мы закрепляем базовую структуру контента: один главный заголовок, информативный абзац и корректная ссылка. Это база для всех следующих уроков.",
+    "В этом уроке ты закрепишь базовую структуру контента: один главный заголовок, один абзац и корректная ссылка.",
   exampleCode: `<h1>Моя первая страница</h1>\n<p>Я изучаю HTML шаг за шагом.</p>\n<a href="https://example.com">Перейти на сайт</a>`,
   task: {
     title: "Собери визитку ученика",
@@ -30,10 +30,10 @@ export const LessonPage = () => {
 
   const progress = useMemo(() => {
     if (!result) {
-      return answerCode.trim().length > 0 ? 42 : 12;
+      return answerCode.trim().length > 0 ? 40 : 10;
     }
 
-    return result.isCorrect ? 100 : Math.max(58, result.score);
+    return result.isCorrect ? 100 : Math.max(60, result.score);
   }, [answerCode, result]);
 
   const handleCheck = () => {
