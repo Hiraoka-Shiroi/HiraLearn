@@ -1,6 +1,3 @@
-
-export type Database = any; // For backward compatibility with existing files
-
 export type Profile = {
   id: string;
   username: string | null;
@@ -21,6 +18,7 @@ export type Course = {
   title: string;
   slug: string;
   description: string;
+  level: string;
   is_published: boolean;
   created_at: string;
 };
@@ -29,28 +27,39 @@ export type Module = {
   id: string;
   course_id: string;
   title: string;
+  slug: string;
+  description: string;
   order_index: number;
   is_published: boolean;
+  created_at: string;
 };
 
 export type Lesson = {
   id: string;
   module_id: string;
   title: string;
+  slug: string;
   theory: string;
+  example_code: string;
   order_index: number;
   xp_reward: number;
   is_published: boolean;
+  created_at: string;
 };
 
 export type Task = {
   id: string;
   lesson_id: string;
+  title: string;
   description: string;
+  task_type: string;
   starter_code: string;
-  validation_rules: any;
+  expected_solution: string;
+  validation_rules: Record<string, string[]>;
+  hints: string[];
   xp_reward: number;
   order_index: number;
+  created_at: string;
 };
 
 export type UserProgress = {
@@ -58,4 +67,29 @@ export type UserProgress = {
   lesson_id: string;
   status: 'in_progress' | 'completed';
   completed_at: string | null;
+};
+
+type TableDef<T> = {
+  Row: T;
+  Insert: Partial<T>;
+  Update: Partial<T>;
+  Relationships: [];
+};
+
+export type Database = {
+  public: {
+    Tables: {
+      profiles: TableDef<Profile>;
+      courses: TableDef<Course>;
+      modules: TableDef<Module>;
+      lessons: TableDef<Lesson>;
+      tasks: TableDef<Task>;
+      user_progress: TableDef<UserProgress>;
+      subscriptions: TableDef<Record<string, unknown>>;
+    };
+    Views: Record<string, never>;
+    Functions: Record<string, never>;
+    Enums: Record<string, never>;
+    CompositeTypes: Record<string, never>;
+  };
 };

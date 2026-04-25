@@ -93,7 +93,7 @@ export const SenseiChat = ({ currentCode }: SenseiChatProps) => {
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Ask your Sensei..."
             className="w-full bg-background border border-border rounded-xl py-3 px-4 pr-10 text-xs focus:outline-none focus:border-accent-primary transition-colors"
           />

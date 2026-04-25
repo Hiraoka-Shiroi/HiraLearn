@@ -41,7 +41,7 @@ export const Navbar = () => {
             </a>
           ))}
           <Link
-            to="/auth"
+            to="/login"
             className="bg-accent-primary hover:bg-accent-primary/90 text-white px-5 py-2 rounded-full text-sm font-medium transition-all"
           >
             Start the Path
@@ -75,7 +75,7 @@ export const Navbar = () => {
             </a>
           ))}
           <Link
-            to="/auth"
+            to="/login"
             className="bg-accent-primary hover:bg-accent-primary/90 text-white px-5 py-2 rounded-full text-sm font-medium transition-all"
             onClick={() => setIsMobileMenuOpen(false)}
           >

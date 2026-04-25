@@ -9,9 +9,3 @@ export interface LessonContent {
   hint: string;
 }
 
-export interface UserProgress {
-  completedLessons: string[];
-  currentLessonId: string;
-  xp: number;
-  streak: number;
-}

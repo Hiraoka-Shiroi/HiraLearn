@@ -44,9 +44,10 @@ function initApp() {
       </React.StrictMode>,
     );
     console.log('HiraLearn mounted successfully.');
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Mount error:", err);
-    rootElement.innerHTML = `<div style="color: #ef4444; padding: 20px;">Ошибка рендеринга: ${err.message}</div>`;
+    const message = err instanceof Error ? err.message : String(err);
+    rootElement.innerHTML = `<div style="color: #ef4444; padding: 20px;">Ошибка рендеринга: ${message}</div>`;
   }
 }
 

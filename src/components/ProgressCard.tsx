@@ -61,7 +61,7 @@ export const ProgressCard = ({ courseId }: ProgressCardProps) => {
         </div>
 
         <button
-          onClick={() => navigate(`/workspace?lessonId=${currentLesson.id}`)}
+          onClick={() => navigate(`/lessons/${currentLesson.id}`)}
           className="bg-foreground text-background px-8 py-4 rounded-2xl font-bold flex items-center justify-center group-hover:bg-accent-primary group-hover:text-white transition-all shadow-xl shadow-accent-primary/0 group-hover:shadow-accent-primary/20"
         >
           <Play className="mr-2 fill-current" size={20} />
