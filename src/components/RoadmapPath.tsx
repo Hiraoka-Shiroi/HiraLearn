@@ -45,7 +45,7 @@ export const RoadmapPath = ({ courseId }: RoadmapPathProps) => {
             <button
               key={lesson.id}
               disabled={isLocked}
-              onClick={() => navigate(`/workspace?lessonId=${lesson.id}`)}
+              onClick={() => navigate(`/lessons/${lesson.id}`)}
               className="w-full relative flex items-center space-x-4 text-left group"
             >
               {index !== lessons.length - 1 && (

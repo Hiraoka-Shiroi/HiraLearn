@@ -33,7 +33,7 @@ export const supabase = createClient<Database>(
   supabaseAnonKey || 'placeholder',
   {
     auth: {
-      storage: customStorage as any,
+      storage: customStorage,
       autoRefreshToken: true,
       persistSession: true,
       detectSessionInUrl: true,

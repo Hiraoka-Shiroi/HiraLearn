@@ -81,7 +81,7 @@ export const PricingPage = () => {
       const paymentData = await billingService.getPaymentLink(planId, user.id, user.email || '');
 
       // Вызываем виджет CloudPayments.kz
-      // @ts-ignore
+      // @ts-expect-error -- CloudPayments SDK loaded via external script
       const widget = new cp.CloudPayments();
       widget.pay('auth', paymentData, {
         onSuccess: (options: any) => {

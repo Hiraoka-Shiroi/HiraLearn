@@ -2,13 +2,14 @@
 import { create } from 'zustand';
 import { supabase } from '@/lib/supabase/client';
 import { User } from '@supabase/supabase-js';
+import { Profile } from '@/types/database';
 
 interface AuthState {
   user: User | null;
-  profile: any | null;
+  profile: Profile | null;
   loading: boolean;
   setUser: (user: User | null) => void;
-  setProfile: (profile: any | null) => void;
+  setProfile: (profile: Profile | null) => void;
   signOut: () => Promise<void>;
 }
 
