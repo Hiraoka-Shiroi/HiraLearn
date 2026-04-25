@@ -1,43 +1,161 @@
-import { LessonPage } from "./features/lesson/LessonPage";
 
-const App = () => {
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
+import { LandingPage } from '@/pages/LandingPage'
+import { Dashboard } from '@/pages/Dashboard'
+import { LessonPage } from '@/pages/LessonPage'
+import { AuthPage } from '@/pages/AuthPage'
+import { PricingPage } from '@/pages/PricingPage'
+import { OnboardingPage } from '@/pages/OnboardingPage'
+import { ProfilePage } from '@/pages/ProfilePage'
+import { AdminPage } from '@/pages/AdminPage'
+import { GamesPage } from '@/pages/GamesPage'
+import { CoursesPage } from '@/pages/CoursesPage'
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { useEffect } from 'react'
+import { useAuthStore } from '@/store/useAuthStore'
+import { supabase } from '@/lib/supabase/client'
+
+function App() {
+  const { setUser, setProfile } = useAuthStore()
+
+  useEffect(() => {
+    let mounted = true;
+
+    const initAuth = async () => {
+      // Emergency timeout to prevent stuck loading screen
+      const timeoutId = setTimeout(() => {
+        if (mounted) {
+           console.warn("Auth initialization timed out. Proceeding as guest.");
+           setProfile(null); // This stops the loading state
+        }
+      }, 3000);
+
+      try {
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        if (sessionError) throw sessionError;
+
+        if (!mounted) return;
+        clearTimeout(timeoutId);
+
+        if (session) {
+          setUser(session.user);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+          if (mounted) setProfile(profile);
+        } else {
+          if (mounted) setProfile(null);
+        }
+      } catch (error) {
+        console.error("Auth initialization failed:", error);
+        if (mounted) {
+          clearTimeout(timeoutId);
+          setProfile(null);
+        }
+      }
+    };
+
+    initAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!mounted) return;
+      if (session) {
+        setUser(session.user)
+        supabase.from('profiles').select('*').eq('id', session.user.id).single()
+          .then(({ data }) => {
+            if (mounted) setProfile(data)
+          })
+      } else {
+        setUser(null)
+        setProfile(null)
+      }
+    })
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe()
+    }
+  }, [setUser, setProfile])
+
   return (
-    <div className="min-h-screen text-zinc-100">
-      <header className="border-b border-zinc-800/80 bg-zinc-950/70 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
-          <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-cyan-400">CodeSensei</p>
-            <h1 className="text-lg font-semibold">AI-тренажёр по Frontend с нуля</h1>
-          </div>
-          <div className="rounded-full border border-zinc-700 px-3 py-1 text-xs text-zinc-300">
-            Demo • HTML Module
-          </div>
-        </div>
-      </header>
+    <Router>
+      <div className="min-h-screen bg-background text-foreground font-sans">
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/login" element={<AuthPage />} />
+          <Route path="/register" element={<AuthPage />} />
 
-      <section className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 md:grid-cols-[1fr_280px]">
-        <LessonPage />
+          <Route
+            path="/onboarding"
+            element={
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            }
+          />
 
-        <aside className="h-fit space-y-4 rounded-2xl border border-zinc-800 bg-zinc-900/70 p-4 shadow-glow">
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-zinc-300">AI Sensei</h2>
-          <p className="text-sm text-zinc-300">
-            Я не дам готовый ответ сразу. Сначала подскажу, где ошибка, и помогу дойти до
-            решения шаг за шагом.
-          </p>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-200">
-            <p className="mb-1 text-zinc-400">Фокус урока</p>
-            <p>h1, p, a[href]</p>
-          </div>
+          <Route
+            path="/courses"
+            element={
+              <ProtectedRoute>
+                <CoursesPage />
+              </ProtectedRoute>
+            }
+          />
 
-          <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-3 text-sm text-zinc-200">
-            <p className="mb-1 text-zinc-400">Серия дней</p>
-            <p className="text-xl font-semibold text-cyan-400">7 🔥</p>
-          </div>
-        </aside>
-      </section>
-    </div>
-  );
-};
+          <Route
+            path="/lessons/:lessonId"
+            element={
+              <ProtectedRoute>
+                <LessonPage />
+              </ProtectedRoute>
+            }
+          />
 
-export default App;
+          <Route
+            path="/games"
+            element={
+              <ProtectedRoute>
+                <GamesPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route path="/pricing" element={<PricingPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </div>
+    </Router>
+  )
+}
+
+export default App

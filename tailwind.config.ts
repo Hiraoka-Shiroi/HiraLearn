@@ -1,19 +1,31 @@
-import type { Config } from "tailwindcss";
+import type { Config } from 'tailwindcss'
 
 export default {
-  content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
+        background: "#020617", // Slate 950
+        foreground: "#f8fafc", // Slate 50
+        card: "#0f172a", // Slate 900
         accent: {
-          400: "#22d3ee",
-          500: "#06b6d4",
+          primary: "#6366f1", // Indigo 500
+          success: "#10b981", // Emerald 500
+          warning: "#f59e0b", // Amber 500
+          danger: "#ef4444", // Red 500
         },
+        muted: "#64748b", // Slate 500
+        border: "#1e293b", // Slate 800
       },
-      boxShadow: {
-        glow: "0 0 40px rgba(34, 211, 238, 0.2)",
+      fontFamily: {
+        sans: ['Inter', 'sans-serif'],
+        mono: ['JetBrains Mono', 'monospace'],
       },
     },
   },
   plugins: [],
-} satisfies Config;
+} satisfies Config
