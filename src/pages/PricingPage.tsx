@@ -5,6 +5,8 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
+import { trackEvent } from '@/lib/firebase/analytics';
+import { isPaddleConfigured, openPaddleCheckout } from '@/lib/paddle/client';
 
 const KASPI_PHONE = '+7 708 261 77 89';
 
@@ -71,10 +73,19 @@ export const PricingPage = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const handlePurchase = (plan: PlanInfo) => {
+  const handlePurchase = async (plan: PlanInfo) => {
     if (!user) {
       navigate('/login');
       return;
+    }
+    void trackEvent('payment_click', { plan: plan.id });
+    if (isPaddleConfigured) {
+      const ok = await openPaddleCheckout({
+        plan: plan.id,
+        email: user.email,
+        userId: user.id,
+      });
+      if (ok) return;
     }
     setSelectedPlan(plan);
   };
@@ -137,7 +148,7 @@ export const PricingPage = () => {
               </ul>
 
               <button
-                onClick={() => handlePurchase(plan)}
+                onClick={() => { void handlePurchase(plan); }}
                 className={`w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 ${
                 plan.highlight
                   ? 'bg-accent-success text-background hover:scale-[1.02]'

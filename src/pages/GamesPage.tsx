@@ -5,6 +5,7 @@ import { Bug, ShieldCheck, Zap, CheckCircle2, ChevronLeft, XCircle, Trophy } fro
 import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase/client';
 import { MainLayout } from '@/components/layout/MainLayout';
+import { trackEvent } from '@/lib/firebase/analytics';
 
 const games = [
   {
@@ -124,6 +125,7 @@ export const GamesPage: React.FC = () => {
                 whileHover={{ y: -5 }}
                 onClick={() => {
                   setActiveGame(game.id);
+                  void trackEvent('game_start', { game_id: game.id });
                   if (game.id === 'bug-hunter') setUserCode(BUG_HUNTER_CHALLENGES[0].buggyCode);
                 }}
                 className="p-8 bg-card border border-border rounded-[2.5rem] text-left hover:border-accent-primary transition-all group relative overflow-hidden"

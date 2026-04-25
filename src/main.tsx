@@ -3,6 +3,9 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App.tsx'
 import './index.css'
+import { installGlobalErrorHandlers } from './lib/monitoring/errorLogger'
+import { recordPageLoadMetric } from './lib/monitoring/pageMetrics'
+import { initAnalyticsOnce } from './lib/firebase/analytics'
 
 // Global error handler for the user to see if something crashes early
 window.onerror = function(message) {
@@ -65,3 +68,10 @@ if (document.readyState === 'loading') {
 } else {
   initApp();
 }
+
+// Wire up monitoring AFTER the in-page window.onerror fallback above, so our
+// logger wraps it (forwards to it after persisting the error) instead of being
+// overwritten.
+installGlobalErrorHandlers();
+recordPageLoadMetric();
+initAnalyticsOnce();
