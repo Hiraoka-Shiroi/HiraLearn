@@ -86,6 +86,17 @@ export type Subscription = {
   updated_at: string;
 };
 
+export type PaymentRequest = {
+  id: string;
+  user_id: string;
+  requested_plan: Exclude<SubscriptionPlan, 'free'>;
+  amount: number;
+  payment_method: string;
+  payment_reference: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  created_at: string;
+};
+
 type TableDef<T> = {
   Row: T;
   Insert: Partial<T>;
@@ -103,6 +114,7 @@ export type Database = {
       tasks: TableDef<Task>;
       user_progress: TableDef<UserProgress>;
       subscriptions: TableDef<Subscription>;
+      payment_requests: TableDef<PaymentRequest>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

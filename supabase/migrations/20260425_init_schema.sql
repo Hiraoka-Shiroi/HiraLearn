@@ -116,8 +116,27 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
 
 ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own subscription" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can update own subscription" ON public.subscriptions FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "Admins can manage subscriptions" ON public.subscriptions FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
+-- 8. Payment Requests (separate from subscriptions for security)
+CREATE TABLE IF NOT EXISTS public.payment_requests (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE,
+  requested_plan TEXT NOT NULL CHECK (requested_plan IN ('student', 'pro', 'lifetime')),
+  amount INTEGER NOT NULL,
+  payment_method TEXT DEFAULT 'kaspi',
+  payment_reference TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.payment_requests ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own requests" ON public.payment_requests FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can submit requests" ON public.payment_requests
+  FOR INSERT WITH CHECK (auth.uid() = user_id AND status = 'pending');
+CREATE POLICY "Admins can manage requests" ON public.payment_requests FOR ALL USING (
   EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
 );
 

@@ -23,7 +23,7 @@ const planCards: PlanCard[] = [
 
 export const PricingPage = () => {
   const { user } = useAuthStore();
-  const { subscription, fetchSubscription, submitPayment } = useSubscriptionStore();
+  const { subscription, pendingRequest, fetchSubscription, submitPayment } = useSubscriptionStore();
   const [selectedPlan, setSelectedPlan] = useState<Exclude<SubscriptionPlan, 'free'> | null>(null);
   const [paymentStep, setPaymentStep] = useState<'choose' | 'instructions' | 'confirm' | 'success'>('choose');
   const [submitting, setSubmitting] = useState(false);
@@ -106,12 +106,24 @@ export const PricingPage = () => {
               )}
             </motion.div>
           )}
+
+          {user && pendingRequest && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-4 inline-flex items-center gap-2 bg-accent-warning/10 text-accent-warning px-6 py-3 rounded-full text-sm font-bold"
+            >
+              <Clock size={18} />
+              Ожидает подтверждения: {pendingRequest.requested_plan.toUpperCase()} ({pendingRequest.amount.toLocaleString()} ₸)
+            </motion.div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {planCards.map((card, i) => {
             const plan = PLANS[card.id];
             const isCurrentPlan = currentPlan === card.id;
+            const hasPendingRequest = pendingRequest?.requested_plan === card.id;
 
             return (
               <motion.div
@@ -159,17 +171,21 @@ export const PricingPage = () => {
 
                 <button
                   onClick={() => handleSelectPlan(card.id)}
-                  disabled={isCurrentPlan}
+                  disabled={isCurrentPlan || hasPendingRequest}
                   className={`w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 ${
                     isCurrentPlan
                       ? 'bg-accent-primary/10 text-accent-primary cursor-default'
-                      : card.highlight
-                        ? 'bg-accent-success text-background hover:scale-[1.02]'
-                        : 'bg-background border border-border hover:bg-border'
+                      : hasPendingRequest
+                        ? 'bg-accent-warning/10 text-accent-warning cursor-default'
+                        : card.highlight
+                          ? 'bg-accent-success text-background hover:scale-[1.02]'
+                          : 'bg-background border border-border hover:bg-border'
                   }`}
                 >
                   {isCurrentPlan ? (
                     <><CheckCircle2 size={18} /> Активен</>
+                  ) : hasPendingRequest ? (
+                    <><Clock size={18} /> Ожидает</>
                   ) : (
                     <><CreditCard size={18} /> Оплатить</>
                   )}
