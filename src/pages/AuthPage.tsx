@@ -106,7 +106,7 @@ export const AuthPage = () => {
         {!isSupabaseConfigured && (
            <div className="mb-6 p-4 bg-accent-danger/10 border border-accent-danger/20 rounded-xl text-accent-danger text-xs flex gap-3 items-center">
               <AlertCircle className="shrink-0" size={20} />
-              <p><b>Supabase не настроен!</b> {t('auth_supabase_warning')}</p>
+              <p>{t('auth_supabase_warning')}</p>
            </div>
         )}
 

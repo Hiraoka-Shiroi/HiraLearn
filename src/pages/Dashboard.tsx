@@ -8,10 +8,12 @@ import { BookOpen, Star, Zap, Trophy, User as UserIcon, ArrowRight } from 'lucid
 import { Link } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
+import { useSubscriptionStore } from '@/store/useSubscriptionStore';
 
 export const Dashboard: React.FC = () => {
   const { profile } = useAuthStore();
   const { t } = useLanguage();
+  const { subscription, fetchSubscription } = useSubscriptionStore();
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
@@ -29,6 +31,7 @@ export const Dashboard: React.FC = () => {
         if (profile) {
           const fetchedProgress = await progressService.getUserProgress(profile.id);
           setProgress(fetchedProgress);
+          fetchSubscription(profile.id);
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
@@ -63,6 +66,11 @@ export const Dashboard: React.FC = () => {
               <h1 className="text-3xl font-bold mb-1">{profile?.full_name || 'Ученик'}</h1>
               <div className="flex items-center gap-3">
                  <span className="px-3 py-1 bg-accent-primary text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">Lvl {profile?.level || 1}</span>
+                 {subscription && subscription.status === 'active' && subscription.plan !== 'free' && (
+                   <span className="px-3 py-1 bg-accent-success text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">
+                     {subscription.plan}
+                   </span>
+                 )}
                  <p className="text-muted-foreground text-sm font-medium">{profile?.xp || 0} XP Набрано</p>
               </div>
             </div>

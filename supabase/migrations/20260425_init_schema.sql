@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.profiles (
   role TEXT DEFAULT 'student' CHECK (role IN ('student', 'admin')),
   level INTEGER DEFAULT 1,
   xp INTEGER DEFAULT 0,
+  streak INTEGER DEFAULT 0,
   current_goal TEXT,
   daily_minutes INTEGER DEFAULT 30,
   explanation_style TEXT DEFAULT 'simple',
@@ -41,6 +42,7 @@ CREATE TABLE IF NOT EXISTS public.modules (
   course_id UUID REFERENCES public.courses(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   slug TEXT NOT NULL,
+  description TEXT,
   order_index INTEGER NOT NULL,
   is_published BOOLEAN DEFAULT false,
   created_at TIMESTAMPTZ DEFAULT NOW()
@@ -72,7 +74,9 @@ CREATE TABLE IF NOT EXISTS public.tasks (
   lesson_id UUID REFERENCES public.lessons(id) ON DELETE CASCADE,
   title TEXT NOT NULL,
   description TEXT,
+  task_type TEXT DEFAULT 'code_editor',
   starter_code TEXT,
+  expected_solution TEXT,
   validation_rules JSONB, -- { requiredTags: [], requiredText: [] }
   hints JSONB, -- [ "Hint 1", "Hint 2" ]
   xp_reward INTEGER DEFAULT 100,
@@ -96,16 +100,57 @@ ALTER TABLE public.user_progress ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Users can view own progress" ON public.user_progress FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY "Users can insert own progress" ON public.user_progress FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+-- 7. Subscriptions
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES public.profiles(id) ON DELETE CASCADE UNIQUE,
+  plan TEXT NOT NULL CHECK (plan IN ('free', 'student', 'pro', 'lifetime')),
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'expired', 'cancelled', 'pending')),
+  started_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ,
+  payment_method TEXT DEFAULT 'kaspi',
+  payment_reference TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can view own subscription" ON public.subscriptions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Admins can manage subscriptions" ON public.subscriptions FOR ALL USING (
+  EXISTS (SELECT 1 FROM public.profiles WHERE id = auth.uid() AND role = 'admin')
+);
+
 -- TRIGGER: Create profile after signup
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
 BEGIN
   INSERT INTO public.profiles (id, full_name, avatar_url)
   VALUES (new.id, new.raw_user_meta_data->>'full_name', new.raw_user_meta_data->>'avatar_url');
+  -- Create default free subscription
+  INSERT INTO public.subscriptions (user_id, plan, status)
+  VALUES (new.id, 'free', 'active');
   RETURN NEW;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
+
+-- FUNCTION: Update updated_at timestamp
+CREATE OR REPLACE FUNCTION public.update_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_profiles_updated_at
+  BEFORE UPDATE ON public.profiles
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();
+
+CREATE TRIGGER update_subscriptions_updated_at
+  BEFORE UPDATE ON public.subscriptions
+  FOR EACH ROW EXECUTE FUNCTION public.update_updated_at();

@@ -70,6 +70,22 @@ export type UserProgress = {
   completed_at: string | null;
 };
 
+export type SubscriptionPlan = 'free' | 'student' | 'pro' | 'lifetime';
+export type SubscriptionStatus = 'active' | 'expired' | 'cancelled' | 'pending';
+
+export type Subscription = {
+  id: string;
+  user_id: string;
+  plan: SubscriptionPlan;
+  status: SubscriptionStatus;
+  started_at: string;
+  expires_at: string | null;
+  payment_method: string;
+  payment_reference: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 type TableDef<T> = {
   Row: T;
   Insert: Partial<T>;
@@ -86,7 +102,7 @@ export type Database = {
       lessons: TableDef<Lesson>;
       tasks: TableDef<Task>;
       user_progress: TableDef<UserProgress>;
-      subscriptions: TableDef<Record<string, unknown>>;
+      subscriptions: TableDef<Subscription>;
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

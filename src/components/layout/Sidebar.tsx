@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut, CreditCard } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/i18n/useLanguage';
@@ -12,6 +12,7 @@ const menuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; 
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
   { id: 'courses', labelKey: 'sidebar_courses', icon: <BookOpen size={20} />, path: '/courses' },
   { id: 'games', labelKey: 'sidebar_arcade', icon: <Gamepad2 size={20} />, path: '/games' },
+  { id: 'pricing', labelKey: 'sidebar_subscription', icon: <CreditCard size={20} />, path: '/pricing' },
   { id: 'profile', labelKey: 'sidebar_profile', icon: <User size={20} />, path: '/profile' },
 ];
 
