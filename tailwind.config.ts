@@ -5,21 +5,24 @@ export default {
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
-  darkMode: 'class',
+  darkMode: ['class', '[data-theme-mode="dark"]'],
   theme: {
     extend: {
       colors: {
-        background: "#020617", // Slate 950
-        foreground: "#f8fafc", // Slate 50
-        card: "#0f172a", // Slate 900
-        accent: {
-          primary: "var(--accent-primary)", // Dynamic via CSS variable
-          success: "#10b981", // Emerald 500
-          warning: "#f59e0b", // Amber 500
-          danger: "#ef4444", // Red 500
+        background: "rgb(var(--bg) / <alpha-value>)",
+        foreground: "rgb(var(--fg) / <alpha-value>)",
+        card: "rgb(var(--card) / <alpha-value>)",
+        muted: {
+          DEFAULT: "rgb(var(--muted) / <alpha-value>)",
+          foreground: "rgb(var(--muted) / <alpha-value>)",
         },
-        muted: "#64748b", // Slate 500
-        border: "#1e293b", // Slate 800
+        border: "rgb(var(--border) / <alpha-value>)",
+        accent: {
+          primary: "var(--accent-primary)",
+          success: "#10b981",
+          warning: "#f59e0b",
+          danger: "#ef4444",
+        },
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],

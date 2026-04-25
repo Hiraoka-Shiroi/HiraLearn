@@ -1,7 +1,7 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Plus, Edit2, Trash2, Eye, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Eye, ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
 import { Lesson } from '@/types/database';
@@ -30,10 +30,11 @@ export const AdminLessonsPage = () => {
   };
 
   const handleDelete = async (lessonId: string) => {
-    if (!confirm('Вы уверены, что хотите удалить этот урок?')) return;
+    const confirmMsg = t('common_delete') + '?';
+    if (!confirm(confirmMsg)) return;
     const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
     if (error) {
-      alert('Ошибка при удалении: ' + error.message);
+      alert(t('common_error') + ': ' + error.message);
     } else {
       setLessons(lessons.filter((l) => l.id !== lessonId));
     }
@@ -47,7 +48,7 @@ export const AdminLessonsPage = () => {
           className="flex items-center gap-2 text-muted hover:text-foreground mb-8 text-sm"
         >
           <ArrowLeft size={16} />
-          К админ-панели
+          {t('admin_back_to_console')}
         </button>
 
         <header className="flex justify-between items-center mb-12">
@@ -56,7 +57,9 @@ export const AdminLessonsPage = () => {
             <p className="text-muted">{t('admin_subtitle')}</p>
           </div>
           <button
-            onClick={() => alert('Создание уроков скоро будет доступно')}
+            disabled
+            aria-disabled
+            title={t('admin_create')}
             className="bg-accent-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:scale-105 transition-all"
           >
             <Plus size={20} />
@@ -69,16 +72,16 @@ export const AdminLessonsPage = () => {
             <thead className="bg-background/50 border-b border-border">
               <tr>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  Title
+                  {t('admin_title')}
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
                   Module
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  Order
+                  #
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted text-right">
-                  Actions
+                  &nbsp;
                 </th>
               </tr>
             </thead>
@@ -106,21 +109,14 @@ export const AdminLessonsPage = () => {
                         <button
                           onClick={() => navigate(`/lessons/${lesson.id}`)}
                           className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all"
-                          title="Просмотр"
+                          title={t('common_view')}
                         >
                           <Eye size={18} />
                         </button>
                         <button
-                          onClick={() => alert('Редактирование скоро будет доступно')}
-                          className="p-2 rounded-lg hover:bg-border text-muted hover:text-accent-primary transition-all"
-                          title="Редактировать"
-                        >
-                          <Edit2 size={18} />
-                        </button>
-                        <button
                           onClick={() => handleDelete(lesson.id)}
                           className="p-2 rounded-lg hover:bg-border text-muted hover:text-accent-danger transition-all"
-                          title="Удалить"
+                          title={t('common_delete')}
                         >
                           <Trash2 size={18} />
                         </button>

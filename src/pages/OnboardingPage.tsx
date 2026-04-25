@@ -4,7 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase/client';
-import { Check, ArrowRight, Target, Clock, BookOpen, Rocket } from 'lucide-react';
+import { Check, Target, Clock, BookOpen, Rocket } from 'lucide-react';
+import { useLanguage } from '@/i18n/useLanguage';
+import { TranslationKey } from '@/i18n/translations';
 
 type OnboardingStep = 'level' | 'goal' | 'time' | 'style';
 
@@ -18,6 +20,7 @@ export const OnboardingPage: React.FC = () => {
   });
   const { user, setProfile } = useAuthStore();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const handleComplete = async () => {
     if (!user) return;
@@ -44,51 +47,51 @@ export const OnboardingPage: React.FC = () => {
 
   interface StepOption {
     id: string | number;
-    label: string;
-    desc: string;
+    labelKey: TranslationKey;
+    descKey: TranslationKey;
     icon: React.ReactElement;
   }
 
   interface StepConfig {
-    title: string;
+    titleKey: TranslationKey;
     options: StepOption[];
     next: OnboardingStep | 'complete';
   }
 
   const steps: Record<OnboardingStep, StepConfig> = {
     level: {
-      title: 'Твой уровень в кодинге?',
+      titleKey: 'onboarding_level',
       options: [
-        { id: 'zero', label: 'Полный ноль', desc: 'Никогда не писал код', icon: <BookOpen /> },
-        { id: 'beginner', label: 'Немного знаю', desc: 'Слышал про теги и переменные', icon: <Target /> },
-        { id: 'intermediate', label: 'Уже верстал', desc: 'Могу собрать простую страницу', icon: <Rocket /> },
+        { id: 'zero', labelKey: 'onb_level_zero', descKey: 'onb_level_zero_desc', icon: <BookOpen /> },
+        { id: 'beginner', labelKey: 'onb_level_some', descKey: 'onb_level_some_desc', icon: <Target /> },
+        { id: 'intermediate', labelKey: 'onb_level_inter', descKey: 'onb_level_inter_desc', icon: <Rocket /> },
       ],
       next: 'goal'
     },
     goal: {
-      title: 'Какая твоя главная цель?',
+      titleKey: 'onboarding_goal',
       options: [
-        { id: 'frontend', label: 'Стать Frontend-разработчиком', desc: 'Полный путь до трудоустройства', icon: <Target /> },
-        { id: 'js', label: 'Выучить JavaScript', desc: 'Для логики и интерактивности', icon: <Rocket /> },
-        { id: 'portfolio', label: 'Собрать портфолио', desc: 'Сделать реальные проекты', icon: <Check /> },
+        { id: 'frontend', labelKey: 'onb_goal_frontend', descKey: 'onb_goal_frontend_desc', icon: <Target /> },
+        { id: 'js', labelKey: 'onb_goal_js', descKey: 'onb_goal_js_desc', icon: <Rocket /> },
+        { id: 'portfolio', labelKey: 'onb_goal_portfolio', descKey: 'onb_goal_portfolio_desc', icon: <Check /> },
       ],
       next: 'time'
     },
     time: {
-      title: 'Сколько времени в день?',
+      titleKey: 'onboarding_time',
       options: [
-        { id: 15, label: '15 минут', desc: 'Быстрый старт', icon: <Clock /> },
-        { id: 30, label: '30 минут', desc: 'Оптимальный темп', icon: <Clock /> },
-        { id: 60, label: '60 минут', desc: 'Интенсивное обучение', icon: <Clock /> },
+        { id: 15, labelKey: 'onb_time_15', descKey: 'onb_time_15_desc', icon: <Clock /> },
+        { id: 30, labelKey: 'onb_time_30', descKey: 'onb_time_30_desc', icon: <Clock /> },
+        { id: 60, labelKey: 'onb_time_60', descKey: 'onb_time_60_desc', icon: <Clock /> },
       ],
       next: 'style'
     },
     style: {
-      title: 'Как тебе объяснять?',
+      titleKey: 'onboarding_style',
       options: [
-        { id: 'simple', label: 'Очень просто', desc: 'На котиках и примерах из жизни', icon: <BookOpen /> },
-        { id: 'normal', label: 'Обычный стиль', desc: 'Баланс теории и практики', icon: <Check /> },
-        { id: 'technical', label: 'Технически', desc: 'Меньше воды, больше терминов', icon: <Target /> },
+        { id: 'simple', labelKey: 'onb_style_simple', descKey: 'onb_style_simple_desc', icon: <BookOpen /> },
+        { id: 'normal', labelKey: 'onb_style_normal', descKey: 'onb_style_normal_desc', icon: <Check /> },
+        { id: 'technical', labelKey: 'onb_style_technical', descKey: 'onb_style_technical_desc', icon: <Target /> },
       ],
       next: 'complete'
     }
@@ -132,7 +135,7 @@ export const OnboardingPage: React.FC = () => {
             exit={{ opacity: 0, x: -20 }}
             className="text-center"
           >
-            <h1 className="text-3xl md:text-4xl font-bold mb-10 text-foreground">{currentStepData.title}</h1>
+            <h1 className="text-3xl md:text-4xl font-bold mb-10 text-foreground">{t(currentStepData.titleKey)}</h1>
 
             <div className="grid grid-cols-1 gap-4">
               {currentStepData.options.map((option) => (
@@ -146,11 +149,8 @@ export const OnboardingPage: React.FC = () => {
                       {React.cloneElement(option.icon, { size: 28 })}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold mb-1">{option.label}</h3>
-                      <p className="text-muted-foreground">{option.desc}</p>
-                    </div>
-                    <div className="ml-auto opacity-0 group-hover:opacity-100 transition-opacity">
-                      <ArrowRight className="text-accent-primary" />
+                      <h3 className="text-xl font-bold mb-1">{t(option.labelKey)}</h3>
+                      <p className="text-muted">{t(option.descKey)}</p>
                     </div>
                   </div>
                 </button>

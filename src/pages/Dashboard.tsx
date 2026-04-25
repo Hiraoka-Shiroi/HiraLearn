@@ -60,10 +60,10 @@ export const Dashboard: React.FC = () => {
                <UserIcon size={40} />
             </div>
             <div>
-              <h1 className="text-3xl font-bold mb-1">{profile?.full_name || 'Ученик'}</h1>
+              <h1 className="text-3xl font-bold mb-1">{profile?.full_name || t('profile_default_name')}</h1>
               <div className="flex items-center gap-3">
                  <span className="px-3 py-1 bg-accent-primary text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">Lvl {profile?.level || 1}</span>
-                 <p className="text-muted-foreground text-sm font-medium">{profile?.xp || 0} XP Набрано</p>
+                 <p className="text-muted-foreground text-sm font-medium">{profile?.xp || 0} XP</p>
               </div>
             </div>
           </div>
@@ -114,6 +114,7 @@ export const Dashboard: React.FC = () => {
 
 const ModuleSection: React.FC<{ module: Module, index: number, progress: UserProgress[] }> = ({ module, index, progress }) => {
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const { t } = useLanguage();
 
   useEffect(() => {
     contentCardService.getLessons(module.id).then(setLessons);
@@ -136,7 +137,7 @@ const ModuleSection: React.FC<{ module: Module, index: number, progress: UserPro
              <div className="flex -space-x-2">
                 {[1,2,3].map(i => <div key={i} className="w-5 h-5 rounded-full bg-border border-2 border-card" />)}
              </div>
-             <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">{lessons.length} Уроков мастерства</p>
+             <p className="text-xs font-bold text-muted-foreground uppercase tracking-tighter">{lessons.length} {t('dashboard_lessons')}</p>
           </div>
         </div>
       </div>
@@ -165,7 +166,7 @@ const ModuleSection: React.FC<{ module: Module, index: number, progress: UserPro
                 <div>
                   <h4 className="font-bold text-base mb-0.5">{lesson.title}</h4>
                   <p className={`text-[10px] font-black uppercase tracking-widest ${isCompleted ? 'text-accent-success' : 'text-muted-foreground'}`}>
-                    {isCompleted ? 'Завершено' : `+${lesson.xp_reward} XP`}
+                    {isCompleted ? t('lesson_done') : `+${lesson.xp_reward} XP`}
                   </p>
                 </div>
               </div>

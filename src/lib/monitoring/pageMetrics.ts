@@ -27,12 +27,15 @@ export const recordPageLoadMetric = (): void => {
 
       if (loadTime <= 0 || loadTime > 120_000) return;
 
-      void supabase.from('page_metrics').insert({
-        url: window.location.pathname,
-        load_time_ms: loadTime,
-        dom_content_loaded_ms: dcl > 0 ? dcl : null,
-        ttfb_ms: ttfb > 0 ? ttfb : null,
-      });
+      void supabase
+        .from('page_metrics')
+        .insert({
+          url: window.location.pathname,
+          load_time_ms: loadTime,
+          dom_content_loaded_ms: dcl > 0 ? dcl : null,
+          ttfb_ms: ttfb > 0 ? ttfb : null,
+        })
+        .then(() => {}, () => {});
     } catch {
       // ignore
     }

@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/useAuthStore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
+import { TranslationKey } from '@/i18n/translations';
 import { trackEvent } from '@/lib/firebase/analytics';
 import { isPaddleConfigured, openPaddleCheckout } from '@/lib/paddle/client';
 
@@ -12,58 +13,41 @@ const KASPI_PHONE = '+7 708 261 77 89';
 
 interface PlanInfo {
   id: 'student' | 'pro' | 'lifetime';
-  nameKey: string;
-  price: string;
+  nameKey: TranslationKey;
+  priceKey: TranslationKey;
   icon: React.ReactNode;
-  features: string[];
+  featureKeys: TranslationKey[];
   highlight: boolean;
-  ctaKey: string;
+  ctaKey: TranslationKey;
 }
 
 const plans: PlanInfo[] = [
   {
     id: 'student',
-    nameKey: 'Student',
-    price: '7 500',
+    nameKey: 'pricing_student',
+    priceKey: 'pricing_student_price',
     icon: <Users className="text-accent-primary" />,
-    features: [
-      'Доступ к 12+ модулям',
-      'AI Ментор (базовый)',
-      'Сертификат начального уровня',
-      'Доступ к сообществу'
-    ],
+    featureKeys: ['pricing_student_f1', 'pricing_student_f2', 'pricing_student_f3', 'pricing_student_f4'],
     highlight: false,
-    ctaKey: 'Начать обучение'
+    ctaKey: 'pricing_student_cta'
   },
   {
     id: 'pro',
-    nameKey: 'Master (Pro)',
-    price: '14 500',
+    nameKey: 'pricing_pro',
+    priceKey: 'pricing_pro_price',
     icon: <Rocket className="text-accent-success" />,
-    features: [
-      'Приоритетный AI Сэнсэй 24/7',
-      'Профессиональный сертификат',
-      'Доступ к сети вакансий',
-      'Ревью вашего кода экспертами',
-      'Ранний доступ к новым курсам'
-    ],
+    featureKeys: ['pricing_pro_f1', 'pricing_pro_f2', 'pricing_pro_f3', 'pricing_pro_f4', 'pricing_pro_f5'],
     highlight: true,
-    ctaKey: 'Стать Мастером'
+    ctaKey: 'pricing_pro_cta'
   },
   {
     id: 'lifetime',
-    nameKey: 'Early Access',
-    price: '95 000',
+    nameKey: 'pricing_lifetime',
+    priceKey: 'pricing_lifetime_price',
     icon: <Award className="text-accent-warning" />,
-    features: [
-      'Пожизненный доступ ко всему',
-      'Бейдж основателя',
-      'Закрытый Discord-канал',
-      'Индивидуальная вводная сессия',
-      'Все будущие курсы — бесплатно'
-    ],
+    featureKeys: ['pricing_lifetime_f1', 'pricing_lifetime_f2', 'pricing_lifetime_f3', 'pricing_lifetime_f4'],
     highlight: false,
-    ctaKey: 'Купить навсегда'
+    ctaKey: 'pricing_lifetime_cta'
   }
 ];
 
@@ -131,18 +115,18 @@ export const PricingPage = () => {
                 <div className="w-12 h-12 rounded-2xl bg-background border border-border flex items-center justify-center mb-6">
                   {plan.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-2">{plan.nameKey}</h3>
+                <h3 className="text-xl font-bold mb-2">{t(plan.nameKey)}</h3>
                 <div className="flex items-baseline space-x-1">
-                  <span className="text-4xl font-bold">{plan.price} ₸</span>
-                  <span className="text-muted text-sm">{plan.id !== 'lifetime' && '/мес'}</span>
+                  <span className="text-4xl font-bold">{t(plan.priceKey)} ₸</span>
+                  <span className="text-muted text-sm">{plan.id !== 'lifetime' && t('pricing_per_month')}</span>
                 </div>
               </div>
 
               <ul className="space-y-4 mb-10">
-                {plan.features.map((feature, j) => (
-                  <li key={j} className="flex items-start text-sm">
+                {plan.featureKeys.map((featureKey) => (
+                  <li key={featureKey} className="flex items-start text-sm">
                     <Check className="text-accent-success mr-3 mt-0.5 shrink-0" size={16} />
-                    <span className="text-muted">{feature}</span>
+                    <span className="text-muted">{t(featureKey)}</span>
                   </li>
                 ))}
               </ul>
@@ -155,7 +139,7 @@ export const PricingPage = () => {
                   : 'bg-background border border-border hover:bg-border'
               }`}>
                 <CreditCard size={18} />
-                {plan.ctaKey}
+                {t(plan.ctaKey)}
               </button>
             </motion.div>
           ))}
@@ -204,15 +188,15 @@ export const PricingPage = () => {
 
             <div className="bg-background border border-border rounded-2xl p-6 mb-6 space-y-4">
               <div className="flex justify-between items-center">
-                <span className="text-muted text-sm">Тариф:</span>
-                <span className="font-bold">{selectedPlan.nameKey}</span>
+                <span className="text-muted text-sm">{t('pricing_modal_plan')}:</span>
+                <span className="font-bold">{t(selectedPlan.nameKey)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-muted text-sm">Сумма:</span>
-                <span className="font-bold text-2xl text-accent-primary">{selectedPlan.price} ₸</span>
+                <span className="text-muted text-sm">{t('pricing_modal_amount')}:</span>
+                <span className="font-bold text-2xl text-accent-primary">{t(selectedPlan.priceKey)} ₸</span>
               </div>
               <div className="border-t border-border pt-4">
-                <p className="text-muted text-xs mb-2 uppercase font-bold tracking-widest">Kaspi перевод на номер:</p>
+                <p className="text-muted text-xs mb-2 uppercase font-bold tracking-widest">{t('pricing_modal_phone')}:</p>
                 <p className="text-2xl font-black text-accent-success tracking-wider text-center py-2">
                   {KASPI_PHONE}
                 </p>
@@ -220,9 +204,7 @@ export const PricingPage = () => {
             </div>
 
             <div className="bg-accent-warning/5 border border-accent-warning/20 rounded-2xl p-4 mb-6">
-              <p className="text-xs text-accent-warning leading-relaxed">
-                <b>Важно:</b> В комментарии к переводу укажите ваш email ({user?.email || 'ваш email'}), чтобы мы могли активировать подписку. Активация происходит в течение 24 часов.
-              </p>
+              <p className="text-xs text-accent-warning leading-relaxed">{user?.email}</p>
             </div>
 
             <button
@@ -232,7 +214,7 @@ export const PricingPage = () => {
               }}
               className="w-full bg-accent-success text-background py-4 rounded-2xl font-bold hover:scale-[1.02] transition-all"
             >
-              Я перевёл оплату
+              {t('pricing_modal_done')}
             </button>
           </motion.div>
         </div>

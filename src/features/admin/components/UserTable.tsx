@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
+import { useLanguage } from '@/i18n/useLanguage';
 import type { AdminUserRow } from '@/types/database';
 
 interface UserTableProps {
@@ -7,20 +8,20 @@ interface UserTableProps {
   loading: boolean;
 }
 
-const formatDate = (iso: string | null): string => {
-  if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleString('ru-RU', {
-    day: '2-digit',
-    month: '2-digit',
-    year: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-};
-
 export const UserTable = ({ users, loading }: UserTableProps) => {
+  const { t, language } = useLanguage();
   const [query, setQuery] = useState('');
+  const formatDate = (iso: string | null): string => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleString(language === 'ru' ? 'ru-RU' : 'en-US', {
+      day: '2-digit',
+      month: '2-digit',
+      year: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -36,8 +37,8 @@ export const UserTable = ({ users, loading }: UserTableProps) => {
     <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden">
       <div className="flex items-center justify-between p-6 border-b border-border">
         <div>
-          <h2 className="text-lg font-bold">Пользователи</h2>
-          <p className="text-xs text-muted mt-1">{users.length} учеников</p>
+          <h2 className="text-lg font-bold">{t('admin_users_table')}</h2>
+          <p className="text-xs text-muted mt-1">{users.length}</p>
         </div>
         <div className="relative">
           <Search
@@ -47,7 +48,7 @@ export const UserTable = ({ users, loading }: UserTableProps) => {
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Поиск по email или имени"
+            placeholder={t('admin_users_search')}
             className="bg-background border border-border rounded-2xl pl-9 pr-4 py-2 text-sm placeholder:text-muted focus:outline-none focus:border-accent-primary w-64"
           />
         </div>
@@ -58,19 +59,19 @@ export const UserTable = ({ users, loading }: UserTableProps) => {
           <thead className="bg-background/50 border-b border-border">
             <tr>
               <th className="p-4 text-[11px] font-bold uppercase tracking-widest text-muted">
-                User
+                {t('admin_user_col_user')}
               </th>
               <th className="p-4 text-[11px] font-bold uppercase tracking-widest text-muted">
-                Role
+                {t('admin_user_col_role')}
               </th>
               <th className="p-4 text-[11px] font-bold uppercase tracking-widest text-muted">
-                Level
+                {t('admin_user_col_level')}
               </th>
               <th className="p-4 text-[11px] font-bold uppercase tracking-widest text-muted">
-                XP
+                {t('admin_user_col_xp')}
               </th>
               <th className="p-4 text-[11px] font-bold uppercase tracking-widest text-muted">
-                Last activity
+                {t('admin_user_col_last_active')}
               </th>
             </tr>
           </thead>
@@ -78,13 +79,13 @@ export const UserTable = ({ users, loading }: UserTableProps) => {
             {loading ? (
               <tr>
                 <td colSpan={5} className="p-12 text-center text-muted">
-                  Загрузка…
+                  {t('common_loading')}
                 </td>
               </tr>
             ) : filtered.length === 0 ? (
               <tr>
                 <td colSpan={5} className="p-12 text-center text-muted">
-                  Пользователи не найдены.
+                  {t('admin_no_users')}
                 </td>
               </tr>
             ) : (

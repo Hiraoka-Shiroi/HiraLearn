@@ -7,6 +7,7 @@ import {
   Tooltip,
   CartesianGrid,
 } from 'recharts';
+import { useLanguage } from '@/i18n/useLanguage';
 import type { PulseBucket } from '../hooks/useAdminMetrics';
 
 interface SystemPulseProps {
@@ -19,6 +20,7 @@ const formatHour = (iso: string): string => {
 };
 
 export const SystemPulse = ({ buckets }: SystemPulseProps) => {
+  const { t } = useLanguage();
   const data = buckets.map((b) => ({ hour: formatHour(b.hour), avgMs: b.avgMs }));
   const empty = data.every((d) => d.avgMs === 0);
 
@@ -26,8 +28,8 @@ export const SystemPulse = ({ buckets }: SystemPulseProps) => {
     <div className="bg-card border border-border rounded-[2.5rem] p-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-lg font-bold mb-1">System Pulse (24h)</h2>
-          <p className="text-xs text-muted">Средняя скорость загрузки страниц, мс</p>
+          <h2 className="text-lg font-bold mb-1">{t('admin_system_pulse')} (24h)</h2>
+          <p className="text-xs text-muted">{t('admin_system_pulse_hint')}</p>
         </div>
       </div>
 
@@ -72,10 +74,7 @@ export const SystemPulse = ({ buckets }: SystemPulseProps) => {
       </div>
 
       {empty ? (
-        <p className="text-xs text-muted mt-4">
-          Пока нет замеров — подключите Firebase Performance или запустите прод-сборку,
-          чтобы клиенты начали слать метрики.
-        </p>
+        <p className="text-xs text-muted mt-4">{t('admin_no_metrics')}</p>
       ) : null}
     </div>
   );

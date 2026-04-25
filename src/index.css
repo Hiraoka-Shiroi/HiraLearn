@@ -4,8 +4,23 @@
 
 :root {
   color-scheme: dark;
+  /* default = dark */
+  --bg: 2 6 23;          /* slate-950 */
+  --fg: 248 250 252;     /* slate-50 */
+  --card: 15 23 42;      /* slate-900 */
+  --muted: 100 116 139;  /* slate-500 */
+  --border: 30 41 59;    /* slate-800 */
   --accent-primary: #6366f1;
   --accent-primary-rgb: 99, 102, 241;
+}
+
+:root[data-theme-mode="light"] {
+  color-scheme: light;
+  --bg: 248 250 252;     /* slate-50 */
+  --fg: 15 23 42;        /* slate-900 */
+  --card: 255 255 255;   /* white */
+  --muted: 100 116 139;  /* slate-500 */
+  --border: 226 232 240; /* slate-200 */
 }
 
 [data-theme="indigo"] {

@@ -1,17 +1,16 @@
 import { useLanguage } from '@/i18n/useLanguage';
-import { Globe } from 'lucide-react';
 
 export const LanguageToggle = () => {
   const { language, setLanguage } = useLanguage();
-
+  const next = language === 'ru' ? 'en' : 'ru';
   return (
     <button
-      onClick={() => setLanguage(language === 'ru' ? 'en' : 'ru')}
-      className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border hover:border-accent-primary/50 transition-all text-sm font-bold"
+      onClick={() => setLanguage(next)}
+      aria-label={`Switch language to ${next.toUpperCase()}`}
       title={language === 'ru' ? 'Switch to English' : 'Переключить на русский'}
+      className="w-10 h-10 rounded-full bg-card border border-border hover:border-accent-primary/50 transition-all flex items-center justify-center text-xs font-bold tracking-widest text-foreground"
     >
-      <Globe size={16} className="text-accent-primary" />
-      <span className="uppercase text-xs tracking-widest">{language === 'ru' ? 'EN' : 'RU'}</span>
+      {language.toUpperCase()}
     </button>
   );
 };
