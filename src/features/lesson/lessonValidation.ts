@@ -6,6 +6,10 @@ const RULE_MESSAGES: Record<string, string> = {
   "include-a": "Добавь ссылку с тегом <a> и атрибутом href.",
 };
 
+const KNOWN_RULES = new Set(Object.keys(RULE_MESSAGES));
+
+const isKnownRule = (rule: string): boolean => KNOWN_RULES.has(rule);
+
 const checkRule = (code: string, rule: string): boolean => {
   switch (rule) {
     case "include-h1":
@@ -24,7 +28,7 @@ export const validateLessonAnswer = (
   requiredRules: string[],
 ): ValidationResult => {
   const issues: ValidationIssue[] = requiredRules
-    .filter((rule) => !checkRule(code, rule))
+    .filter((rule) => !isKnownRule(rule) || !checkRule(code, rule))
     .map((rule) => ({
       rule,
       message:
@@ -33,7 +37,10 @@ export const validateLessonAnswer = (
     }));
 
   const passedCount = requiredRules.length - issues.length;
-  const score = Math.round((passedCount / requiredRules.length) * 100);
+  const score =
+    requiredRules.length === 0
+      ? 100
+      : Math.round((passedCount / requiredRules.length) * 100);
 
   return {
     isCorrect: issues.length === 0,
