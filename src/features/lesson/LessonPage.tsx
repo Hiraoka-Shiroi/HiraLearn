@@ -38,6 +38,7 @@ export const LessonPage = () => {
 
   const handleAnswerChange = (nextCode: string) => {
     setAnswerCode(nextCode);
+
     if (result) {
       setResult(null);
     }
