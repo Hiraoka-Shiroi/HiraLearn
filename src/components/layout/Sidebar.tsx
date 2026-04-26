@@ -72,7 +72,7 @@ export const Sidebar: React.FC = () => {
         </div>
 
         <button
-          onClick={() => { signOut(); navigate('/login'); }}
+          onClick={async () => { await signOut(); navigate('/login'); }}
           className="w-full flex items-center gap-4 p-4 rounded-2xl text-muted-foreground hover:bg-accent-danger/5 hover:text-accent-danger transition-all group"
         >
           <LogOut size={20} />
