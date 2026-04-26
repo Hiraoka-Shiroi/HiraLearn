@@ -170,6 +170,9 @@ export const translations = {
     lesson_correct_msg: 'Код верный. Ты можешь завершить урок.',
     lesson_errors: 'Есть ошибки',
     lesson_your_code: 'Твой код',
+    lesson_hint_default: 'Внимательно прочитай задание и попробуй ещё раз.',
+    lesson_hint_use_tag: 'Используй тег: <{tag}>',
+    lesson_hint_must_contain: 'Текст должен содержать: "{text}"',
 
     // AI Service
     ai_error_connection: 'Произошла ошибка при подключении к AI. Попробуйте ещё раз или проверьте структуру кода.',
@@ -530,6 +533,9 @@ export const translations = {
     lesson_correct_msg: 'Code is correct. You can complete the lesson.',
     lesson_errors: 'There are errors',
     lesson_your_code: 'Your Code',
+    lesson_hint_default: 'Read the task carefully and try again.',
+    lesson_hint_use_tag: 'Use the tag: <{tag}>',
+    lesson_hint_must_contain: 'Text must contain: "{text}"',
 
     // AI Service
     ai_error_connection: 'AI connection error. Please try again or check your code structure.',

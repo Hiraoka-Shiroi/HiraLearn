@@ -47,6 +47,19 @@ export const contentCardService = {
   }
 };
 
+function calculateLevel(xp: number): number {
+  if (xp < 100) return 1;
+  if (xp < 300) return 2;
+  if (xp < 600) return 3;
+  if (xp < 1000) return 4;
+  if (xp < 1500) return 5;
+  if (xp < 2100) return 6;
+  if (xp < 2800) return 7;
+  if (xp < 3600) return 8;
+  if (xp < 4500) return 9;
+  return 10;
+}
+
 export const progressService = {
   async getUserProgress(userId: string) {
     const { data, error } = await supabase
@@ -58,7 +71,6 @@ export const progressService = {
   },
 
   async completeLesson(userId: string, lessonId: string, xpReward: number) {
-    // Check if lesson was already completed to prevent duplicate XP
     const { data: existing } = await supabase
       .from('user_progress')
       .select('id')
@@ -68,11 +80,9 @@ export const progressService = {
       .maybeSingle();
 
     if (existing) {
-      // Already completed — skip XP award
       return;
     }
 
-    // Mark lesson as completed
     const { error: progressError } = await supabase
       .from('user_progress')
       .upsert({
@@ -84,17 +94,41 @@ export const progressService = {
 
     if (progressError) throw progressError;
 
-    // Update user XP
     const { data: profile } = await supabase
       .from('profiles')
-      .select('xp')
+      .select('xp, streak, last_active_at')
       .eq('id', userId)
       .single();
 
     if (profile) {
+      const newXp = profile.xp + xpReward;
+      const newLevel = calculateLevel(newXp);
+
+      const today = new Date().toISOString().slice(0, 10);
+      const lastActive = profile.last_active_at
+        ? new Date(profile.last_active_at).toISOString().slice(0, 10)
+        : null;
+
+      let newStreak = profile.streak ?? 0;
+      if (lastActive === today) {
+        // already active today, keep streak
+      } else if (lastActive) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayStr = yesterday.toISOString().slice(0, 10);
+        newStreak = lastActive === yesterdayStr ? newStreak + 1 : 1;
+      } else {
+        newStreak = 1;
+      }
+
       await supabase
         .from('profiles')
-        .update({ xp: profile.xp + xpReward })
+        .update({
+          xp: newXp,
+          level: newLevel,
+          streak: newStreak,
+          last_active_at: new Date().toISOString(),
+        })
         .eq('id', userId);
     }
   }

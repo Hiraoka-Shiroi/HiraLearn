@@ -10,7 +10,6 @@ import { TranslationKey } from '@/i18n/translations';
 
 const navItems: { labelKey: TranslationKey; sectionId: string }[] = [
   { labelKey: 'nav_path', sectionId: 'the-path' },
-  { labelKey: 'nav_features', sectionId: 'the-path' },
   { labelKey: 'nav_pricing', sectionId: 'pricing' },
 ];
 

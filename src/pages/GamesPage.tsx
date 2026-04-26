@@ -40,8 +40,8 @@ const TAG_BUILDER_CHALLENGES: { id: number; titleKey: TranslationKey; goal: stri
   {
     id: 1,
     titleKey: 'games_tag_simple',
-    goal: ["article", "h2", "p", "/p", "/article"],
-    blocks: ["p", "article", "/p", "h2", "div", "/article", "span"]
+    goal: ["article", "h2", "/h2", "p", "/p", "/article"],
+    blocks: ["p", "article", "/p", "h2", "/h2", "div", "/article", "span"]
   }
 ];
 
@@ -52,7 +52,7 @@ export const GamesPage: React.FC = () => {
 
   // Bug Hunter State
   const [bugIndex] = useState(0);
-  const [userCode, setUserCode] = useState('');
+  const [userCode, setUserCode] = useState(BUG_HUNTER_CHALLENGES[0]?.buggyCode ?? '');
   const [bhResult, setBhResult] = useState<'idle' | 'success' | 'fail'>('idle');
 
   // Tag Builder State
@@ -75,14 +75,28 @@ export const GamesPage: React.FC = () => {
     } catch { /* noop */ }
   };
 
+  const calculateLevel = (xp: number): number => {
+    if (xp < 100) return 1;
+    if (xp < 300) return 2;
+    if (xp < 600) return 3;
+    if (xp < 1000) return 4;
+    if (xp < 1500) return 5;
+    if (xp < 2100) return 6;
+    if (xp < 2800) return 7;
+    if (xp < 3600) return 8;
+    if (xp < 4500) return 9;
+    return 10;
+  };
+
   const addXPToProfile = async (amount: number, gameKey: string) => {
     if (!profile) return;
     if (getCompletedGames().has(gameKey)) return;
     markGameCompleted(gameKey);
     const newXp = profile.xp + amount;
+    const newLevel = calculateLevel(newXp);
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
-      .update({ xp: newXp })
+      .update({ xp: newXp, level: newLevel })
       .eq('id', profile.id)
       .select()
       .single();
