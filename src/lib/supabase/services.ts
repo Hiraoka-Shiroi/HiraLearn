@@ -104,6 +104,8 @@ export const progressService = {
       const newXp = profile.xp + xpReward;
       const newLevel = calculateLevel(newXp);
 
+      // Compute streak from user_progress completion dates (not last_active_at
+      // which App.tsx updates on every page load).
       const today = new Date().toISOString().slice(0, 10);
 
       const { data: prevCompletions } = await supabase
