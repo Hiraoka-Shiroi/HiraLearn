@@ -12,6 +12,7 @@ interface ModuleWithCourse extends Module {
 
 interface ModuleFormData {
   title: string;
+  slug: string;
   description: string;
   course_id: string;
   order_index: number;
@@ -20,6 +21,7 @@ interface ModuleFormData {
 
 const emptyForm: ModuleFormData = {
   title: '',
+  slug: '',
   description: '',
   course_id: '',
   order_index: 0,
@@ -106,6 +108,7 @@ export const AdminModulesPage = () => {
     setEditingId(mod.id);
     setForm({
       title: mod.title,
+      slug: mod.slug,
       description: mod.description || '',
       course_id: mod.course_id,
       order_index: mod.order_index,
@@ -119,7 +122,7 @@ export const AdminModulesPage = () => {
     setSaving(true);
     const payload = {
       title: form.title,
-      slug: form.title.toLowerCase().replace(/\s+/g, '-'),
+      slug: form.slug || form.title.toLowerCase().replace(/\s+/g, '-'),
       description: form.description,
       course_id: form.course_id,
       order_index: form.order_index,
