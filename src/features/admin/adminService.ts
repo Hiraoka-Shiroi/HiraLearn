@@ -1,11 +1,19 @@
 import { supabase } from '@/lib/supabase/client';
 
 // Supabase RPC types are derived from generated DB types which we don't ship.
-// Use a typed helper that bypasses the empty Functions table.
-const rpc = supabase.rpc as unknown as (
-  fn: string,
-  args?: Record<string, unknown>,
-) => Promise<{ data: unknown; error: { message: string } | null }>;
+// Use a wrapper that bypasses the empty Functions table without losing the
+// `this` binding on supabase.rpc (which would otherwise crash with
+// "Cannot read properties of undefined (reading 'rest')" because the RPC
+// implementation accesses this.rest internally).
+const rpc = (fn: string, args?: Record<string, unknown>) =>
+  (supabase.rpc as unknown as (
+    f: string,
+    a?: Record<string, unknown>,
+  ) => Promise<{ data: unknown; error: { message: string } | null }>).call(
+    supabase,
+    fn,
+    args,
+  );
 import type {
   AdminDashboardSummary,
   AdminLog,

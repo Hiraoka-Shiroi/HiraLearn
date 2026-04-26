@@ -109,10 +109,14 @@ export const ensurePushToken = async (): Promise<string | null> => {
     if (!session) return token;
 
     // Functions table is unspecified in our generated types; cast to bypass.
-    await (supabase.rpc as unknown as (
+    // Use .call(supabase, ...) so the rpc method keeps its `this` binding —
+    // calling supabase.rpc as a bare function loses `this` and crashes with
+    // "Cannot read properties of undefined (reading 'rest')".
+    const rpc = supabase.rpc as unknown as (
       fn: string,
       args: Record<string, unknown>,
-    ) => Promise<{ error: { message: string } | null }>)('register_push_token', {
+    ) => Promise<{ error: { message: string } | null }>;
+    await rpc.call(supabase, 'register_push_token', {
       p_token: token,
       p_platform: 'web',
       p_device_info: {
