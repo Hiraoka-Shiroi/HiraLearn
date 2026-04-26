@@ -123,7 +123,7 @@ export const progressService = {
         : null;
 
       if (lastCompletionDate === today) {
-        // already completed a different lesson today, keep streak
+        // already completed another lesson today, keep streak
       } else if (lastCompletionDate) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
