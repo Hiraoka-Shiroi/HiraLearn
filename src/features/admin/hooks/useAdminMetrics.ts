@@ -112,11 +112,15 @@ export const useAdminMetrics = (): AdminMetricsState => {
       if (userListRes.error || userRows.length === 0) {
         const { data: profileRows } = await supabase
           .from('profiles')
-          .select('id, username, full_name, role, level, xp, last_active_at, created_at')
-          .order('last_active_at', { ascending: false, nullsFirst: false })
+          .select('id, username, full_name, role, level, xp, updated_at, created_at')
+          .order('updated_at', { ascending: false, nullsFirst: false })
           .limit(100);
         if (profileRows && profileRows.length > 0) {
-          userRows = profileRows.map((p) => ({ ...p, email: p.username || '' })) as AdminUserRow[];
+          userRows = profileRows.map((p) => ({
+            ...p,
+            email: p.username || '',
+            last_active_at: p.updated_at,
+          })) as AdminUserRow[];
         }
       }
 
