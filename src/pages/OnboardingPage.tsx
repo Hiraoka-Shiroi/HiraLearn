@@ -22,16 +22,16 @@ export const OnboardingPage: React.FC = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
 
-  const handleComplete = async () => {
+  const handleComplete = async (finalData?: typeof data) => {
     if (!user) return;
+    const d = finalData ?? data;
 
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
       .update({
-        current_goal: data.goal,
-        daily_minutes: data.daily_minutes,
-        explanation_style: data.explanation_style,
-        // We could also store level if we had a column for it, or just use it to suggest a course
+        current_goal: d.goal,
+        daily_minutes: d.daily_minutes,
+        explanation_style: d.explanation_style,
       })
       .eq('id', user.id)
       .select()
@@ -100,9 +100,11 @@ export const OnboardingPage: React.FC = () => {
   const currentStepData = steps[step];
 
   const handleSelect = (id: string | number) => {
-    setData({ ...data, [step === 'time' ? 'daily_minutes' : step === 'style' ? 'explanation_style' : step]: id });
+    const key = step === 'time' ? 'daily_minutes' : step === 'style' ? 'explanation_style' : step;
+    const updatedData = { ...data, [key]: id };
+    setData(updatedData);
     if (currentStepData.next === 'complete') {
-      handleComplete();
+      handleComplete(updatedData);
     } else {
       setStep(currentStepData.next);
     }
