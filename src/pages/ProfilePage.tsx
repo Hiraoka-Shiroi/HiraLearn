@@ -18,7 +18,7 @@ export const ProfilePage: React.FC = () => {
 
   useEffect(() => {
     if (user) {
-      billingService.getSubscription(user.id).then(setSubscription);
+      billingService.getSubscription(user.id).then(setSubscription).catch(() => {});
     }
   }, [user]);
 
