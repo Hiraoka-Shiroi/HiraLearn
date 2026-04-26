@@ -107,15 +107,15 @@ export const useAdminMetrics = (): AdminMetricsState => {
           .gte('created_at', since24h),
       ]);
 
-      // Fallback: if admin_user_list view doesn't exist, query profiles directly
+      // Fallback: if admin_user_list view doesn't exist or returns empty, query profiles directly
       let userRows: AdminUserRow[] = (userListRes.data as AdminUserRow[]) ?? [];
-      if (userListRes.error && userRows.length === 0) {
+      if (userListRes.error || userRows.length === 0) {
         const { data: profileRows } = await supabase
           .from('profiles')
           .select('id, username, full_name, role, level, xp, last_active_at, created_at')
           .order('last_active_at', { ascending: false, nullsFirst: false })
           .limit(100);
-        if (profileRows) {
+        if (profileRows && profileRows.length > 0) {
           userRows = profileRows.map((p) => ({ ...p, email: p.username || '' })) as AdminUserRow[];
         }
       }

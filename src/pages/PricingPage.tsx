@@ -1,6 +1,6 @@
 import { Navbar } from '@/components/Navbar';
 import { motion } from 'framer-motion';
-import { Check, ShieldCheck, Zap, Award, Users, Rocket, CreditCard, Phone, X } from 'lucide-react';
+import { Check, ShieldCheck, Zap, Award, Users, Rocket, CreditCard, Phone, X, CheckCircle2 } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -8,6 +8,7 @@ import { useLanguage } from '@/i18n/useLanguage';
 import { TranslationKey } from '@/i18n/translations';
 import { trackEvent } from '@/lib/firebase/analytics';
 import { isPaddleConfigured, openPaddleCheckout } from '@/lib/paddle/client';
+import { supabase } from '@/lib/supabase/client';
 
 const KASPI_PHONE = '+7 708 261 77 89';
 
@@ -54,6 +55,8 @@ const plans: PlanInfo[] = [
 export const PricingPage = () => {
   const { user } = useAuthStore();
   const [selectedPlan, setSelectedPlan] = useState<PlanInfo | null>(null);
+  const [paymentSubmitted, setPaymentSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -79,6 +82,16 @@ export const PricingPage = () => {
       <Navbar />
 
       <main className="container mx-auto px-6 pt-32 pb-24">
+        {paymentSubmitted && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-2xl mx-auto mb-8 p-4 bg-accent-success/10 border border-accent-success/30 rounded-2xl flex items-center gap-3"
+          >
+            <CheckCircle2 className="text-accent-success shrink-0" size={20} />
+            <p className="text-sm">{t('pricing_payment_success')}</p>
+          </motion.div>
+        )}
         <div className="text-center mb-20">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
@@ -214,13 +227,28 @@ export const PricingPage = () => {
             </div>
 
             <button
-              onClick={() => {
+              onClick={async () => {
+                if (!user || !selectedPlan) return;
+                setSubmitting(true);
+                try {
+                  await supabase.from('subscriptions').upsert({
+                    user_id: user.id,
+                    plan: selectedPlan.id,
+                    status: 'pending',
+                    provider: 'kaspi',
+                  }, { onConflict: 'user_id' });
+                  void trackEvent('kaspi_payment_submitted', { plan: selectedPlan.id });
+                } catch {
+                  // continue even if DB write fails
+                }
+                setSubmitting(false);
                 setSelectedPlan(null);
-                alert(t('pricing_payment_success'));
+                setPaymentSubmitted(true);
               }}
-              className="w-full bg-accent-success text-background py-4 rounded-2xl font-bold hover:scale-[1.02] transition-all"
+              disabled={submitting}
+              className="w-full bg-accent-success text-background py-4 rounded-2xl font-bold hover:scale-[1.02] transition-all disabled:opacity-50"
             >
-              {t('pricing_modal_done')}
+              {submitting ? '...' : t('pricing_modal_done')}
             </button>
           </motion.div>
         </div>
