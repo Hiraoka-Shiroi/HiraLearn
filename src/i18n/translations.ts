@@ -733,7 +733,7 @@ export const translations = {
     admin_example_code: 'Example Code',
     admin_order: 'Order',
     admin_rls_error: 'Update failed. Check RLS policies in Supabase.',
-    admin_visitors: 'Visitors (24h)',
+    admin_visitors: 'Visits (24h)',
     admin_modules_link: 'Modules',
     admin_modules_title: 'Manage Modules',
     admin_modules_subtitle: 'Create, edit, and delete course modules.',
