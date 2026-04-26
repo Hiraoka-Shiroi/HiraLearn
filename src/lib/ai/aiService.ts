@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { useLanguage } from '@/i18n/useLanguage';
 
 export interface AIResponse {
   feedback: string;
@@ -7,9 +8,10 @@ export interface AIResponse {
 
 export const aiService = {
   /**
-   * Invokes the 'get-sensei-feedback' edge function
+   * Invokes the 'get-sensei-feedback' edge function for AI code review
    */
   async getFeedback(userMessage: string, userCode: string, context?: Record<string, unknown>): Promise<string> {
+    const t = useLanguage.getState().t;
     try {
       const { data, error } = await supabase.functions.invoke('get-sensei-feedback', {
         body: {
@@ -21,13 +23,13 @@ export const aiService = {
 
       if (error) {
         console.error('Edge Function error:', error);
-        return "I apologize, but my connection to the spiritual realm is currently weak. Please try again or check your code structure.";
+        return t('ai_error_connection');
       }
 
-      return data?.feedback || "I have observed your request, but I have no words at this moment.";
+      return data?.feedback || t('ai_error_no_response');
     } catch (err) {
       console.error('AI Service fetch error:', err);
-      return "The path is blocked by a technical obstacle. Even a Sensei sometimes faces connectivity issues.";
+      return t('ai_error_technical');
     }
   }
 };

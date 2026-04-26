@@ -150,7 +150,7 @@ export const AuthPage = () => {
               <input
                 {...register('email')}
                 type="email"
-                placeholder="sensei@example.com"
+                placeholder="user@example.com"
                 className="w-full bg-background border border-border rounded-2xl py-4 pl-12 pr-4 text-sm focus:outline-none focus:border-accent-primary transition-colors"
               />
             </div>

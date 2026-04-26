@@ -171,6 +171,11 @@ export const translations = {
     lesson_errors: 'Есть ошибки',
     lesson_your_code: 'Твой код',
 
+    // AI Service
+    ai_error_connection: 'Произошла ошибка при подключении к AI. Попробуйте ещё раз или проверьте структуру кода.',
+    ai_error_no_response: 'Запрос получен, но ответ пока недоступен.',
+    ai_error_technical: 'Произошла техническая ошибка. Попробуйте позже.',
+
     // Pricing page
     pricing_page_title: 'Инвестируй в свое',
     pricing_page_title_accent: 'Мастерство',
@@ -284,7 +289,7 @@ export const translations = {
     profile_style_label: 'Стиль объяснения',
     ach_first_step: 'Первый шаг',
     ach_first_step_desc: 'Завершил первый урок',
-    ach_ninja: 'Код-ниндзя',
+    ach_ninja: 'Кодер',
     ach_ninja_desc: 'Решил 5 задач без подсказок',
     ach_streak: 'Стрик-мастер',
     ach_streak_desc: 'Занимался 3 дня подряд',
@@ -525,6 +530,11 @@ export const translations = {
     lesson_correct_msg: 'Code is correct. You can complete the lesson.',
     lesson_errors: 'There are errors',
     lesson_your_code: 'Your Code',
+
+    // AI Service
+    ai_error_connection: 'AI connection error. Please try again or check your code structure.',
+    ai_error_no_response: 'Request received, but no response is available yet.',
+    ai_error_technical: 'A technical error occurred. Please try again later.',
 
     // Pricing page
     pricing_page_title: 'Invest in Your',
