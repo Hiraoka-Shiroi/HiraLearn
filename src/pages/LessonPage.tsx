@@ -125,7 +125,18 @@ export const LessonPage: React.FC = () => {
                     <Lightbulb size={14} /> {t('lesson_hint_title')}
                   </div>
                   <p className="text-sm text-foreground/70">
-                    {lesson.tasks?.[0]?.hints?.[0] ?? ''}
+                    {lesson.tasks?.[0]?.hints?.[0] || (() => {
+                      const rules = lesson.tasks?.[0]?.validation_rules;
+                      if (!rules) return 'Внимательно прочитай задание и попробуй ещё раз.';
+                      const parts: string[] = [];
+                      if (rules.requiredTags?.length) {
+                        parts.push(`Используй тег: <${rules.requiredTags[0]}>`);
+                      }
+                      if (rules.requiredText?.length) {
+                        parts.push(`Текст должен содержать: "${rules.requiredText[0]}"`);
+                      }
+                      return parts.length > 0 ? parts.join('. ') : 'Внимательно прочитай задание и попробуй ещё раз.';
+                    })()}
                   </p>
                 </motion.div>
               )}

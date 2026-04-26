@@ -58,7 +58,21 @@ export const progressService = {
   },
 
   async completeLesson(userId: string, lessonId: string, xpReward: number) {
-    // 1. Mark lesson as completed
+    // Check if lesson was already completed to prevent duplicate XP
+    const { data: existing } = await supabase
+      .from('user_progress')
+      .select('id')
+      .eq('user_id', userId)
+      .eq('lesson_id', lessonId)
+      .eq('status', 'completed')
+      .maybeSingle();
+
+    if (existing) {
+      // Already completed — skip XP award
+      return;
+    }
+
+    // Mark lesson as completed
     const { error: progressError } = await supabase
       .from('user_progress')
       .upsert({
@@ -70,8 +84,7 @@ export const progressService = {
 
     if (progressError) throw progressError;
 
-    // 2. Update user XP (this should ideally be done in a DB function/RPC for security, but for now we'll do it here)
-    // Actually, let's use a RPC if possible later. For MVP, we'll update profiles.
+    // Update user XP
     const { data: profile } = await supabase
       .from('profiles')
       .select('xp')

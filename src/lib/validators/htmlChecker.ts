@@ -11,6 +11,9 @@ export interface ValidationResult {
   feedback: string;
 }
 
+const normalize = (s: string): string =>
+  s.replace(/\s+/g, ' ').trim().toLowerCase();
+
 export const checkHTML = (code: string, rules: ValidationRules): ValidationResult => {
   const parser = new DOMParser();
   const doc = parser.parseFromString(code, 'text/html');
@@ -28,8 +31,10 @@ export const checkHTML = (code: string, rules: ValidationRules): ValidationResul
   }
 
   if (rules.requiredText) {
+    const normalizedCode = normalize(doc.body?.textContent ?? '');
     rules.requiredText.forEach((text: string) => {
-      if (code.includes(text)) {
+      const normalizedText = normalize(text);
+      if (normalizedCode.includes(normalizedText)) {
         passed.push(`Текст "${text}" присутствует`);
       } else {
         failed.push(`Текст "${text}" не найден`);
@@ -37,18 +42,20 @@ export const checkHTML = (code: string, rules: ValidationRules): ValidationResul
     });
   }
 
+  const total = passed.length + failed.length;
+  const score = total > 0 ? Math.round((passed.length / total) * 100) : 0;
   const isCorrect = failed.length === 0;
 
   let feedback = '';
   if (isCorrect) {
-    feedback = "Идеально! Ты справился.";
+    feedback = "Отлично! Ты справился.";
   } else {
     feedback = failed[0] || "Есть ошибки, проверь код еще раз.";
   }
 
   return {
     isCorrect,
-    score: isCorrect ? 100 : 0,
+    score,
     passedChecks: passed,
     failedChecks: failed,
     feedback

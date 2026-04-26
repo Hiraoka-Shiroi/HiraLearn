@@ -78,7 +78,7 @@ export const Hero = () => {
           </div>
 
           <div className="absolute -top-6 -right-6 bg-accent-success text-background text-xs font-bold px-4 py-2 rounded-lg shadow-xl -rotate-12 hidden md:block">
-            AI-POWERED SENSEI
+            AI-POWERED
           </div>
         </motion.div>
       </div>

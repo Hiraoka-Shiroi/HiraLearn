@@ -60,8 +60,25 @@ export const GamesPage: React.FC = () => {
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [tbResult, setTbResult] = useState<'idle' | 'success' | 'fail'>('idle');
 
-  const addXPToProfile = async (amount: number) => {
+  const getCompletedGames = (): Set<string> => {
+    try {
+      const raw = localStorage.getItem('hiralearn_completed_games');
+      return raw ? new Set(JSON.parse(raw) as string[]) : new Set();
+    } catch { return new Set(); }
+  };
+
+  const markGameCompleted = (key: string) => {
+    try {
+      const completed = getCompletedGames();
+      completed.add(key);
+      localStorage.setItem('hiralearn_completed_games', JSON.stringify([...completed]));
+    } catch { /* noop */ }
+  };
+
+  const addXPToProfile = async (amount: number, gameKey: string) => {
     if (!profile) return;
+    if (getCompletedGames().has(gameKey)) return;
+    markGameCompleted(gameKey);
     const newXp = profile.xp + amount;
     const { data: updatedProfile, error } = await supabase
       .from('profiles')
@@ -79,7 +96,7 @@ export const GamesPage: React.FC = () => {
     const challenge = BUG_HUNTER_CHALLENGES[bugIndex];
     if (challenge.check(userCode)) {
       setBhResult('success');
-      addXPToProfile(100);
+      void addXPToProfile(100, `bug-hunter-${bugIndex}`);
     } else {
       setBhResult('fail');
     }
@@ -100,7 +117,7 @@ export const GamesPage: React.FC = () => {
     const isCorrect = JSON.stringify(selectedTags) === JSON.stringify(challenge.goal);
     if (isCorrect) {
       setTbResult('success');
-      addXPToProfile(150);
+      void addXPToProfile(150, `tag-builder-${tbIndex}`);
     } else {
       setTbResult('fail');
     }
