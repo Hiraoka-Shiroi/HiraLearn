@@ -300,6 +300,11 @@ export const translations = {
     pricing_modal_amount: 'Сумма',
     pricing_modal_phone: 'Номер для перевода',
     pricing_modal_done: 'Я оплатил',
+    pricing_modal_important: 'Важно:',
+    pricing_modal_instruction: 'В комментарии к переводу укажите ваш email ({email}), чтобы мы могли активировать подписку. Активация происходит в течение 24 часов.',
+    pricing_modal_your_email: 'ваш email',
+    admin_lesson_col_title: 'Название',
+    admin_lesson_col_module: 'Модуль',
 
     // Admin (extended)
     admin_console: 'Admin Console',
@@ -644,6 +649,11 @@ export const translations = {
     pricing_modal_plan: 'Plan',
     pricing_modal_amount: 'Amount',
     pricing_modal_phone: 'Transfer to',
+    pricing_modal_important: 'Important:',
+    pricing_modal_instruction: 'Add your email ({email}) in the transfer comment so we can activate your subscription. Activation happens within 24 hours.',
+    pricing_modal_your_email: 'your email',
+    admin_lesson_col_title: 'Title',
+    admin_lesson_col_module: 'Module',
     pricing_modal_done: 'I have paid',
 
     // Admin (extended)
