@@ -30,19 +30,6 @@ function App() {
 
   useEffect(() => {
     void trackEvent('page_view', { url: window.location.href });
-    const start = performance.now();
-    const logMetric = () => {
-      const loadTime = Math.round(performance.now() - start);
-      void supabase.from('page_metrics').insert({
-        url: window.location.hash || '/',
-        load_time_ms: loadTime,
-      }).then(() => {}, () => {});
-    };
-    if (document.readyState === 'complete') {
-      logMetric();
-    } else {
-      window.addEventListener('load', logMetric, { once: true });
-    }
   }, []);
 
   useEffect(() => {

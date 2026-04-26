@@ -128,10 +128,10 @@ export const AdminModulesPage = () => {
 
     if (editingId) {
       const { error } = await supabase.from('modules').update(payload).eq('id', editingId);
-      if (error) alert(t('common_error') + ': ' + error.message);
+      if (error) { alert(t('common_error') + ': ' + error.message); setSaving(false); return; }
     } else {
       const { error } = await supabase.from('modules').insert(payload);
-      if (error) alert(t('common_error') + ': ' + error.message);
+      if (error) { alert(t('common_error') + ': ' + error.message); setSaving(false); return; }
     }
 
     setSaving(false);
