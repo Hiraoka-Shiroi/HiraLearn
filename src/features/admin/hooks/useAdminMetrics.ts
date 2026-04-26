@@ -99,7 +99,7 @@ export const useAdminMetrics = (): AdminMetricsState => {
         supabase
           .from('admin_user_list')
           .select('*')
-          .order('last_active_at', { ascending: false, nullsFirst: false })
+          .order('last_seen_at', { ascending: false, nullsFirst: false })
           .limit(100),
         supabase
           .from('page_metrics')
@@ -119,8 +119,8 @@ export const useAdminMetrics = (): AdminMetricsState => {
           userRows = profileRows.map((p) => ({
             ...p,
             email: p.username || '',
-            last_active_at: p.updated_at,
-          })) as AdminUserRow[];
+            last_seen_at: p.updated_at,
+          })) as unknown as AdminUserRow[];
         }
       }
 

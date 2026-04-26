@@ -1,15 +1,23 @@
-
 import { ReactNode, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '@/store/useAuthStore';
 import { supabase } from '@/lib/supabase/client';
+import type { Role } from '@/types/database';
+import { hasRole, isAdmin } from '@/features/admin/permissions';
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  /** Legacy: equivalent to requireRole='admin'. */
   adminOnly?: boolean;
+  /** Minimum role required to access this route. */
+  requireRole?: Role;
 }
 
-export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({
+  children,
+  adminOnly = false,
+  requireRole,
+}: ProtectedRouteProps) => {
   const { user, profile, loading, setUser, setProfile } = useAuthStore();
   const location = useLocation();
 
@@ -41,15 +49,34 @@ export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRoutePr
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Redirect to onboarding if profile is incomplete and user is not already on onboarding
-  const onboardingDone = (() => { try { return localStorage.getItem('hiralearn_onboarding_done') === '1'; } catch { return false; } })();
+  if (profile?.status === 'banned') {
+    return <Navigate to="/login?banned=1" replace />;
+  }
+
+  // Onboarding gate (skipped for admin views — admins can bypass).
+  const onboardingDone = (() => {
+    try {
+      return localStorage.getItem('hiralearn_onboarding_done') === '1';
+    } catch {
+      return false;
+    }
+  })();
   const isIncomplete = !profile?.current_goal && !onboardingDone;
-  if (isIncomplete && location.pathname !== '/onboarding') {
+  const isAdminPath = location.pathname.startsWith('/admin');
+  if (isIncomplete && location.pathname !== '/onboarding' && !isAdminPath) {
     return <Navigate to="/onboarding" replace />;
   }
 
-  if (adminOnly && profile?.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
+  const minRole: Role | null = requireRole ?? (adminOnly ? 'admin' : null);
+  if (minRole && !hasRole(profile, minRole)) {
+    // Special case: legacy adminOnly should also accept moderator viewing read-only,
+    // but we keep strict admin gating for compatibility. Use requireRole='moderator' for
+    // moderator-accessible pages.
+    if (adminOnly && isAdmin(profile)) {
+      // ok
+    } else {
+      return <Navigate to="/dashboard" replace />;
+    }
   }
 
   return <>{children}</>;

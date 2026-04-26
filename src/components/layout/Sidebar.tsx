@@ -8,6 +8,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
 import { TranslationKey } from '@/i18n/translations';
+import { isStaff } from '@/features/admin/permissions';
 
 const baseMenuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
@@ -22,7 +23,7 @@ export const Sidebar: React.FC = () => {
   const { signOut, profile } = useAuthStore();
   const { t } = useLanguage();
 
-  const menuItems = profile?.role === 'admin'
+  const menuItems = isStaff(profile)
     ? [...baseMenuItems, { id: 'admin', labelKey: 'sidebar_admin' as TranslationKey, icon: <Shield size={20} />, path: '/admin' }]
     : baseMenuItems;
 

@@ -1,4 +1,3 @@
-
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { LandingPage } from '@/pages/LandingPage'
 import { Dashboard } from '@/pages/Dashboard'
@@ -7,18 +6,29 @@ import { AuthPage } from '@/pages/AuthPage'
 import { PricingPage } from '@/pages/PricingPage'
 import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ProfilePage } from '@/pages/ProfilePage'
-import { AdminPage } from '@/pages/AdminPage'
 import { AdminLessonsPage } from '@/pages/AdminLessonsPage'
 import { AdminModulesPage } from '@/pages/AdminModulesPage'
 import { GamesPage } from '@/pages/GamesPage'
 import { CoursesPage } from '@/pages/CoursesPage'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import {
+  AdminLayout,
+  AdminGate,
+  AdminDashboardPage,
+  AdminUsersPage,
+  AdminRolesPage,
+  AdminSubscriptionsPage,
+  AdminPushPage,
+  AdminLogsPage,
+  AdminSettingsPage,
+} from '@/features/admin'
 import { useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { useThemeStore } from '@/store/useThemeStore'
 import { identifyUser, trackEvent } from '@/lib/firebase/analytics'
+import { ensurePushToken, isFcmConfigured } from '@/lib/firebase/messaging'
 
 function App() {
   const { setUser, setProfile } = useAuthStore()
@@ -88,6 +98,10 @@ function App() {
           .then(({ data }) => {
             if (mounted) setProfile(data)
           })
+        // Try to refresh the push token whenever the session changes (best-effort, never blocks UI).
+        if (isFcmConfigured()) {
+          void ensurePushToken().catch(() => {});
+        }
       } else {
         setUser(null)
         setProfile(null)
@@ -106,93 +120,121 @@ function App() {
       <Router>
         <div className="min-h-screen bg-background text-foreground font-sans">
           <Routes>
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<AuthPage />} />
-          <Route path="/register" element={<AuthPage />} />
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<AuthPage />} />
+            <Route path="/register" element={<AuthPage />} />
 
-          <Route
-            path="/onboarding"
-            element={
-              <ProtectedRoute>
-                <OnboardingPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/onboarding"
+              element={
+                <ProtectedRoute>
+                  <OnboardingPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/courses"
-            element={
-              <ProtectedRoute>
-                <CoursesPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/courses"
+              element={
+                <ProtectedRoute>
+                  <CoursesPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/lessons/:lessonId"
-            element={
-              <ProtectedRoute>
-                <LessonPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/lessons/:lessonId"
+              element={
+                <ProtectedRoute>
+                  <LessonPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/games"
-            element={
-              <ProtectedRoute>
-                <GamesPage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/games"
+              element={
+                <ProtectedRoute>
+                  <GamesPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <ProfilePage />
-              </ProtectedRoute>
-            }
-          />
+            <Route
+              path="/profile"
+              element={
+                <ProtectedRoute>
+                  <ProfilePage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Admin section: outer guard requires moderator+ (so /admin and /admin/users
+                load), each individual page does its own role gate via <AdminGate />. */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute requireRole="moderator">
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              <Route index element={<AdminDashboardPage />} />
+              <Route
+                path="users"
+                element={<AdminGate require="staff"><AdminUsersPage /></AdminGate>}
+              />
+              <Route
+                path="roles"
+                element={<AdminGate require="super_admin"><AdminRolesPage /></AdminGate>}
+              />
+              <Route
+                path="subscriptions"
+                element={<AdminGate require="admin"><AdminSubscriptionsPage /></AdminGate>}
+              />
+              <Route
+                path="push"
+                element={<AdminGate require="admin"><AdminPushPage /></AdminGate>}
+              />
+              <Route
+                path="logs"
+                element={<AdminGate require="super_admin"><AdminLogsPage /></AdminGate>}
+              />
+              <Route
+                path="settings"
+                element={<AdminGate require="admin"><AdminSettingsPage /></AdminGate>}
+              />
+            </Route>
 
-          <Route
-            path="/admin/lessons"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminLessonsPage />
-              </ProtectedRoute>
-            }
-          />
+            {/* Legacy admin sub-pages kept for compatibility */}
+            <Route
+              path="/admin/lessons"
+              element={
+                <ProtectedRoute requireRole="admin">
+                  <AdminLessonsPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/modules"
+              element={
+                <ProtectedRoute requireRole="admin">
+                  <AdminModulesPage />
+                </ProtectedRoute>
+              }
+            />
 
-          <Route
-            path="/admin/modules"
-            element={
-              <ProtectedRoute adminOnly>
-                <AdminModulesPage />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route path="/pricing" element={<PricingPage />} />
-          <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="/pricing" element={<PricingPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </Router>

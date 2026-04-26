@@ -1,11 +1,11 @@
 export { AdminDashboard } from './AdminDashboard';
-export { AdminStats } from './components/AdminStats';
-export { ErrorMonitor } from './components/ErrorMonitor';
-export { SystemPulse } from './components/SystemPulse';
-export { UserTable } from './components/UserTable';
-export { useAdminMetrics } from './hooks/useAdminMetrics';
-export type {
-  AdminSummary,
-  ErrorBucket,
-  PulseBucket,
-} from './hooks/useAdminMetrics';
+export { AdminLayout, AdminGate } from './AdminLayout';
+export { AdminDashboardPage } from './pages/AdminDashboardPage';
+export { AdminUsersPage } from './pages/AdminUsersPage';
+export { AdminRolesPage } from './pages/AdminRolesPage';
+export { AdminSubscriptionsPage } from './pages/AdminSubscriptionsPage';
+export { AdminPushPage } from './pages/AdminPushPage';
+export { AdminLogsPage } from './pages/AdminLogsPage';
+export { AdminSettingsPage } from './pages/AdminSettingsPage';
+export { adminService } from './adminService';
+export * from './permissions';
