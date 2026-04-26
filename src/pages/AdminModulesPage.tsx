@@ -176,7 +176,7 @@ export const AdminModulesPage = () => {
               className="bg-accent-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:scale-105 transition-all"
             >
               <Plus size={20} />
-              <span>{t('admin_create')}</span>
+              <span>{t('admin_modules_create')}</span>
             </button>
           </div>
         </header>
@@ -186,7 +186,7 @@ export const AdminModulesPage = () => {
             <div className="bg-card border border-border rounded-3xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">
-                  {editingId ? t('common_edit') : t('admin_create')}
+                  {editingId ? t('common_edit') : t('admin_modules_create')}
                 </h2>
                 <button
                   onClick={() => setShowForm(false)}
@@ -300,13 +300,13 @@ export const AdminModulesPage = () => {
               {loading ? (
                 <tr>
                   <td colSpan={4} className="p-12 text-center text-muted">
-                    {t('admin_loading')}
+                    {t('admin_modules_loading')}
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
                   <td colSpan={4} className="p-12 text-center text-muted">
-                    {t('admin_empty')}
+                    {t('admin_modules_empty')}
                   </td>
                 </tr>
               ) : (
