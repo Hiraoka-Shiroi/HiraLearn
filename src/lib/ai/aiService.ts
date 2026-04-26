@@ -7,7 +7,7 @@ export interface AIResponse {
 
 export const aiService = {
   /**
-   * Invokes the 'get-sensei-feedback' edge function
+   * Invokes the 'get-sensei-feedback' edge function for AI code review
    */
   async getFeedback(userMessage: string, userCode: string, context?: Record<string, unknown>): Promise<string> {
     try {
@@ -21,13 +21,13 @@ export const aiService = {
 
       if (error) {
         console.error('Edge Function error:', error);
-        return "I apologize, but my connection to the spiritual realm is currently weak. Please try again or check your code structure.";
+        return "Произошла ошибка при подключении к AI. Попробуйте ещё раз или проверьте структуру кода.";
       }
 
-      return data?.feedback || "I have observed your request, but I have no words at this moment.";
+      return data?.feedback || "Запрос получен, но ответ пока недоступен.";
     } catch (err) {
       console.error('AI Service fetch error:', err);
-      return "The path is blocked by a technical obstacle. Even a Sensei sometimes faces connectivity issues.";
+      return "Произошла техническая ошибка. Попробуйте позже.";
     }
   }
 };

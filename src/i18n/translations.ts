@@ -284,7 +284,7 @@ export const translations = {
     profile_style_label: 'Стиль объяснения',
     ach_first_step: 'Первый шаг',
     ach_first_step_desc: 'Завершил первый урок',
-    ach_ninja: 'Код-ниндзя',
+    ach_ninja: 'Кодер',
     ach_ninja_desc: 'Решил 5 задач без подсказок',
     ach_streak: 'Стрик-мастер',
     ach_streak_desc: 'Занимался 3 дня подряд',
