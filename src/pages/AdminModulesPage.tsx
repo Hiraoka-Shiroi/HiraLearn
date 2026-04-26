@@ -1,95 +1,90 @@
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase/client';
-import { Plus, Trash2, Eye, ArrowLeft, Edit2, Search, ToggleLeft, ToggleRight, X } from 'lucide-react';
+import { Plus, Trash2, ArrowLeft, Edit2, Search, ToggleLeft, ToggleRight, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
-import { Lesson } from '@/types/database';
+import { Module } from '@/types/database';
 
-interface LessonWithModule extends Lesson {
-  modules: { title: string } | null;
+interface ModuleWithCourse extends Module {
+  courses: { title: string } | null;
 }
 
-interface LessonFormData {
+interface ModuleFormData {
   title: string;
   slug: string;
-  theory: string;
-  example_code: string;
-  module_id: string;
+  description: string;
+  course_id: string;
   order_index: number;
-  xp_reward: number;
   is_published: boolean;
 }
 
-const emptyForm: LessonFormData = {
+const emptyForm: ModuleFormData = {
   title: '',
   slug: '',
-  theory: '',
-  example_code: '',
-  module_id: '',
+  description: '',
+  course_id: '',
   order_index: 0,
-  xp_reward: 50,
   is_published: false,
 };
 
-export const AdminLessonsPage = () => {
-  const [lessons, setLessons] = useState<LessonWithModule[]>([]);
+export const AdminModulesPage = () => {
+  const [modules, setModules] = useState<ModuleWithCourse[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState<LessonFormData>(emptyForm);
-  const [modules, setModules] = useState<{ id: string; title: string }[]>([]);
+  const [form, setForm] = useState<ModuleFormData>(emptyForm);
+  const [courses, setCourses] = useState<{ id: string; title: string }[]>([]);
   const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const { t } = useLanguage();
 
   useEffect(() => {
-    void loadLessons();
     void loadModules();
+    void loadCourses();
   }, []);
 
-  const loadLessons = async () => {
+  const loadModules = async () => {
     const { data } = await supabase
-      .from('lessons')
-      .select('*, modules(title)')
+      .from('modules')
+      .select('*, courses(title)')
       .order('order_index');
-    setLessons((data as unknown as LessonWithModule[]) || []);
+    setModules((data as unknown as ModuleWithCourse[]) || []);
     setLoading(false);
   };
 
-  const loadModules = async () => {
-    const { data } = await supabase.from('modules').select('id, title').order('order_index');
-    setModules(data || []);
+  const loadCourses = async () => {
+    const { data } = await supabase.from('courses').select('id, title').order('created_at');
+    setCourses(data || []);
   };
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return lessons;
-    return lessons.filter(
-      (l) =>
-        l.title.toLowerCase().includes(q) ||
-        (l.modules?.title ?? '').toLowerCase().includes(q),
+    if (!q) return modules;
+    return modules.filter(
+      (m) =>
+        m.title.toLowerCase().includes(q) ||
+        (m.courses?.title ?? '').toLowerCase().includes(q),
     );
-  }, [lessons, query]);
+  }, [modules, query]);
 
-  const handleDelete = async (lessonId: string) => {
-    const confirmMsg = t('common_delete') + '?';
-    if (!confirm(confirmMsg)) return;
-    const { error } = await supabase.from('lessons').delete().eq('id', lessonId);
+  const handleDelete = async (moduleId: string) => {
+    if (!confirm(t('common_delete') + '?')) return;
+    const { error } = await supabase.from('modules').delete().eq('id', moduleId);
     if (error) {
       alert(t('common_error') + ': ' + error.message);
     } else {
-      setLessons(lessons.filter((l) => l.id !== lessonId));
+      setModules(modules.filter((m) => m.id !== moduleId));
     }
   };
 
-  const handleTogglePublish = async (lesson: LessonWithModule) => {
-    const newVal = !lesson.is_published;
+  const handleTogglePublish = async (mod: ModuleWithCourse) => {
+    const newVal = !mod.is_published;
     const { data, error } = await supabase
-      .from('lessons')
+      .from('modules')
       .update({ is_published: newVal })
-      .eq('id', lesson.id)
+      .eq('id', mod.id)
       .select('is_published')
       .single();
     if (error) {
@@ -100,11 +95,7 @@ export const AdminLessonsPage = () => {
       alert(t('admin_rls_error'));
       return;
     }
-    setLessons(
-      lessons.map((l) =>
-        l.id === lesson.id ? { ...l, is_published: newVal } : l,
-      ),
-    );
+    setModules(modules.map((m) => m.id === mod.id ? { ...m, is_published: newVal } : m));
   };
 
   const openCreate = () => {
@@ -113,49 +104,42 @@ export const AdminLessonsPage = () => {
     setShowForm(true);
   };
 
-  const openEdit = (lesson: LessonWithModule) => {
-    setEditingId(lesson.id);
+  const openEdit = (mod: ModuleWithCourse) => {
+    setEditingId(mod.id);
     setForm({
-      title: lesson.title,
-      slug: lesson.slug,
-      theory: lesson.theory || '',
-      example_code: lesson.example_code || '',
-      module_id: lesson.module_id,
-      order_index: lesson.order_index,
-      xp_reward: lesson.xp_reward,
-      is_published: lesson.is_published,
+      title: mod.title,
+      slug: mod.slug,
+      description: mod.description || '',
+      course_id: mod.course_id,
+      order_index: mod.order_index,
+      is_published: mod.is_published,
     });
     setShowForm(true);
   };
 
   const handleSave = async () => {
-    if (!form.title.trim() || !form.module_id) return;
+    if (!form.title.trim() || !form.course_id) return;
     setSaving(true);
     const payload = {
       title: form.title,
       slug: form.slug || form.title.toLowerCase().replace(/\s+/g, '-'),
-      theory: form.theory,
-      example_code: form.example_code,
-      module_id: form.module_id,
+      description: form.description,
+      course_id: form.course_id,
       order_index: form.order_index,
-      xp_reward: form.xp_reward,
       is_published: form.is_published,
     };
 
     if (editingId) {
-      const { error } = await supabase
-        .from('lessons')
-        .update(payload)
-        .eq('id', editingId);
+      const { error } = await supabase.from('modules').update(payload).eq('id', editingId);
       if (error) { alert(t('common_error') + ': ' + error.message); setSaving(false); return; }
     } else {
-      const { error } = await supabase.from('lessons').insert(payload);
+      const { error } = await supabase.from('modules').insert(payload);
       if (error) { alert(t('common_error') + ': ' + error.message); setSaving(false); return; }
     }
 
     setSaving(false);
     setShowForm(false);
-    void loadLessons();
+    void loadModules();
   };
 
   return (
@@ -171,8 +155,8 @@ export const AdminLessonsPage = () => {
 
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-12">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{t('admin_title')}</h1>
-            <p className="text-muted">{t('admin_subtitle')}</p>
+            <h1 className="text-3xl font-bold mb-2">{t('admin_modules_title')}</h1>
+            <p className="text-muted">{t('admin_modules_subtitle')}</p>
           </div>
           <div className="flex items-center gap-3">
             <div className="relative">
@@ -192,18 +176,17 @@ export const AdminLessonsPage = () => {
               className="bg-accent-primary text-white px-6 py-3 rounded-2xl font-bold flex items-center space-x-2 hover:scale-105 transition-all"
             >
               <Plus size={20} />
-              <span>{t('admin_create')}</span>
+              <span>{t('admin_modules_create')}</span>
             </button>
           </div>
         </header>
 
-        {/* Create/Edit Form Modal */}
         {showForm && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-card border border-border rounded-3xl p-8 w-full max-w-lg max-h-[90vh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-bold">
-                  {editingId ? t('common_edit') : t('admin_create')}
+                  {editingId ? t('common_edit') : t('admin_modules_create')}
                 </h2>
                 <button
                   onClick={() => setShowForm(false)}
@@ -216,7 +199,7 @@ export const AdminLessonsPage = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
-                    {t('admin_lesson_col_title')}
+                    {t('admin_module_name')}
                   </label>
                   <input
                     value={form.title}
@@ -224,82 +207,50 @@ export const AdminLessonsPage = () => {
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary"
                   />
                 </div>
-
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
-                    {t('admin_lesson_col_module')}
+                    {t('admin_module_course')}
                   </label>
                   <select
-                    value={form.module_id}
-                    onChange={(e) => setForm({ ...form, module_id: e.target.value })}
+                    value={form.course_id}
+                    onChange={(e) => setForm({ ...form, course_id: e.target.value })}
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary"
                   >
                     <option value="">-- --</option>
-                    {modules.map((m) => (
-                      <option key={m.id} value={m.id}>
-                        {m.title}
+                    {courses.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.title}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
-                    {t('lesson_theory')}
+                    {t('admin_module_desc')}
                   </label>
                   <textarea
-                    value={form.theory}
-                    onChange={(e) => setForm({ ...form, theory: e.target.value })}
-                    rows={4}
+                    value={form.description}
+                    onChange={(e) => setForm({ ...form, description: e.target.value })}
+                    rows={3}
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary resize-none"
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
-                    {t('admin_example_code')}
+                    {t('admin_order')}
                   </label>
-                  <textarea
-                    value={form.example_code}
-                    onChange={(e) => setForm({ ...form, example_code: e.target.value })}
-                    rows={3}
-                    placeholder="<h1>Hello World</h1>"
-                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-accent-primary resize-none"
+                  <input
+                    type="number"
+                    value={form.order_index}
+                    onChange={(e) => setForm({ ...form, order_index: parseInt(e.target.value) || 0 })}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary"
                   />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
-                      {t('admin_order')}
-                    </label>
-                    <input
-                      type="number"
-                      value={form.order_index}
-                      onChange={(e) =>
-                        setForm({ ...form, order_index: parseInt(e.target.value) || 0 })
-                      }
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
-                      XP
-                    </label>
-                    <input
-                      type="number"
-                      value={form.xp_reward}
-                      onChange={(e) =>
-                        setForm({ ...form, xp_reward: parseInt(e.target.value) || 0 })
-                      }
-                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary"
-                    />
-                  </div>
                 </div>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={form.is_published}
-                    onChange={(e) =>
-                      setForm({ ...form, is_published: e.target.checked })
-                    }
+                    onChange={(e) => setForm({ ...form, is_published: e.target.checked })}
                     className="w-4 h-4 accent-accent-primary"
                   />
                   <span className="text-sm font-medium">
@@ -317,7 +268,7 @@ export const AdminLessonsPage = () => {
                 </button>
                 <button
                   onClick={handleSave}
-                  disabled={saving || !form.title.trim() || !form.module_id}
+                  disabled={saving || !form.title.trim() || !form.course_id}
                   className="flex-1 bg-accent-primary text-white rounded-xl py-3 font-bold hover:bg-accent-primary/90 transition-colors disabled:opacity-50"
                 >
                   {saving ? '...' : t('common_save')}
@@ -332,16 +283,13 @@ export const AdminLessonsPage = () => {
             <thead className="bg-background/50 border-b border-border">
               <tr>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  {t('admin_lesson_col_title')}
+                  {t('admin_module_name')}
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  {t('admin_lesson_col_module')}
+                  {t('admin_module_course')}
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
                   {t('admin_order')}
-                </th>
-                <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  XP
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted text-right">
                   &nbsp;
@@ -351,59 +299,51 @@ export const AdminLessonsPage = () => {
             <tbody className="divide-y divide-border">
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-muted">
-                    {t('admin_loading')}
+                  <td colSpan={4} className="p-12 text-center text-muted">
+                    {t('admin_modules_loading')}
                   </td>
                 </tr>
               ) : filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="p-12 text-center text-muted">
-                    {t('admin_empty')}
+                  <td colSpan={4} className="p-12 text-center text-muted">
+                    {t('admin_modules_empty')}
                   </td>
                 </tr>
               ) : (
-                filtered.map((lesson) => (
-                  <tr key={lesson.id} className="hover:bg-background/30 transition-colors">
+                filtered.map((mod) => (
+                  <tr key={mod.id} className="hover:bg-background/30 transition-colors">
                     <td className="p-6">
-                      <div className="font-bold">{lesson.title}</div>
-                      {!lesson.is_published && (
+                      <div className="font-bold">{mod.title}</div>
+                      {!mod.is_published && (
                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted bg-border px-2 py-0.5 rounded-full">
                           {t('admin_draft')}
                         </span>
                       )}
                     </td>
-                    <td className="p-6 text-sm text-muted">{lesson.modules?.title}</td>
-                    <td className="p-6 text-sm font-mono">{lesson.order_index}</td>
-                    <td className="p-6 text-sm font-mono">{lesson.xp_reward}</td>
+                    <td className="p-6 text-sm text-muted">{mod.courses?.title}</td>
+                    <td className="p-6 text-sm font-mono">{mod.order_index}</td>
                     <td className="p-6">
                       <div className="flex justify-end space-x-2">
                         <button
-                          onClick={() => handleTogglePublish(lesson)}
+                          onClick={() => handleTogglePublish(mod)}
                           className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all"
-                          title={lesson.is_published ? t('admin_unpublish') : t('admin_publish')}
+                          title={mod.is_published ? t('admin_unpublish') : t('admin_publish')}
                         >
-                          {lesson.is_published ? (
+                          {mod.is_published ? (
                             <ToggleRight size={18} className="text-accent-success" />
                           ) : (
                             <ToggleLeft size={18} />
                           )}
                         </button>
                         <button
-                          onClick={() => openEdit(lesson)}
+                          onClick={() => openEdit(mod)}
                           className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all"
                           title={t('common_edit')}
                         >
                           <Edit2 size={18} />
                         </button>
                         <button
-                          onClick={() => navigate(`/lessons/${lesson.id}`)}
-                          className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all"
-                          title={t('common_view')}
-                        >
-                          <Eye size={18} />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(lesson.id)}
+                          onClick={() => handleDelete(mod.id)}
                           className="p-2 rounded-lg hover:bg-border text-muted hover:text-accent-danger transition-all"
                           title={t('common_delete')}
                         >

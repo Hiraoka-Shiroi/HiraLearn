@@ -1,4 +1,4 @@
-import { Users, Wallet, Activity, AlertTriangle } from 'lucide-react';
+import { Users, Wallet, Activity, AlertTriangle, Eye } from 'lucide-react';
 import { StatCard } from './StatCard';
 import { useLanguage } from '@/i18n/useLanguage';
 import type { AdminSummary } from '../hooks/useAdminMetrics';
@@ -41,6 +41,12 @@ export const AdminStats = ({ summary, loading }: AdminStatsProps) => {
       accent: 'primary' as const,
     },
     {
+      label: t('admin_visitors'),
+      value: loading || !summary ? '—' : summary.visitorsToday.toLocaleString('ru-RU'),
+      icon: <Eye size={18} />,
+      accent: 'success' as const,
+    },
+    {
       label: t('admin_error_rate'),
       value: loading || !summary ? '—' : summary.errorsLast24h.toLocaleString('ru-RU'),
       icon: <AlertTriangle size={18} />,
@@ -49,7 +55,7 @@ export const AdminStats = ({ summary, loading }: AdminStatsProps) => {
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
       {cards.map((c) => (
         <StatCard key={c.label} {...c} />
       ))}
