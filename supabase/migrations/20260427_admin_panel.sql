@@ -239,6 +239,17 @@ CREATE POLICY "users can update own push tokens" ON public.push_tokens FOR UPDAT
 CREATE POLICY "users can delete own push tokens" ON public.push_tokens FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY "admins can read all push tokens"  ON public.push_tokens FOR SELECT USING (public.is_admin());
 
+-- Touch trigger helper: bumps updated_at on every UPDATE.
+-- Defined here as well so this migration is self-sufficient (older databases
+-- that didn't apply 20260426_admin_monitoring.sql also need it).
+CREATE OR REPLACE FUNCTION public.touch_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
 DROP TRIGGER IF EXISTS push_tokens_touch_updated_at ON public.push_tokens;
 CREATE TRIGGER push_tokens_touch_updated_at
   BEFORE UPDATE ON public.push_tokens
