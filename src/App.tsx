@@ -188,7 +188,14 @@ function App() {
                 </ProtectedRoute>
               }
             >
-              <Route index element={<AdminDashboardPage />} />
+              <Route
+                index
+                element={
+                  <AdminGate require="admin">
+                    <AdminDashboardPage />
+                  </AdminGate>
+                }
+              />
               <Route
                 path="users"
                 element={<AdminGate require="staff"><AdminUsersPage /></AdminGate>}

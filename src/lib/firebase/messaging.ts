@@ -55,10 +55,32 @@ export const requestPushPermission = async (): Promise<PushPermissionState> => {
   return res as PushPermissionState;
 };
 
+const sendConfigToWorker = (target: ServiceWorker | null) => {
+  if (!target) return;
+  try {
+    target.postMessage({ type: 'FCM_CONFIG', config: firebaseConfig });
+  } catch (e) {
+    console.warn('Failed to post FCM_CONFIG to SW', e);
+  }
+};
+
 const registerServiceWorker = async (): Promise<ServiceWorkerRegistration | null> => {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    return await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+    // Wait for the SW to become available, then push the runtime FCM config to it.
+    // Without this, public/firebase-messaging-sw.js never initializes Firebase
+    // and background notifications won't be handled (icon, link, etc).
+    const ready = await navigator.serviceWorker.ready;
+    sendConfigToWorker(ready.active ?? reg.active ?? reg.waiting ?? reg.installing);
+    // If SW is still installing, also send config once it activates.
+    const installing = reg.installing;
+    if (installing) {
+      installing.addEventListener('statechange', () => {
+        if (installing.state === 'activated') sendConfigToWorker(installing);
+      });
+    }
+    return reg;
   } catch (e) {
     console.warn('SW registration failed', e);
     return null;
