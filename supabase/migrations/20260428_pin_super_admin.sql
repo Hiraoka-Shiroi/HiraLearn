@@ -100,6 +100,10 @@ ON CONFLICT (id) DO NOTHING;
 -- 6. Защита: и admin_set_user_role, и admin_set_user_status явно блокируют
 -- закреплённые учётки. Триггер выше — резервная защита, но мы возвращаем
 -- понятную ошибку клиенту.
+--
+-- DROP перед CREATE: в 20260427 эти функции созданы с RETURNS VOID, и
+-- PostgreSQL не позволяет менять возвращаемый тип через CREATE OR REPLACE.
+DROP FUNCTION IF EXISTS public.admin_set_user_role(UUID, TEXT, TEXT);
 CREATE OR REPLACE FUNCTION public.admin_set_user_role(
   p_target_user UUID,
   p_new_role    TEXT,
@@ -170,6 +174,7 @@ $$;
 
 GRANT EXECUTE ON FUNCTION public.admin_set_user_role(UUID, TEXT, TEXT) TO authenticated;
 
+DROP FUNCTION IF EXISTS public.admin_set_user_status(UUID, TEXT, TEXT);
 CREATE OR REPLACE FUNCTION public.admin_set_user_status(
   p_target_user UUID,
   p_new_status  TEXT,
