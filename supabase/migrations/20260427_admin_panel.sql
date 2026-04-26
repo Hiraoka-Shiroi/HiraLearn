@@ -398,51 +398,52 @@ BEGIN
   RETURN QUERY
   WITH base AS (
     SELECT
-      p.id,
-      COALESCE(p.email, u.email) AS email,
-      p.full_name,
-      p.username,
-      p.role,
-      p.status,
-      p.level,
-      p.xp,
-      p.created_at,
-      COALESCE(p.last_seen_at, p.last_active_at, p.updated_at) AS last_seen_at,
-      s.plan,
+      p.id           AS b_id,
+      COALESCE(p.email, u.email) AS b_email,
+      p.full_name    AS b_full_name,
+      p.username     AS b_username,
+      p.role         AS b_role,
+      p.status       AS b_status,
+      p.level        AS b_level,
+      p.xp           AS b_xp,
+      p.created_at   AS b_created_at,
+      COALESCE(p.last_seen_at, p.last_active_at, p.updated_at) AS b_last_seen_at,
+      s.plan         AS b_plan,
       CASE
         WHEN s.status = 'active' AND (s.ends_at IS NULL OR s.ends_at > NOW())
           THEN TRUE
         ELSE FALSE
-      END AS plan_active,
-      s.ends_at AS plan_ends_at
+      END           AS b_plan_active,
+      s.ends_at     AS b_plan_ends_at
     FROM public.profiles p
     LEFT JOIN auth.users u ON u.id = p.id
     LEFT JOIN public.subscriptions s ON s.user_id = p.id
   ),
   filtered AS (
-    SELECT * FROM base
+    SELECT b.*
+    FROM base b
     WHERE (v_search IS NULL
-           OR LOWER(COALESCE(email,'')) LIKE '%' || v_search || '%'
-           OR LOWER(COALESCE(full_name,'')) LIKE '%' || v_search || '%'
-           OR LOWER(COALESCE(username,'')) LIKE '%' || v_search || '%')
-      AND (p_role IS NULL OR role = p_role)
-      AND (p_status IS NULL OR status = p_status)
-      AND (p_plan IS NULL OR plan = p_plan)
-      AND (p_only_active_sub IS NULL OR plan_active = p_only_active_sub)
+           OR LOWER(COALESCE(b.b_email,'')) LIKE '%' || v_search || '%'
+           OR LOWER(COALESCE(b.b_full_name,'')) LIKE '%' || v_search || '%'
+           OR LOWER(COALESCE(b.b_username,'')) LIKE '%' || v_search || '%')
+      AND (p_role   IS NULL OR b.b_role   = p_role)
+      AND (p_status IS NULL OR b.b_status = p_status)
+      AND (p_plan   IS NULL OR b.b_plan   = p_plan)
+      AND (p_only_active_sub IS NULL OR b.b_plan_active = p_only_active_sub)
   )
   SELECT
-    f.id, f.email, f.full_name, f.username, f.role, f.status,
-    f.level, f.xp, f.created_at, f.last_seen_at,
-    f.plan, f.plan_active, f.plan_ends_at,
+    f.b_id, f.b_email, f.b_full_name, f.b_username, f.b_role, f.b_status,
+    f.b_level, f.b_xp, f.b_created_at, f.b_last_seen_at,
+    f.b_plan, f.b_plan_active, f.b_plan_ends_at,
     (SELECT COUNT(*) FROM filtered) AS total_count
   FROM filtered f
   ORDER BY
-    CASE WHEN p_sort = 'created_desc'  THEN f.created_at END DESC NULLS LAST,
-    CASE WHEN p_sort = 'created_asc'   THEN f.created_at END ASC  NULLS LAST,
-    CASE WHEN p_sort = 'last_seen_desc'THEN f.last_seen_at END DESC NULLS LAST,
-    CASE WHEN p_sort = 'last_seen_asc' THEN f.last_seen_at END ASC  NULLS LAST,
-    CASE WHEN p_sort = 'email_asc'     THEN f.email END ASC NULLS LAST,
-    CASE WHEN p_sort = 'email_desc'    THEN f.email END DESC NULLS LAST
+    CASE WHEN p_sort = 'created_desc'   THEN f.b_created_at   END DESC NULLS LAST,
+    CASE WHEN p_sort = 'created_asc'    THEN f.b_created_at   END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'last_seen_desc' THEN f.b_last_seen_at END DESC NULLS LAST,
+    CASE WHEN p_sort = 'last_seen_asc'  THEN f.b_last_seen_at END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'email_asc'      THEN f.b_email        END ASC  NULLS LAST,
+    CASE WHEN p_sort = 'email_desc'     THEN f.b_email        END DESC NULLS LAST
   LIMIT p_limit OFFSET p_offset;
 END;
 $$;
