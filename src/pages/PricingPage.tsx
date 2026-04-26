@@ -204,7 +204,13 @@ export const PricingPage = () => {
             </div>
 
             <div className="bg-accent-warning/5 border border-accent-warning/20 rounded-2xl p-4 mb-6">
-              <p className="text-xs text-accent-warning leading-relaxed">{user?.email}</p>
+              <p className="text-xs text-accent-warning leading-relaxed">
+                <b>{t('pricing_modal_important')}</b>{' '}
+                {t('pricing_modal_instruction').replace(
+                  '{email}',
+                  user?.email || t('pricing_modal_your_email'),
+                )}
+              </p>
             </div>
 
             <button

@@ -72,10 +72,10 @@ export const AdminLessonsPage = () => {
             <thead className="bg-background/50 border-b border-border">
               <tr>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  {t('admin_title')}
+                  {t('admin_lesson_col_title')}
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
-                  Module
+                  {t('admin_lesson_col_module')}
                 </th>
                 <th className="p-6 text-xs font-bold uppercase tracking-widest text-muted">
                   #
