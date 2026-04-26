@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase/client';
+import { useLanguage } from '@/i18n/useLanguage';
 
 export interface AIResponse {
   feedback: string;
@@ -10,6 +11,7 @@ export const aiService = {
    * Invokes the 'get-sensei-feedback' edge function for AI code review
    */
   async getFeedback(userMessage: string, userCode: string, context?: Record<string, unknown>): Promise<string> {
+    const t = useLanguage.getState().t;
     try {
       const { data, error } = await supabase.functions.invoke('get-sensei-feedback', {
         body: {
@@ -21,13 +23,13 @@ export const aiService = {
 
       if (error) {
         console.error('Edge Function error:', error);
-        return "Произошла ошибка при подключении к AI. Попробуйте ещё раз или проверьте структуру кода.";
+        return t('ai_error_connection');
       }
 
-      return data?.feedback || "Запрос получен, но ответ пока недоступен.";
+      return data?.feedback || t('ai_error_no_response');
     } catch (err) {
       console.error('AI Service fetch error:', err);
-      return "Произошла техническая ошибка. Попробуйте позже.";
+      return t('ai_error_technical');
     }
   }
 };
