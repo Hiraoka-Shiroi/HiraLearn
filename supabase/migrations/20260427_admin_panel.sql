@@ -37,14 +37,24 @@ CREATE TABLE IF NOT EXISTS public.payments (
   status TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS public.error_logs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE public.error_logs ENABLE ROW LEVEL SECURITY;
+
 CREATE TABLE IF NOT EXISTS public.page_metrics (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+ALTER TABLE public.page_metrics ENABLE ROW LEVEL SECURITY;
+
+-- No SELECT policy is added here intentionally: with RLS enabled and no
+-- policy, only service_role / SECURITY DEFINER functions can read these
+-- tables. The dashboard RPC reads them via SECURITY DEFINER, so it works,
+-- but unauthenticated PostgREST traffic is denied by default.
 
 -- Drop old role check (only allowed student/admin)
 ALTER TABLE public.profiles

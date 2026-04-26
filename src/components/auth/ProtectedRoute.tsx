@@ -53,7 +53,8 @@ export const ProtectedRoute = ({
     return <Navigate to="/login?banned=1" replace />;
   }
 
-  // Onboarding gate (skipped for admin views — admins can bypass).
+  // Onboarding gate (skipped for admin views and admin-level users — admins
+  // and super_admins shouldn't be forced through the learner onboarding flow).
   const onboardingDone = (() => {
     try {
       return localStorage.getItem('hiralearn_onboarding_done') === '1';
@@ -63,7 +64,13 @@ export const ProtectedRoute = ({
   })();
   const isIncomplete = !profile?.current_goal && !onboardingDone;
   const isAdminPath = location.pathname.startsWith('/admin');
-  if (isIncomplete && location.pathname !== '/onboarding' && !isAdminPath) {
+  const isAdminUser = isAdmin(profile);
+  if (
+    isIncomplete &&
+    location.pathname !== '/onboarding' &&
+    !isAdminPath &&
+    !isAdminUser
+  ) {
     return <Navigate to="/onboarding" replace />;
   }
 
