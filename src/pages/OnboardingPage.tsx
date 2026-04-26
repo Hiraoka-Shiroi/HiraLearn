@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/useAuthStore';
@@ -18,9 +18,15 @@ export const OnboardingPage: React.FC = () => {
     daily_minutes: 30,
     explanation_style: 'normal'
   });
-  const { user, setProfile } = useAuthStore();
+  const { user, profile, setProfile } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
+
+  useEffect(() => {
+    if (profile?.current_goal) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [profile, navigate]);
 
   const handleComplete = async (finalData?: typeof data) => {
     if (!user) return;
@@ -39,8 +45,11 @@ export const OnboardingPage: React.FC = () => {
 
     if (error) {
       console.error("Error updating profile:", error);
+      try { localStorage.setItem('hiralearn_onboarding_done', '1'); } catch (_e) { /* noop */ }
+      navigate('/dashboard');
     } else {
       setProfile(updatedProfile);
+      try { localStorage.setItem('hiralearn_onboarding_done', '1'); } catch (_e) { /* noop */ }
       navigate('/dashboard');
     }
   };

@@ -42,7 +42,8 @@ export const ProtectedRoute = ({ children, adminOnly = false }: ProtectedRoutePr
   }
 
   // Redirect to onboarding if profile is incomplete and user is not already on onboarding
-  const isIncomplete = !profile?.current_goal;
+  const onboardingDone = (() => { try { return localStorage.getItem('hiralearn_onboarding_done') === '1'; } catch { return false; } })();
+  const isIncomplete = !profile?.current_goal && !onboardingDone;
   if (isIncomplete && location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" replace />;
   }

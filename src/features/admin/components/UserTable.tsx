@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useLanguage } from '@/i18n/useLanguage';
+import { supabase } from '@/lib/supabase/client';
 import type { AdminUserRow } from '@/types/database';
 
 interface UserTableProps {
@@ -8,9 +9,17 @@ interface UserTableProps {
   loading: boolean;
 }
 
-export const UserTable = ({ users, loading }: UserTableProps) => {
+export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
   const { t, language } = useLanguage();
   const [query, setQuery] = useState('');
+  const [users, setUsers] = useState(initialUsers);
+  const [updatingRole, setUpdatingRole] = useState<string | null>(null);
+
+  // Sync when parent updates
+  if (initialUsers !== users && !updatingRole) {
+    setUsers(initialUsers);
+  }
+
   const formatDate = (iso: string | null): string => {
     if (!iso) return '—';
     const d = new Date(iso);
@@ -27,11 +36,26 @@ export const UserTable = ({ users, loading }: UserTableProps) => {
     const q = query.trim().toLowerCase();
     if (!q) return users;
     return users.filter((u) =>
-      [u.email, u.username, u.full_name]
+      [u.email, u.username, u.full_name, u.role]
         .filter(Boolean)
         .some((s) => s!.toLowerCase().includes(q)),
     );
   }, [users, query]);
+
+  const toggleRole = async (user: AdminUserRow) => {
+    const newRole = user.role === 'admin' ? 'student' : 'admin';
+    setUpdatingRole(user.id);
+    const { error } = await supabase
+      .from('profiles')
+      .update({ role: newRole })
+      .eq('id', user.id);
+    if (!error) {
+      setUsers((prev) =>
+        prev.map((u) => (u.id === user.id ? { ...u, role: newRole } : u)),
+      );
+    }
+    setUpdatingRole(null);
+  };
 
   return (
     <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden">
@@ -98,15 +122,23 @@ export const UserTable = ({ users, loading }: UserTableProps) => {
                     <div className="text-[11px] text-muted">{u.email}</div>
                   </td>
                   <td className="p-4">
-                    <span
-                      className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${
+                    <button
+                      onClick={() => toggleRole(u)}
+                      disabled={updatingRole === u.id}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors cursor-pointer hover:opacity-80 ${
                         u.role === 'admin'
                           ? 'bg-accent-success/15 text-accent-success'
                           : 'bg-border text-muted'
                       }`}
+                      title={u.role === 'admin' ? 'Сделать учеником' : 'Сделать админом'}
                     >
+                      {u.role === 'admin' ? (
+                        <ShieldCheck size={12} />
+                      ) : (
+                        <ShieldOff size={12} />
+                      )}
                       {u.role}
-                    </span>
+                    </button>
                   </td>
                   <td className="p-4 text-sm font-mono">{u.level}</td>
                   <td className="p-4 text-sm font-mono">{u.xp.toLocaleString('ru-RU')}</td>
