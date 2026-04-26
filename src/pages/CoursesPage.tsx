@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase/client';
 import { Course } from '@/types/database';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
-import { Book, Layout, Code, Terminal, ArrowRight, ShieldCheck, Trash2, EyeOff } from 'lucide-react';
+import { Book, Layout, Code, Terminal, ArrowRight, ShieldCheck, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
 
@@ -111,7 +111,7 @@ export const CoursesPage: React.FC = () => {
                            className="p-2 rounded-xl hover:bg-border text-muted hover:text-foreground transition-all"
                            title={course.is_published ? t('admin_unpublish') : t('admin_publish')}
                          >
-                           <EyeOff size={16} />
+                           {course.is_published ? <EyeOff size={16} /> : <Eye size={16} className="text-accent-success" />}
                          </button>
                          <button
                            onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }}
