@@ -73,7 +73,7 @@ export const ProfilePage: React.FC = () => {
                  <Settings className="text-muted-foreground" size={24} /> {t('profile_settings')}
                </h2>
                <div className="bg-card border border-border rounded-[2rem] divide-y divide-border overflow-hidden shadow-lg">
-                  <div className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
+                  <div onClick={() => navigate('/onboarding')} className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
                     <div className="flex items-center gap-5">
                        <div className="w-12 h-12 bg-accent-primary/10 rounded-2xl flex items-center justify-center text-accent-primary">
                           <Target size={24} />
@@ -85,7 +85,7 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     <ChevronRight className="text-muted-foreground" size={20} />
                   </div>
-                  <div className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
+                  <div onClick={() => navigate('/onboarding')} className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
                     <div className="flex items-center gap-5">
                        <div className="w-12 h-12 bg-accent-success/10 rounded-2xl flex items-center justify-center text-accent-success">
                           <Zap size={24} />
@@ -97,7 +97,7 @@ export const ProfilePage: React.FC = () => {
                     </div>
                     <ChevronRight className="text-muted-foreground" size={20} />
                   </div>
-                  <div className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
+                  <div onClick={() => navigate('/onboarding')} className="p-6 md:p-8 flex items-center justify-between hover:bg-white/[0.02] transition-colors cursor-pointer">
                     <div className="flex items-center gap-5">
                        <div className="w-12 h-12 bg-accent-warning/10 rounded-2xl flex items-center justify-center text-accent-warning">
                           <Award size={24} />

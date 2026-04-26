@@ -2,19 +2,21 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { contentCardService, progressService } from '@/lib/supabase/services';
-import { Module, Lesson, UserProgress } from '@/types/database';
+import { Module, Lesson, UserProgress, Course } from '@/types/database';
 import { motion } from 'framer-motion';
 import { BookOpen, Star, Zap, Trophy, User as UserIcon, ArrowRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
 
 export const Dashboard: React.FC = () => {
   const { profile } = useAuthStore();
   const { t } = useLanguage();
+  const [searchParams] = useSearchParams();
   const [modules, setModules] = useState<Module[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeCourse, setActiveCourse] = useState<Course | null>(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -22,7 +24,12 @@ export const Dashboard: React.FC = () => {
         const fetchedCourses = await contentCardService.getCourses();
 
         if (fetchedCourses.length > 0) {
-          const fetchedModules = await contentCardService.getModules(fetchedCourses[0].id);
+          const courseSlug = searchParams.get('course');
+          const selectedCourse = (courseSlug
+            ? fetchedCourses.find((c) => c.slug === courseSlug)
+            : undefined) ?? fetchedCourses[0];
+          setActiveCourse(selectedCourse);
+          const fetchedModules = await contentCardService.getModules(selectedCourse.id);
           setModules(fetchedModules);
         }
 
@@ -38,7 +45,7 @@ export const Dashboard: React.FC = () => {
     };
 
     fetchData();
-  }, [profile]);
+  }, [profile, searchParams]);
 
   if (loading) return (
     <div className="min-h-screen bg-background flex items-center justify-center">
@@ -86,7 +93,7 @@ export const Dashboard: React.FC = () => {
              <h2 className="text-2xl font-bold flex items-center gap-3">
                <BookOpen className="text-accent-primary" size={28} /> {t('dash_your_learning')}
              </h2>
-             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{t('dash_html_path')}</span>
+             <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{activeCourse?.title ?? t('dash_html_path')}</span>
           </div>
 
           <div className="space-y-16 relative">

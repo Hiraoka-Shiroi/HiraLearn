@@ -52,6 +52,7 @@ export type AnalyticsEvent =
   | 'lesson_start'
   | 'lesson_complete'
   | 'payment_click'
+  | 'kaspi_payment_submitted'
   | 'game_start'
   | 'page_view';
 
