@@ -6,10 +6,11 @@ const environment =
   (import.meta.env.VITE_PADDLE_ENVIRONMENT as 'sandbox' | 'production' | undefined) ??
   'sandbox';
 
-const priceIds: Record<SubscriptionPlan, string | undefined> = {
+const priceIds: Partial<Record<SubscriptionPlan, string | undefined>> = {
   student: import.meta.env.VITE_PADDLE_PRICE_STUDENT,
   pro: import.meta.env.VITE_PADDLE_PRICE_PRO,
   lifetime: import.meta.env.VITE_PADDLE_PRICE_LIFETIME,
+  premium: import.meta.env.VITE_PADDLE_PRICE_PREMIUM,
 };
 
 export const isPaddleConfigured = Boolean(

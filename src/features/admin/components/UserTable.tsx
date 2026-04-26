@@ -47,7 +47,7 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
 
   const toggleRole = async (user: AdminUserRow) => {
     if (user.id === currentUserId) return;
-    const newRole = user.role === 'admin' ? 'student' : 'admin';
+    const newRole: 'admin' | 'user' = user.role === 'admin' ? 'user' : 'admin';
     setUpdatingRole(user.id);
     const { error } = await supabase
       .from('profiles')
@@ -150,7 +150,7 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
                   </td>
                   <td className="p-4 text-sm font-mono">{u.level}</td>
                   <td className="p-4 text-sm font-mono">{u.xp.toLocaleString('ru-RU')}</td>
-                  <td className="p-4 text-sm text-muted">{formatDate(u.last_active_at)}</td>
+                  <td className="p-4 text-sm text-muted">{formatDate(u.last_seen_at)}</td>
                 </tr>
               ))
             )}

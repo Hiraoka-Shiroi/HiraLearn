@@ -1,9 +1,14 @@
+export type Role = 'user' | 'moderator' | 'admin' | 'super_admin';
+export type AccountStatus = 'active' | 'banned' | 'deleted';
+
 export type Profile = {
   id: string;
   username: string | null;
   full_name: string | null;
   avatar_url: string | null;
-  role: 'student' | 'admin';
+  email: string | null;
+  role: Role;
+  status: AccountStatus;
   level: number;
   xp: number;
   streak: number;
@@ -11,6 +16,7 @@ export type Profile = {
   daily_minutes: number;
   explanation_style: string;
   last_active_at: string | null;
+  last_seen_at: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -93,8 +99,13 @@ export type PageMetric = {
   created_at: string;
 };
 
-export type SubscriptionPlan = 'student' | 'pro' | 'lifetime';
-export type SubscriptionStatus = 'pending' | 'active' | 'past_due' | 'canceled' | 'expired';
+export type SubscriptionPlan = 'free' | 'student' | 'premium' | 'pro' | 'lifetime';
+export type SubscriptionStatus =
+  | 'pending'
+  | 'active'
+  | 'past_due'
+  | 'canceled'
+  | 'expired';
 
 export type Subscription = {
   id: string;
@@ -105,6 +116,10 @@ export type Subscription = {
   provider_customer_id: string | null;
   provider_subscription_id: string | null;
   current_period_end: string | null;
+  starts_at: string | null;
+  ends_at: string | null;
+  issued_by: string | null;
+  reason: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -128,12 +143,84 @@ export type AdminUserRow = {
   id: string;
   username: string | null;
   full_name: string | null;
-  role: 'student' | 'admin';
+  email: string;
+  role: Role;
+  status: AccountStatus;
   level: number;
   xp: number;
-  last_active_at: string | null;
+  last_seen_at: string | null;
   created_at: string;
-  email: string;
+  plan: SubscriptionPlan | null;
+  plan_active: boolean;
+  plan_ends_at: string | null;
+  total_count: number;
+};
+
+export type PushPlatform = 'web' | 'ios' | 'android';
+
+export type PushToken = {
+  id: string;
+  user_id: string;
+  token: string;
+  platform: PushPlatform;
+  device_info: Record<string, unknown> | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AdminAction =
+  | 'role.change'
+  | 'status.change'
+  | 'subscription.grant'
+  | 'subscription.revoke'
+  | 'push.send'
+  | string;
+
+export type AdminLog = {
+  id: string;
+  admin_id: string | null;
+  admin_email: string | null;
+  admin_name: string | null;
+  target_user_id: string | null;
+  target_email: string | null;
+  target_name: string | null;
+  action: AdminAction;
+  old_value: Record<string, unknown> | null;
+  new_value: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+  total_count: number;
+};
+
+export type NotificationAudience =
+  | { type: 'all' }
+  | { type: 'role'; value: Role }
+  | { type: 'plan'; value: SubscriptionPlan }
+  | { type: 'user'; value: string };
+
+export type NotificationRecord = {
+  id: string;
+  title: string;
+  body: string;
+  link: string | null;
+  audience: NotificationAudience;
+  sent_by: string | null;
+  sent_count: number;
+  failed_count: number;
+  invalid_tokens: string[] | null;
+  created_at: string;
+};
+
+export type AdminDashboardSummary = {
+  total_users: number;
+  active_users_30d: number;
+  banned_users: number;
+  active_subscriptions: number;
+  total_revenue: number;
+  push_tokens_active: number;
+  notifications_sent_30d: number;
+  errors_24h: number;
 };
 
 type TableDef<T> = {
@@ -156,6 +243,9 @@ export type Database = {
       page_metrics: TableDef<PageMetric>;
       subscriptions: TableDef<Subscription>;
       payments: TableDef<Payment>;
+      push_tokens: TableDef<PushToken>;
+      admin_logs: TableDef<AdminLog>;
+      notifications: TableDef<NotificationRecord>;
     };
     Views: {
       admin_user_list: { Row: AdminUserRow; Relationships: [] };
