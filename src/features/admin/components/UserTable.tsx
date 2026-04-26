@@ -130,7 +130,7 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
                           ? 'bg-accent-success/15 text-accent-success'
                           : 'bg-border text-muted'
                       }`}
-                      title={u.role === 'admin' ? 'Сделать учеником' : 'Сделать админом'}
+                      title={u.role === 'admin' ? t('admin_role_make_student') : t('admin_role_make_admin')}
                     >
                       {u.role === 'admin' ? (
                         <ShieldCheck size={12} />

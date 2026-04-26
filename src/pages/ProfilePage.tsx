@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
-import { User, Settings, Award, LogOut, ChevronRight, Zap, Trophy, Target } from 'lucide-react';
+import { User, Settings, Award, LogOut, ChevronRight, Zap, Trophy, Target, Shield } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
@@ -111,6 +111,15 @@ export const ProfilePage: React.FC = () => {
                   </div>
                </div>
             </section>
+
+            {profile?.role === 'admin' && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="w-full p-8 bg-accent-primary/5 border-2 border-dashed border-accent-primary/20 rounded-[2rem] text-accent-primary font-black uppercase tracking-widest flex items-center justify-center gap-4 hover:bg-accent-primary hover:text-white transition-all shadow-xl shadow-accent-primary/5"
+              >
+                <Shield size={24} /> {t('profile_admin_panel')}
+              </button>
+            )}
 
             <button
               onClick={handleLogout}

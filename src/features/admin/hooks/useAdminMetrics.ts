@@ -101,6 +101,19 @@ export const useAdminMetrics = (): AdminMetricsState => {
           .limit(100),
       ]);
 
+      // Fallback: if admin_user_list view doesn't exist, query profiles directly
+      let userRows: AdminUserRow[] = (userListRes.data as AdminUserRow[]) ?? [];
+      if (userListRes.error && userRows.length === 0) {
+        const { data: profileRows } = await supabase
+          .from('profiles')
+          .select('id, username, full_name, role, level, xp, last_active_at, created_at')
+          .order('last_active_at', { ascending: false, nullsFirst: false })
+          .limit(100);
+        if (profileRows) {
+          userRows = profileRows.map((p) => ({ ...p, email: p.username || '' })) as AdminUserRow[];
+        }
+      }
+
       const totalRevenue =
         revenueRes.data?.reduce(
           (acc: number, row: { amount: number | string | null }) =>
@@ -154,7 +167,7 @@ export const useAdminMetrics = (): AdminMetricsState => {
         })),
       );
       setRecentErrors((recentErrorsRes.data as ErrorLog[]) ?? []);
-      setUsers((userListRes.data as AdminUserRow[]) ?? []);
+      setUsers(userRows);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load admin metrics');
     } finally {

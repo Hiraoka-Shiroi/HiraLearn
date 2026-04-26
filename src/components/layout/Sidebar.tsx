@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/i18n/useLanguage';
@@ -9,7 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
 import { TranslationKey } from '@/i18n/translations';
 
-const menuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
+const baseMenuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
   { id: 'courses', labelKey: 'sidebar_courses', icon: <BookOpen size={20} />, path: '/courses' },
   { id: 'games', labelKey: 'sidebar_arcade', icon: <Gamepad2 size={20} />, path: '/games' },
@@ -21,6 +21,10 @@ export const Sidebar: React.FC = () => {
   const navigate = useNavigate();
   const { signOut, profile } = useAuthStore();
   const { t } = useLanguage();
+
+  const menuItems = profile?.role === 'admin'
+    ? [...baseMenuItems, { id: 'admin', labelKey: 'sidebar_admin' as TranslationKey, icon: <Shield size={20} />, path: '/admin' }]
+    : baseMenuItems;
 
   return (
     <aside className="w-20 md:w-64 h-screen bg-card border-r border-border flex flex-col py-8 px-4 shrink-0 transition-all">
