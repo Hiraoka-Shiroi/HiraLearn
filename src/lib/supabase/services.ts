@@ -96,7 +96,7 @@ export const progressService = {
 
     const { data: profile } = await supabase
       .from('profiles')
-      .select('xp, streak, last_active_at')
+      .select('xp, streak')
       .eq('id', userId)
       .single();
 
@@ -104,19 +104,31 @@ export const progressService = {
       const newXp = profile.xp + xpReward;
       const newLevel = calculateLevel(newXp);
 
+      // Compute streak from user_progress completion dates (not last_active_at
+      // which App.tsx updates on every page load).
       const today = new Date().toISOString().slice(0, 10);
-      const lastActive = profile.last_active_at
-        ? new Date(profile.last_active_at).toISOString().slice(0, 10)
-        : null;
+
+      const { data: prevCompletions } = await supabase
+        .from('user_progress')
+        .select('completed_at')
+        .eq('user_id', userId)
+        .eq('status', 'completed')
+        .neq('lesson_id', lessonId)
+        .order('completed_at', { ascending: false })
+        .limit(1);
 
       let newStreak = profile.streak ?? 0;
-      if (lastActive === today) {
-        // already active today, keep streak
-      } else if (lastActive) {
+      const lastCompletionDate = prevCompletions?.[0]?.completed_at
+        ? new Date(prevCompletions[0].completed_at).toISOString().slice(0, 10)
+        : null;
+
+      if (lastCompletionDate === today) {
+        // already completed a different lesson today, keep streak
+      } else if (lastCompletionDate) {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const yesterdayStr = yesterday.toISOString().slice(0, 10);
-        newStreak = lastActive === yesterdayStr ? newStreak + 1 : 1;
+        newStreak = lastCompletionDate === yesterdayStr ? newStreak + 1 : 1;
       } else {
         newStreak = 1;
       }
@@ -127,7 +139,6 @@ export const progressService = {
           xp: newXp,
           level: newLevel,
           streak: newStreak,
-          last_active_at: new Date().toISOString(),
         })
         .eq('id', userId);
     }
