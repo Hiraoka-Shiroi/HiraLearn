@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
 import { User, Settings, Award, LogOut, ChevronRight, Zap, Trophy, Target } from 'lucide-react';
@@ -7,11 +7,20 @@ import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
 import { TranslationKey } from '@/i18n/translations';
+import { billingService } from '@/features/billing/billingService';
+import type { Subscription } from '@/types/database';
 
 export const ProfilePage: React.FC = () => {
-  const { profile, signOut } = useAuthStore();
+  const { profile, user, signOut } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [subscription, setSubscription] = useState<Subscription | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      billingService.getSubscription(user.id).then(setSubscription);
+    }
+  }, [user]);
 
   const handleLogout = async () => {
     await signOut();
@@ -44,8 +53,12 @@ export const ProfilePage: React.FC = () => {
                    <span className="px-5 py-2 bg-accent-primary/10 text-accent-primary border border-accent-primary/20 rounded-2xl text-[10px] font-black uppercase tracking-widest">
                       {profile?.current_goal || 'Frontend'}
                    </span>
-                   <span className="px-5 py-2 bg-accent-success/10 text-accent-success border border-accent-success/20 rounded-2xl text-[10px] font-black uppercase tracking-widest">
-                      Student
+                   <span className={`px-5 py-2 rounded-2xl text-[10px] font-black uppercase tracking-widest ${
+                      subscription?.status === 'active'
+                        ? 'bg-accent-success/10 text-accent-success border border-accent-success/20'
+                        : 'bg-border text-muted-foreground border border-border'
+                   }`}>
+                      {subscription?.status === 'active' ? (subscription.plan === 'lifetime' ? 'Lifetime' : subscription.plan) : t('profile_free_plan')}
                    </span>
                 </div>
               </div>

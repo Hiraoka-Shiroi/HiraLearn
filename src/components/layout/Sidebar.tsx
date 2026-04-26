@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
@@ -18,6 +18,7 @@ const menuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; 
 
 export const Sidebar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { signOut, profile } = useAuthStore();
   const { t } = useLanguage();
 
@@ -66,12 +67,12 @@ export const Sidebar: React.FC = () => {
         <div className="hidden md:block p-4 bg-background border border-border rounded-2xl">
            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('sidebar_level')} {profile?.level || 1}</p>
            <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-              <div className="h-full bg-accent-primary w-1/3" />
+              <div className="h-full bg-accent-primary transition-all" style={{ width: `${Math.min(((profile?.xp ?? 0) % 500) / 500 * 100, 100)}%` }} />
            </div>
         </div>
 
         <button
-          onClick={() => signOut()}
+          onClick={() => { signOut(); navigate('/login'); }}
           className="w-full flex items-center gap-4 p-4 rounded-2xl text-muted-foreground hover:bg-accent-danger/5 hover:text-accent-danger transition-all group"
         >
           <LogOut size={20} />

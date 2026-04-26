@@ -82,7 +82,7 @@ export const LessonPage: React.FC = () => {
           <div className="hidden md:flex flex-col items-end">
              <span className="text-xs font-bold text-accent-primary">+{lesson.xp_reward} XP</span>
              <div className="w-24 h-1.5 bg-border rounded-full overflow-hidden">
-                <div className="h-full bg-accent-primary w-1/3" />
+                <div className="h-full bg-accent-primary transition-all" style={{ width: result?.isCorrect ? '100%' : '0%' }} />
              </div>
           </div>
         </div>

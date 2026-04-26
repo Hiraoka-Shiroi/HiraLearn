@@ -52,6 +52,12 @@ export const AuthPage = () => {
       const message = err instanceof Error ? err.message : String(err);
       if (message === 'Failed to fetch' || (err instanceof TypeError)) {
         setError(t('auth_err_network'));
+      } else if (message.toLowerCase().includes('invalid login credentials')) {
+        setError(t('auth_err_invalid_credentials'));
+      } else if (message.toLowerCase().includes('user already registered')) {
+        setError(t('auth_err_already_registered'));
+      } else if (message.toLowerCase().includes('email not confirmed')) {
+        setError(t('auth_err_email_not_confirmed'));
       } else {
         setError(message || t('auth_err_generic'));
       }

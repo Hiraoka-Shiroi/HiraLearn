@@ -90,6 +90,9 @@ export const translations = {
     auth_err_supabase_not_configured: 'Ошибка: Supabase не настроен. Пожалуйста, создайте файл .env и добавьте VITE_SUPABASE_URL и VITE_SUPABASE_ANON_KEY.',
     auth_err_network: 'Сетевая ошибка: Не удалось связаться с Supabase. Проверьте правильность URL в .env или настройки CORS.',
     auth_err_generic: 'Произошла ошибка',
+    auth_err_invalid_credentials: 'Неверный email или пароль.',
+    auth_err_already_registered: 'Пользователь с таким email уже зарегистрирован.',
+    auth_err_email_not_confirmed: 'Email не подтвержден. Проверьте почту.',
     auth_err_github: 'Supabase не настроен для работы с GitHub.',
 
     // Dashboard
@@ -286,6 +289,8 @@ export const translations = {
     ach_streak: 'Стрик-мастер',
     ach_streak_desc: 'Занимался 3 дня подряд',
     profile_username: 'Никнейм',
+    profile_free_plan: 'Бесплатный',
+    profile_subscription: 'Подписка',
 
     // Lesson (extended)
     lesson_back_to_dashboard: 'К дашборду',
@@ -440,6 +445,9 @@ export const translations = {
     auth_err_supabase_not_configured: 'Error: Supabase is not configured. Please create a .env file and add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
     auth_err_network: 'Network error: could not reach Supabase. Check the URL in .env or CORS settings.',
     auth_err_generic: 'Something went wrong',
+    auth_err_invalid_credentials: 'Invalid email or password.',
+    auth_err_already_registered: 'A user with this email is already registered.',
+    auth_err_email_not_confirmed: 'Email not confirmed. Please check your inbox.',
     auth_err_github: 'Supabase is not configured for GitHub.',
 
     // Dashboard
@@ -636,6 +644,8 @@ export const translations = {
     ach_streak: 'Streak master',
     ach_streak_desc: '3 days in a row',
     profile_username: 'Username',
+    profile_free_plan: 'Free',
+    profile_subscription: 'Subscription',
 
     // Lesson (extended)
     lesson_back_to_dashboard: 'Back to Dashboard',

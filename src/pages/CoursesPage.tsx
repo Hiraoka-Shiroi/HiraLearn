@@ -67,7 +67,7 @@ export const CoursesPage: React.FC = () => {
                       <span className="text-xs font-black uppercase tracking-widest text-accent-success">{t('courses_certificate')}</span>
                    </div>
                    <button
-                     onClick={() => navigate('/dashboard')}
+                     onClick={() => navigate(`/dashboard?course=${course.slug}`)}
                      className="bg-accent-primary text-white p-3 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-accent-primary/20"
                    >
                      <ArrowRight size={20} />
