@@ -112,6 +112,7 @@ export const translations = {
     sidebar_arcade: 'Аркада',
     sidebar_profile: 'Профиль',
     sidebar_logout: 'Выйти',
+    sidebar_admin: 'Админ',
     sidebar_level: 'Уровень',
 
     // Courses
@@ -146,6 +147,9 @@ export const translations = {
     profile_minutes: 'минут в день',
     profile_style: 'Стиль объяснения',
     profile_logout: 'Выйти из аккаунта',
+    profile_admin_panel: 'Админ-панель',
+    admin_role_make_student: 'Сделать учеником',
+    admin_role_make_admin: 'Сделать админом',
     profile_achievements: 'Достижения',
     profile_first_step: 'Первый шаг',
     profile_first_step_desc: 'Завершил первый урок',
@@ -475,6 +479,7 @@ export const translations = {
     sidebar_arcade: 'Arcade',
     sidebar_profile: 'Profile',
     sidebar_logout: 'Logout',
+    sidebar_admin: 'Admin',
     sidebar_level: 'Level',
 
     // Courses
@@ -509,6 +514,9 @@ export const translations = {
     profile_minutes: 'minutes per day',
     profile_style: 'Explanation Style',
     profile_logout: 'Sign Out',
+    profile_admin_panel: 'Admin Panel',
+    admin_role_make_student: 'Make Student',
+    admin_role_make_admin: 'Make Admin',
     profile_achievements: 'Achievements',
     profile_first_step: 'First Step',
     profile_first_step_desc: 'Completed first lesson',
