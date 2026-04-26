@@ -2,24 +2,55 @@
 import React, { useEffect, useState } from 'react';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { contentCardService } from '@/lib/supabase/services';
+import { supabase } from '@/lib/supabase/client';
 import { Course } from '@/types/database';
+import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
-import { Book, Layout, Code, Terminal, ArrowRight, ShieldCheck } from 'lucide-react';
+import { Book, Layout, Code, Terminal, ArrowRight, ShieldCheck, Trash2, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '@/i18n/useLanguage';
 
 export const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
+  const { profile } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const isAdmin = profile?.role === 'admin';
 
   useEffect(() => {
-    contentCardService.getCourses().then(data => {
-      setCourses(data);
+    const loadCourses = async () => {
+      if (isAdmin) {
+        const { data } = await supabase.from('courses').select('*').order('created_at');
+        setCourses((data as Course[]) || []);
+      } else {
+        const data = await contentCardService.getCourses();
+        setCourses(data);
+      }
       setLoading(false);
-    });
-  }, []);
+    };
+    void loadCourses();
+  }, [isAdmin]);
+
+  const handleDeleteCourse = async (courseId: string) => {
+    if (!confirm(t('common_delete') + '?')) return;
+    const { error } = await supabase.from('courses').delete().eq('id', courseId);
+    if (error) {
+      alert(t('common_error') + ': ' + error.message);
+    } else {
+      setCourses(courses.filter((c) => c.id !== courseId));
+    }
+  };
+
+  const handleTogglePublish = async (course: Course) => {
+    const { error } = await supabase
+      .from('courses')
+      .update({ is_published: !course.is_published })
+      .eq('id', course.id);
+    if (!error) {
+      setCourses(courses.map((c) => c.id === course.id ? { ...c, is_published: !c.is_published } : c));
+    }
+  };
 
   const getCourseIcon = (slug: string) => {
     if (slug.includes('html')) return <Layout size={32} />;
@@ -61,17 +92,43 @@ export const CoursesPage: React.FC = () => {
                   {course.description || t('courses_default_desc')}
                 </p>
 
+                {isAdmin && !course.is_published && (
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-muted bg-border px-2 py-0.5 rounded-full mb-4 inline-block">
+                    {t('admin_draft')}
+                  </span>
+                )}
+
                 <div className="mt-auto flex items-center justify-between">
                    <div className="flex items-center gap-3">
                       <ShieldCheck className="text-accent-success" size={18} />
                       <span className="text-xs font-black uppercase tracking-widest text-accent-success">{t('courses_certificate')}</span>
                    </div>
-                   <button
-                     onClick={() => navigate(`/dashboard?course=${course.slug}`)}
-                     className="bg-accent-primary text-white p-3 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-accent-primary/20"
-                   >
-                     <ArrowRight size={20} />
-                   </button>
+                   <div className="flex items-center gap-2">
+                     {isAdmin && (
+                       <>
+                         <button
+                           onClick={(e) => { e.stopPropagation(); handleTogglePublish(course); }}
+                           className="p-2 rounded-xl hover:bg-border text-muted hover:text-foreground transition-all"
+                           title={course.is_published ? t('admin_unpublish') : t('admin_publish')}
+                         >
+                           <EyeOff size={16} />
+                         </button>
+                         <button
+                           onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }}
+                           className="p-2 rounded-xl hover:bg-accent-danger/10 text-muted hover:text-accent-danger transition-all"
+                           title={t('common_delete')}
+                         >
+                           <Trash2 size={16} />
+                         </button>
+                       </>
+                     )}
+                     <button
+                       onClick={() => navigate(`/dashboard?course=${course.slug}`)}
+                       className="bg-accent-primary text-white p-3 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-accent-primary/20"
+                     >
+                       <ArrowRight size={20} />
+                     </button>
+                   </div>
                 </div>
               </motion.div>
             ))}

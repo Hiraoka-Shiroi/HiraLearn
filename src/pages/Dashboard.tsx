@@ -50,25 +50,21 @@ export const Dashboard: React.FC = () => {
     <MainLayout>
       <div className="p-6 md:p-10 max-w-5xl mx-auto">
         {/* Header / Stats */}
-        <header className="mb-12 flex flex-col md:flex-row items-center justify-between bg-card p-8 rounded-[2.5rem] border border-border shadow-xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 p-8 text-accent-primary/5 group-hover:scale-110 transition-transform duration-700">
-             <UserIcon size={120} />
-          </div>
-
-          <div className="flex items-center gap-6 relative z-10">
-            <div className="w-20 h-20 bg-accent-primary/10 rounded-3xl flex items-center justify-center text-accent-primary border border-accent-primary/20 shadow-inner">
+        <header className="mb-12 flex flex-col md:flex-row items-center justify-between gap-6 bg-card p-8 rounded-[2.5rem] border border-border shadow-xl relative overflow-hidden">
+          <div className="flex items-center gap-6 relative z-10 min-w-0">
+            <div className="w-20 h-20 shrink-0 bg-accent-primary/10 rounded-3xl flex items-center justify-center text-accent-primary border border-accent-primary/20 shadow-inner">
                <UserIcon size={40} />
             </div>
-            <div>
-              <h1 className="text-3xl font-bold mb-1">{profile?.full_name || t('profile_default_name')}</h1>
+            <div className="min-w-0">
+              <h1 className="text-3xl font-bold mb-1 truncate">{profile?.full_name || t('profile_default_name')}</h1>
               <div className="flex items-center gap-3">
-                 <span className="px-3 py-1 bg-accent-primary text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">Lvl {profile?.level || 1}</span>
-                 <p className="text-muted-foreground text-sm font-medium">{profile?.xp || 0} XP</p>
+                 <span className="px-3 py-1 bg-accent-primary text-white text-[10px] font-bold rounded-full uppercase tracking-tighter shrink-0">Lvl {profile?.level || 1}</span>
+                 <p className="text-muted-foreground text-sm font-medium shrink-0">{profile?.xp || 0} XP</p>
               </div>
             </div>
           </div>
 
-          <div className="flex gap-8 mt-8 md:mt-0 relative z-10">
+          <div className="flex gap-8 relative z-10 shrink-0">
             <div className="text-center">
               <div className="flex items-center gap-2 text-accent-warning font-black text-2xl">
                 <Zap size={24} fill="currentColor" /> {profile?.streak ?? 0}

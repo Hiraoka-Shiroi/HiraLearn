@@ -14,6 +14,7 @@ interface LessonFormData {
   title: string;
   slug: string;
   theory: string;
+  example_code: string;
   module_id: string;
   order_index: number;
   xp_reward: number;
@@ -24,6 +25,7 @@ const emptyForm: LessonFormData = {
   title: '',
   slug: '',
   theory: '',
+  example_code: '',
   module_id: '',
   order_index: 0,
   xp_reward: 50,
@@ -108,6 +110,7 @@ export const AdminLessonsPage = () => {
       title: lesson.title,
       slug: lesson.slug,
       theory: lesson.theory || '',
+      example_code: lesson.example_code || '',
       module_id: lesson.module_id,
       order_index: lesson.order_index,
       xp_reward: lesson.xp_reward,
@@ -123,6 +126,7 @@ export const AdminLessonsPage = () => {
       title: form.title,
       slug: form.slug || form.title.toLowerCase().replace(/\s+/g, '-'),
       theory: form.theory,
+      example_code: form.example_code,
       module_id: form.module_id,
       order_index: form.order_index,
       xp_reward: form.xp_reward,
@@ -254,6 +258,18 @@ export const AdminLessonsPage = () => {
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary resize-none"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
+                    {t('admin_example_code')}
+                  </label>
+                  <textarea
+                    value={form.example_code}
+                    onChange={(e) => setForm({ ...form, example_code: e.target.value })}
+                    rows={3}
+                    placeholder="<h1>Hello World</h1>"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm font-mono focus:outline-none focus:border-accent-primary resize-none"
+                  />
+                </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
@@ -292,7 +308,7 @@ export const AdminLessonsPage = () => {
                     className="w-4 h-4 accent-accent-primary"
                   />
                   <span className="text-sm font-medium">
-                    {form.is_published ? 'Опубликован' : 'Черновик'}
+                    {form.is_published ? t('admin_published') : t('admin_draft')}
                   </span>
                 </label>
               </div>
@@ -357,7 +373,7 @@ export const AdminLessonsPage = () => {
                       <div className="font-bold">{lesson.title}</div>
                       {!lesson.is_published && (
                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted bg-border px-2 py-0.5 rounded-full">
-                          Черновик
+                          {t('admin_draft')}
                         </span>
                       )}
                     </td>
@@ -369,7 +385,7 @@ export const AdminLessonsPage = () => {
                         <button
                           onClick={() => handleTogglePublish(lesson)}
                           className="p-2 rounded-lg hover:bg-border text-muted hover:text-foreground transition-all"
-                          title={lesson.is_published ? 'Снять с публикации' : 'Опубликовать'}
+                          title={lesson.is_published ? t('admin_unpublish') : t('admin_publish')}
                         >
                           {lesson.is_published ? (
                             <ToggleRight size={18} className="text-accent-success" />
