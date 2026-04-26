@@ -21,7 +21,40 @@
 ALTER TABLE public.profiles
   ADD COLUMN IF NOT EXISTS status TEXT DEFAULT 'active',
   ADD COLUMN IF NOT EXISTS email TEXT,
-  ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
+  ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ,
+  -- Older databases may not have last_active_at (was introduced by an
+  -- optional monitoring migration). Add it here so the COALESCE backfill
+  -- below and the admin views below never fail with "column does not exist".
+  ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ;
+
+-- Stub tables used by admin_dashboard_summary. If the optional monitoring
+-- migration (20260426) is applied later, these CREATE TABLE IF NOT EXISTS
+-- become no-ops; if not, the dashboard simply reports 0 for the missing
+-- metrics instead of erroring out.
+CREATE TABLE IF NOT EXISTS public.payments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  amount NUMERIC,
+  status TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.payments ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.error_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.error_logs ENABLE ROW LEVEL SECURITY;
+
+CREATE TABLE IF NOT EXISTS public.page_metrics (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+ALTER TABLE public.page_metrics ENABLE ROW LEVEL SECURITY;
+
+-- No SELECT policy is added here intentionally: with RLS enabled and no
+-- policy, only service_role / SECURITY DEFINER functions can read these
+-- tables. The dashboard RPC reads them via SECURITY DEFINER, so it works,
+-- but unauthenticated PostgREST traffic is denied by default.
 
 -- Drop old role check (only allowed student/admin)
 ALTER TABLE public.profiles
@@ -148,6 +181,24 @@ GRANT EXECUTE ON FUNCTION public.is_super_admin()    TO anon, authenticated;
 -- 3. Subscriptions: extended plans + admin metadata
 -- -----------------------------------------------------------------------------
 
+-- Stub the subscriptions table for older databases that didn't apply
+-- 20260426_admin_monitoring.sql. CREATE TABLE IF NOT EXISTS is a no-op
+-- when the table already exists.
+CREATE TABLE IF NOT EXISTS public.subscriptions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  plan TEXT NOT NULL DEFAULT 'free',
+  status TEXT NOT NULL DEFAULT 'pending',
+  provider TEXT NOT NULL DEFAULT 'manual',
+  provider_customer_id TEXT,
+  provider_subscription_id TEXT,
+  current_period_end TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id)
+);
+ALTER TABLE public.subscriptions ENABLE ROW LEVEL SECURITY;
+
 ALTER TABLE public.subscriptions
   DROP CONSTRAINT IF EXISTS subscriptions_plan_check;
 
@@ -197,6 +248,17 @@ CREATE POLICY "users can insert own push tokens" ON public.push_tokens FOR INSER
 CREATE POLICY "users can update own push tokens" ON public.push_tokens FOR UPDATE USING (auth.uid() = user_id);
 CREATE POLICY "users can delete own push tokens" ON public.push_tokens FOR DELETE USING (auth.uid() = user_id);
 CREATE POLICY "admins can read all push tokens"  ON public.push_tokens FOR SELECT USING (public.is_admin());
+
+-- Touch trigger helper: bumps updated_at on every UPDATE.
+-- Defined here as well so this migration is self-sufficient (older databases
+-- that didn't apply 20260426_admin_monitoring.sql also need it).
+CREATE OR REPLACE FUNCTION public.touch_updated_at()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = NOW();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS push_tokens_touch_updated_at ON public.push_tokens;
 CREATE TRIGGER push_tokens_touch_updated_at
