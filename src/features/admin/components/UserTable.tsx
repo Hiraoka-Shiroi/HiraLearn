@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Search, ShieldCheck, ShieldOff } from 'lucide-react';
 import { useLanguage } from '@/i18n/useLanguage';
 import { supabase } from '@/lib/supabase/client';
+import { useAuthStore } from '@/store/useAuthStore';
 import type { AdminUserRow } from '@/types/database';
 
 interface UserTableProps {
@@ -42,7 +43,10 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
     );
   }, [users, query]);
 
+  const currentUserId = useAuthStore((s) => s.user?.id);
+
   const toggleRole = async (user: AdminUserRow) => {
+    if (user.id === currentUserId) return;
     const newRole = user.role === 'admin' ? 'student' : 'admin';
     setUpdatingRole(user.id);
     const { error } = await supabase
@@ -124,13 +128,17 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
                   <td className="p-4">
                     <button
                       onClick={() => toggleRole(u)}
-                      disabled={updatingRole === u.id}
-                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors cursor-pointer hover:opacity-80 ${
+                      disabled={updatingRole === u.id || u.id === currentUserId}
+                      className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors ${
+                        u.id === currentUserId
+                          ? 'opacity-50 cursor-not-allowed'
+                          : 'cursor-pointer hover:opacity-80'
+                      } ${
                         u.role === 'admin'
                           ? 'bg-accent-success/15 text-accent-success'
                           : 'bg-border text-muted'
                       }`}
-                      title={u.role === 'admin' ? t('admin_role_make_student') : t('admin_role_make_admin')}
+                      title={u.id === currentUserId ? t('admin_role_self') : u.role === 'admin' ? t('admin_role_make_student') : t('admin_role_make_admin')}
                     >
                       {u.role === 'admin' ? (
                         <ShieldCheck size={12} />
