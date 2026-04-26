@@ -52,7 +52,8 @@ export type AnalyticsEvent =
   | 'lesson_start'
   | 'lesson_complete'
   | 'payment_click'
-  | 'game_start';
+  | 'game_start'
+  | 'page_view';
 
 export const trackEvent = async (
   event: AnalyticsEvent,
@@ -61,7 +62,7 @@ export const trackEvent = async (
   const a = await initAnalytics();
   if (!a) return;
   try {
-    logEvent(a, event, params);
+    logEvent(a, event as string, params);
   } catch (e) {
     console.warn('Analytics logEvent failed:', e);
   }

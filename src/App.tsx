@@ -9,6 +9,7 @@ import { OnboardingPage } from '@/pages/OnboardingPage'
 import { ProfilePage } from '@/pages/ProfilePage'
 import { AdminPage } from '@/pages/AdminPage'
 import { AdminLessonsPage } from '@/pages/AdminLessonsPage'
+import { AdminModulesPage } from '@/pages/AdminModulesPage'
 import { GamesPage } from '@/pages/GamesPage'
 import { CoursesPage } from '@/pages/CoursesPage'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
@@ -17,7 +18,7 @@ import { useEffect } from 'react'
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { useThemeStore } from '@/store/useThemeStore'
-import { identifyUser } from '@/lib/firebase/analytics'
+import { identifyUser, trackEvent } from '@/lib/firebase/analytics'
 
 function App() {
   const { setUser, setProfile } = useAuthStore()
@@ -26,6 +27,23 @@ function App() {
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', color);
   }, [color]);
+
+  useEffect(() => {
+    void trackEvent('page_view', { url: window.location.href });
+    const start = performance.now();
+    const logMetric = () => {
+      const loadTime = Math.round(performance.now() - start);
+      void supabase.from('page_metrics').insert({
+        url: window.location.hash || '/',
+        load_time_ms: loadTime,
+      }).then(() => {}, () => {});
+    };
+    if (document.readyState === 'complete') {
+      logMetric();
+    } else {
+      window.addEventListener('load', logMetric, { once: true });
+    }
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -173,6 +191,15 @@ function App() {
             element={
               <ProtectedRoute adminOnly>
                 <AdminLessonsPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/modules"
+            element={
+              <ProtectedRoute adminOnly>
+                <AdminModulesPage />
               </ProtectedRoute>
             }
           />

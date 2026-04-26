@@ -40,6 +40,13 @@ export const AdminDashboard = () => {
               {t('admin_refresh')}
             </button>
             <button
+              onClick={() => navigate('/admin/modules')}
+              className="flex items-center gap-1 bg-card border border-border text-foreground px-5 py-2 rounded-2xl text-sm font-bold hover:border-accent-primary transition-all"
+            >
+              {t('admin_modules_link')}
+              <ChevronRight size={16} />
+            </button>
+            <button
               onClick={() => navigate('/admin/lessons')}
               className="flex items-center gap-1 bg-accent-primary text-white px-5 py-2 rounded-2xl text-sm font-bold hover:scale-[1.02] transition-all"
             >

@@ -7,6 +7,7 @@ export interface AdminSummary {
   totalRevenue: number;
   errorsLast24h: number;
   avgLoadMs: number | null;
+  visitorsToday: number;
 }
 
 export interface ErrorBucket {
@@ -74,6 +75,7 @@ export const useAdminMetrics = (): AdminMetricsState => {
         errorsRangeRes,
         pulseRes,
         userListRes,
+        visitorsRes,
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('payments').select('amount').eq('status', 'completed'),
@@ -99,6 +101,10 @@ export const useAdminMetrics = (): AdminMetricsState => {
           .select('*')
           .order('last_active_at', { ascending: false, nullsFirst: false })
           .limit(100),
+        supabase
+          .from('page_metrics')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', since24h),
       ]);
 
       // Fallback: if admin_user_list view doesn't exist, query profiles directly
@@ -156,6 +162,7 @@ export const useAdminMetrics = (): AdminMetricsState => {
         totalRevenue,
         errorsLast24h: errorsCountRes.count ?? 0,
         avgLoadMs,
+        visitorsToday: visitorsRes.count ?? 0,
       });
       setErrorBuckets(
         Array.from(errorBucketsMap.entries()).map(([hour, count]) => ({ hour, count })),

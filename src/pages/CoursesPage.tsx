@@ -37,19 +37,33 @@ export const CoursesPage: React.FC = () => {
     const { error } = await supabase.from('courses').delete().eq('id', courseId);
     if (error) {
       alert(t('common_error') + ': ' + error.message);
-    } else {
-      setCourses(courses.filter((c) => c.id !== courseId));
+      return;
     }
+    const { data: check } = await supabase.from('courses').select('id').eq('id', courseId).maybeSingle();
+    if (check) {
+      alert(t('admin_rls_error'));
+      return;
+    }
+    setCourses(courses.filter((c) => c.id !== courseId));
   };
 
   const handleTogglePublish = async (course: Course) => {
-    const { error } = await supabase
+    const newVal = !course.is_published;
+    const { data, error } = await supabase
       .from('courses')
-      .update({ is_published: !course.is_published })
-      .eq('id', course.id);
-    if (!error) {
-      setCourses(courses.map((c) => c.id === course.id ? { ...c, is_published: !c.is_published } : c));
+      .update({ is_published: newVal })
+      .eq('id', course.id)
+      .select('is_published')
+      .single();
+    if (error) {
+      alert(t('common_error') + ': ' + error.message);
+      return;
     }
+    if (data && data.is_published !== newVal) {
+      alert(t('admin_rls_error'));
+      return;
+    }
+    setCourses(courses.map((c) => c.id === course.id ? { ...c, is_published: newVal } : c));
   };
 
   const getCourseIcon = (slug: string) => {
