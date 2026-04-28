@@ -66,7 +66,7 @@ export const Dashboard: React.FC = () => {
               <h1 className="text-3xl font-bold mb-1">{profile?.full_name || 'Ученик'}</h1>
               <div className="flex items-center gap-3">
                  <span className="px-3 py-1 bg-accent-primary text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">Lvl {profile?.level || 1}</span>
-                 {subscription && subscription.status === 'active' && subscription.plan !== 'free' && (
+                 {subscription && subscription.status === 'active' && subscription.plan !== 'free' && !(subscription.expires_at && new Date(subscription.expires_at) < new Date()) && (
                    <span className="px-3 py-1 bg-accent-success text-white text-[10px] font-bold rounded-full uppercase tracking-tighter">
                      {subscription.plan}
                    </span>
