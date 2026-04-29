@@ -29,7 +29,11 @@ export const Sidebar: React.FC = () => {
 
   const xp = profile?.xp ?? 0;
   const level = profile?.level ?? 1;
-  const xpPercent = Math.min(((xp) % 500) / 500 * 100, 100);
+  const XP_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500];
+  const currentLevelXp = XP_THRESHOLDS[Math.max(level - 1, 0)] ?? 0;
+  const nextLevelXp = XP_THRESHOLDS[Math.min(level, XP_THRESHOLDS.length - 1)] ?? 9999;
+  const xpNeeded = nextLevelXp - currentLevelXp;
+  const xpPercent = xpNeeded > 0 ? Math.min(((xp - currentLevelXp) / xpNeeded) * 100, 100) : 100;
 
   return (
     <aside className="w-20 md:w-64 h-screen bg-card/80 backdrop-blur-sm border-r border-border flex flex-col py-6 px-3 md:px-4 shrink-0 transition-all">

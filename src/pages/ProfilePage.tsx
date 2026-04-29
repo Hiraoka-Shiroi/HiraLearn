@@ -103,7 +103,6 @@ export const ProfilePage: React.FC = () => {
 
   const completedLessonIds = useMemo(() => new Set(progress.filter(p => p.status === 'completed').map(p => p.lesson_id)), [progress]);
   const completedCount = completedLessonIds.size;
-  const totalLessons = allLessons.length;
 
   const nextLesson = useMemo(() => {
     for (const lesson of allLessons) {
@@ -121,6 +120,15 @@ export const ProfilePage: React.FC = () => {
     if (!currentModule) return courses[0] ?? null;
     return courses.find(c => c.id === currentModule.course_id) ?? null;
   }, [currentModule, courses]);
+
+  /* Course-scoped progress for learning path card */
+  const courseLessons = useMemo(() => {
+    if (!currentCourse) return [];
+    const courseModuleIds = new Set(allModules.filter(m => m.course_id === currentCourse.id).map(m => m.id));
+    return allLessons.filter(l => courseModuleIds.has(l.module_id));
+  }, [currentCourse, allModules, allLessons]);
+  const courseCompletedCount = useMemo(() => courseLessons.filter(l => completedLessonIds.has(l.id)).length, [courseLessons, completedLessonIds]);
+  const courseTotalLessons = courseLessons.length;
 
   /* Weak topics = modules where user hasn't completed at least 50% */
   const weakModules = useMemo(() => {
@@ -169,7 +177,7 @@ export const ProfilePage: React.FC = () => {
     return (
       <MainLayout>
         <div className="flex items-center justify-center h-full min-h-[60vh]">
-          <div className="w-8 h-8 border-3 border-accent-primary border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-[3px] border-accent-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </MainLayout>
     );
@@ -308,19 +316,19 @@ export const ProfilePage: React.FC = () => {
                         {currentModule && <p className="text-sm text-muted-foreground">{currentModule.title}</p>}
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-black text-accent-primary">{totalLessons > 0 ? Math.round((completedCount / totalLessons) * 100) : 0}%</p>
-                        <p className="text-xs text-muted-foreground">{completedCount}/{totalLessons}</p>
+                        <p className="text-2xl font-black text-accent-primary">{courseTotalLessons > 0 ? Math.round((courseCompletedCount / courseTotalLessons) * 100) : 0}%</p>
+                        <p className="text-xs text-muted-foreground">{courseCompletedCount}/{courseTotalLessons}</p>
                       </div>
                     </div>
                     <div className="h-2 bg-surface-1 rounded-full overflow-hidden border border-border/50">
                       <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: totalLessons > 0 ? `${(completedCount / totalLessons) * 100}%` : '0%' }}
+                        animate={{ width: courseTotalLessons > 0 ? `${(courseCompletedCount / courseTotalLessons) * 100}%` : '0%' }}
                         transition={{ duration: 1, ease: 'easeOut' }}
                         className="h-full rounded-full bg-gradient-to-r from-accent-success to-emerald-400"
                       />
                     </div>
-                    {completedCount > 0 && completedCount < totalLessons && (
+                    {courseCompletedCount > 0 && courseCompletedCount < courseTotalLessons && (
                       <p className="text-xs text-muted-foreground italic">{t('profile_keep_going')}</p>
                     )}
                   </div>
