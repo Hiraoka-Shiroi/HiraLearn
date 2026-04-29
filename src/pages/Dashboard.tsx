@@ -50,7 +50,7 @@ export const Dashboard: React.FC = () => {
   if (loading) return (
     <MainLayout>
       <div className="min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-3 border-accent-primary border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-[3px] border-accent-primary border-t-transparent rounded-full animate-spin" />
       </div>
     </MainLayout>
   );
