@@ -382,6 +382,20 @@ export const translations = {
     courses_locked: 'Заблокировано',
     courses_continue: 'Продолжить',
     courses_start: 'Начать',
+
+    // Profile redesign
+    profile_days_in_hira: '{n} дн. в HiraLearn',
+    profile_xp_to_next: 'XP до следующего уровня',
+    profile_next_lesson: 'Следующий урок',
+    profile_learning_path: 'Текущий путь обучения',
+    profile_keep_going: 'Ты уже близко к следующему уровню — не останавливайся!',
+    profile_recent_activity: 'Недавняя активность',
+    profile_no_activity: 'Пока нет завершённых уроков. Начни свой путь!',
+    profile_weak_topics: 'Слабые темы',
+    profile_weak_hint: 'Повтори эти модули, чтобы закрепить знания.',
+    profile_streak_label: 'Дней подряд',
+    profile_streak_keep: 'Серия дней держится — не сбей streak!',
+    profile_streak_start: 'Заверши урок сегодня, чтобы начать серию.',
   },
 
   en: {
@@ -767,6 +781,20 @@ export const translations = {
     courses_locked: 'Locked',
     courses_continue: 'Continue',
     courses_start: 'Start',
+
+    // Profile redesign
+    profile_days_in_hira: '{n}d in HiraLearn',
+    profile_xp_to_next: 'XP to next level',
+    profile_next_lesson: 'Next lesson',
+    profile_learning_path: 'Current learning path',
+    profile_keep_going: 'You\'re close to the next level — keep going!',
+    profile_recent_activity: 'Recent activity',
+    profile_no_activity: 'No completed lessons yet. Start your path!',
+    profile_weak_topics: 'Weak topics',
+    profile_weak_hint: 'Revisit these modules to strengthen your knowledge.',
+    profile_streak_label: 'Days in a row',
+    profile_streak_keep: 'Your streak is going strong — don\'t break it!',
+    profile_streak_start: 'Complete a lesson today to start your streak.',
   }
 } as const;
 

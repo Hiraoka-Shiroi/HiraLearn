@@ -27,61 +27,80 @@ export const Sidebar: React.FC = () => {
     ? [...baseMenuItems, { id: 'admin', labelKey: 'sidebar_admin' as TranslationKey, icon: <Shield size={20} />, path: '/admin' }]
     : baseMenuItems;
 
+  const xp = profile?.xp ?? 0;
+  const level = profile?.level ?? 1;
+  const xpPercent = Math.min(((xp) % 500) / 500 * 100, 100);
+
   return (
-    <aside className="w-20 md:w-64 h-screen bg-card border-r border-border flex flex-col py-8 px-4 shrink-0 transition-all">
-      <Link to="/dashboard" className="flex items-center gap-3 px-4 mb-12 group">
-        <div className="w-10 h-10 bg-accent-primary rounded-xl flex items-center justify-center text-white rotate-45 group-hover:rotate-90 transition-transform duration-500 shadow-lg shadow-accent-primary/20">
-           <div className="-rotate-45 group-hover:-rotate-90 transition-transform duration-500">H</div>
+    <aside className="w-20 md:w-64 h-screen bg-card/80 backdrop-blur-sm border-r border-border flex flex-col py-6 px-3 md:px-4 shrink-0 transition-all">
+      {/* Logo */}
+      <Link to="/dashboard" className="flex items-center gap-3 px-3 mb-10 group">
+        <div className="w-10 h-10 bg-gradient-to-br from-accent-primary to-indigo-400 rounded-xl flex items-center justify-center text-white rotate-45 group-hover:rotate-[135deg] transition-transform duration-700 shadow-glow-primary shrink-0">
+           <div className="-rotate-45 group-hover:-rotate-[135deg] transition-transform duration-700 font-black text-sm">H</div>
         </div>
-        <span className="text-xl font-bold hidden md:block">HiraLearn</span>
+        <span className="text-lg font-black hidden md:block tracking-tight">HiraLearn</span>
       </Link>
 
-      <nav className="flex-1 space-y-2">
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1">
         {menuItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
             <Link
               key={item.id}
               to={item.path}
-              className={`flex items-center gap-4 p-4 rounded-2xl transition-all group ${
+              className={`relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all group ${
                 isActive
-                ? 'bg-accent-primary text-white shadow-lg shadow-accent-primary/20'
-                : 'text-muted-foreground hover:bg-accent-primary/5 hover:text-accent-primary'
+                ? 'text-white'
+                : 'text-muted-foreground hover:text-foreground hover:bg-surface-2/50'
               }`}
             >
-              <div className="shrink-0">{item.icon}</div>
-              <span className="font-bold hidden md:block">{t(item.labelKey)}</span>
               {isActive && (
                 <motion.div
-                  layoutId="active-pill"
-                  className="ml-auto w-1.5 h-1.5 bg-white rounded-full hidden md:block"
+                  layoutId="sidebar-active"
+                  className="absolute inset-0 bg-accent-primary rounded-xl shadow-glow-primary"
+                  transition={{ type: 'spring', stiffness: 350, damping: 30 }}
                 />
               )}
+              <div className="relative z-10 shrink-0">{item.icon}</div>
+              <span className="relative z-10 font-semibold text-sm hidden md:block">{t(item.labelKey)}</span>
             </Link>
           );
         })}
       </nav>
 
-      <div className="mt-auto space-y-4">
-        <div className="hidden md:flex gap-2 px-2">
+      {/* Footer section */}
+      <div className="mt-auto space-y-3">
+        {/* Toggles */}
+        <div className="hidden md:flex gap-1.5 px-1">
           <LanguageToggle />
           <ModeToggle />
           <ThemeToggle />
         </div>
 
-        <div className="hidden md:block p-4 bg-background border border-border rounded-2xl">
-           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('sidebar_level')} {profile?.level || 1}</p>
-           <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-              <div className="h-full bg-accent-primary transition-all" style={{ width: `${Math.min(((profile?.xp ?? 0) % 500) / 500 * 100, 100)}%` }} />
-           </div>
+        {/* Level progress */}
+        <div className="hidden md:block px-3 py-3 bg-surface-1 border border-border/50 rounded-xl">
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('sidebar_level')} {level}</span>
+            <span className="text-[10px] font-bold text-accent-primary">{xp} XP</span>
+          </div>
+          <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-accent-primary to-indigo-400 rounded-full"
+              initial={{ width: 0 }}
+              animate={{ width: `${xpPercent}%` }}
+              transition={{ duration: 0.6 }}
+            />
+          </div>
         </div>
 
+        {/* Logout */}
         <button
           onClick={async () => { await signOut(); navigate('/login'); }}
-          className="w-full flex items-center gap-4 p-4 rounded-2xl text-muted-foreground hover:bg-accent-danger/5 hover:text-accent-danger transition-all group"
+          className="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-muted-foreground hover:bg-accent-danger/5 hover:text-accent-danger transition-all group"
         >
-          <LogOut size={20} />
-          <span className="font-bold hidden md:block">{t('sidebar_logout')}</span>
+          <LogOut size={18} />
+          <span className="font-semibold text-sm hidden md:block">{t('sidebar_logout')}</span>
         </button>
       </div>
     </aside>
