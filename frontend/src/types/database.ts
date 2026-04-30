@@ -250,7 +250,27 @@ export type Database = {
     Views: {
       admin_user_list: { Row: AdminUserRow; Relationships: [] };
     };
-    Functions: Record<string, never>;
+    Functions: {
+      complete_lesson: {
+        Args: { p_lesson_id: string };
+        Returns: Profile;
+      };
+      update_own_profile: {
+        Args: {
+          p_full_name?:         string | null;
+          p_username?:          string | null;
+          p_avatar_url?:        string | null;
+          p_current_goal?:      string | null;
+          p_daily_minutes?:     number | null;
+          p_explanation_style?: string | null;
+        };
+        Returns: Profile;
+      };
+      award_xp: {
+        Args: { p_amount: number; p_reason?: string | null };
+        Returns: Profile;
+      };
+    };
     Enums: Record<string, never>;
     CompositeTypes: Record<string, never>;
   };

@@ -9,6 +9,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
 import { TranslationKey } from '@/i18n/translations';
 import { isStaff } from '@/features/admin/permissions';
+import { getLevelProgress, isMaxLevel } from '@/lib/progress/levels';
 
 const baseMenuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
@@ -29,11 +30,7 @@ export const Sidebar: React.FC = () => {
 
   const xp = profile?.xp ?? 0;
   const level = profile?.level ?? 1;
-  const XP_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500];
-  const currentLevelXp = XP_THRESHOLDS[Math.max(level - 1, 0)] ?? 0;
-  const nextLevelXp = XP_THRESHOLDS[Math.min(level, XP_THRESHOLDS.length - 1)] ?? 9999;
-  const xpNeeded = nextLevelXp - currentLevelXp;
-  const xpPercent = xpNeeded > 0 ? Math.min(((xp - currentLevelXp) / xpNeeded) * 100, 100) : 100;
+  const xpPercent = isMaxLevel(level) ? 100 : Math.round(getLevelProgress(xp, level) * 100);
 
   return (
     <aside className="w-20 md:w-64 h-screen bg-card/80 backdrop-blur-sm border-r border-border flex flex-col py-6 px-3 md:px-4 shrink-0 transition-all">

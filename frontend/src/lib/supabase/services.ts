@@ -1,16 +1,31 @@
 
 import { supabase } from './client';
-import { Course, Module, Lesson, Task, UserProgress } from '@/types/database';
+import { Course, Module, Lesson, Task, UserProgress, Profile } from '@/types/database';
 
 export const contentCardService = {
   async getCourses() {
-    const { data, error } = await supabase
+    // Try to order by the new `order_index` column first; fall back to
+    // `created_at` for older databases that haven't applied the
+    // 20260430 migration yet.
+    let { data, error } = await supabase
       .from('courses')
       .select('*')
       .eq('is_published', true)
-      .order('created_at');
+      .order('order_index', { ascending: true })
+      .order('created_at', { ascending: true });
+
+    if (error && /column .*order_index/i.test(error.message)) {
+      const fallback = await supabase
+        .from('courses')
+        .select('*')
+        .eq('is_published', true)
+        .order('created_at');
+      data = fallback.data;
+      error = fallback.error;
+    }
+
     if (error) throw error;
-    return data as Course[];
+    return (data ?? []) as Course[];
   },
 
   async getModules(courseId: string) {
@@ -43,21 +58,19 @@ export const contentCardService = {
       .single();
 
     if (lessonError) throw lessonError;
-    return lesson as Lesson & { tasks: Task[] };
+    return lesson as unknown as Lesson & { tasks: Task[] };
   }
 };
 
-function calculateLevel(xp: number): number {
-  if (xp < 100) return 1;
-  if (xp < 300) return 2;
-  if (xp < 600) return 3;
-  if (xp < 1000) return 4;
-  if (xp < 1500) return 5;
-  if (xp < 2100) return 6;
-  if (xp < 2800) return 7;
-  if (xp < 3600) return 8;
-  if (xp < 4500) return 9;
-  return 10;
+export interface CompleteLessonResult {
+  /** The fresh profile after XP/level/streak update. */
+  profile: Profile;
+  /** XP awarded by *this* call (0 if the lesson was already completed). */
+  xpAwarded: number;
+  /** True if the call moved the user to a higher level. */
+  leveledUp: boolean;
+  /** Level number BEFORE this completion. */
+  previousLevel: number;
 }
 
 export const progressService = {
@@ -70,77 +83,56 @@ export const progressService = {
     return data as UserProgress[];
   },
 
-  async completeLesson(userId: string, lessonId: string, xpReward: number) {
-    const { data: existing } = await supabase
-      .from('user_progress')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('lesson_id', lessonId)
-      .eq('status', 'completed')
-      .maybeSingle();
+  /**
+   * Complete a lesson via the SECURITY DEFINER `complete_lesson` RPC.
+   * The RPC awards XP, recomputes level, updates the streak, and returns
+   * the updated profile atomically. Clients cannot bump XP/level
+   * directly — the profiles_protect_columns trigger reverts any raw
+   * UPDATEs from `authenticated` to OLD values.
+   */
+  async completeLesson(lessonId: string, currentProfile: Profile | null): Promise<CompleteLessonResult> {
+    const { data, error } = await supabase.rpc('complete_lesson', { p_lesson_id: lessonId });
+    if (error) throw error;
 
-    if (existing) {
-      return;
-    }
+    // RPC returns the profile row; supabase-js wraps a single-record
+    // RETURNS public.profiles into an object (not an array).
+    const profile = (Array.isArray(data) ? data[0] : data) as Profile;
+    if (!profile) throw new Error('complete_lesson returned no profile');
 
-    const { error: progressError } = await supabase
-      .from('user_progress')
-      .upsert({
-        user_id: userId,
-        lesson_id: lessonId,
-        status: 'completed',
-        completed_at: new Date().toISOString()
-      });
+    const previousXp = currentProfile?.xp ?? 0;
+    const previousLevel = currentProfile?.level ?? 1;
+    const xpAwarded = Math.max(0, (profile.xp ?? 0) - previousXp);
+    const leveledUp = (profile.level ?? 1) > previousLevel;
 
-    if (progressError) throw progressError;
+    return { profile, xpAwarded, leveledUp, previousLevel };
+  },
+};
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('xp, streak')
-      .eq('id', userId)
-      .single();
+export const profileService = {
+  /**
+   * Update only the safe profile fields via the `update_own_profile` RPC.
+   * Pass `null` for fields you don't want to touch; pass `''` to clear.
+   */
+  async updateOwnProfile(input: {
+    full_name?: string | null;
+    username?: string | null;
+    avatar_url?: string | null;
+    current_goal?: string | null;
+    daily_minutes?: number | null;
+    explanation_style?: string | null;
+  }): Promise<Profile> {
+    const { data, error } = await supabase.rpc('update_own_profile', {
+      p_full_name:         input.full_name ?? null,
+      p_username:          input.username ?? null,
+      p_avatar_url:        input.avatar_url ?? null,
+      p_current_goal:      input.current_goal ?? null,
+      p_daily_minutes:     input.daily_minutes ?? null,
+      p_explanation_style: input.explanation_style ?? null,
+    });
+    if (error) throw error;
 
-    if (profile) {
-      const newXp = profile.xp + xpReward;
-      const newLevel = calculateLevel(newXp);
-
-      // Compute streak from user_progress completion dates (not last_active_at
-      // which App.tsx updates on every page load).
-      const today = new Date().toISOString().slice(0, 10);
-
-      const { data: prevCompletions } = await supabase
-        .from('user_progress')
-        .select('completed_at')
-        .eq('user_id', userId)
-        .eq('status', 'completed')
-        .neq('lesson_id', lessonId)
-        .order('completed_at', { ascending: false })
-        .limit(1);
-
-      let newStreak = profile.streak ?? 0;
-      const lastCompletionDate = prevCompletions?.[0]?.completed_at
-        ? new Date(prevCompletions[0].completed_at).toISOString().slice(0, 10)
-        : null;
-
-      if (lastCompletionDate === today) {
-        // already completed another lesson today, keep streak
-      } else if (lastCompletionDate) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().slice(0, 10);
-        newStreak = lastCompletionDate === yesterdayStr ? newStreak + 1 : 1;
-      } else {
-        newStreak = 1;
-      }
-
-      await supabase
-        .from('profiles')
-        .update({
-          xp: newXp,
-          level: newLevel,
-          streak: newStreak,
-        })
-        .eq('id', userId);
-    }
-  }
+    const profile = (Array.isArray(data) ? data[0] : data) as Profile;
+    if (!profile) throw new Error('update_own_profile returned no profile');
+    return profile;
+  },
 };

@@ -1,8 +1,7 @@
 
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { contentCardService, progressService } from '@/lib/supabase/services';
-import { supabase } from '@/lib/supabase/client';
+import { contentCardService, progressService, profileService } from '@/lib/supabase/services';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Award, LogOut, ChevronRight, Zap, Trophy, Target, Shield,
@@ -18,16 +17,16 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
 import { isStaff } from '@/features/admin/permissions';
-import type { Subscription, Course, Module, Lesson, UserProgress, Profile } from '@/types/database';
-
-/* ── XP thresholds (mirrors services.ts) ─────────────────────── */
-const XP_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500];
-function xpForNextLevel(level: number): number {
-  return XP_THRESHOLDS[Math.min(level, XP_THRESHOLDS.length - 1)] ?? 9999;
-}
-function xpForCurrentLevel(level: number): number {
-  return XP_THRESHOLDS[Math.max(level - 1, 0)] ?? 0;
-}
+import type { Subscription, Course, Module, Lesson, UserProgress } from '@/types/database';
+import {
+  getCurrentLevelXp,
+  getLevelProgress,
+  getNextLevelXp,
+  isMaxLevel,
+} from '@/lib/progress/levels';
+import { Avatar } from '@/components/avatar/Avatar';
+import { AvatarPickerModal } from '@/components/avatar/AvatarPickerModal';
+import { uploadAvatar } from '@/lib/avatar/uploadAvatar';
 
 /* ── Fade-in wrapper ────────────────────────────────────────── */
 const FadeIn: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({ children, delay = 0, className = '' }) => (
@@ -100,11 +99,11 @@ export const ProfilePage: React.FC = () => {
   const level = profile?.level ?? 1;
   const xp = profile?.xp ?? 0;
   const streak = profile?.streak ?? 0;
-  const nextLevelXp = xpForNextLevel(level);
-  const currentLevelXp = xpForCurrentLevel(level);
-  const xpInLevel = xp - currentLevelXp;
-  const xpNeeded = nextLevelXp - currentLevelXp;
-  const xpPercent = xpNeeded > 0 ? Math.min((xpInLevel / xpNeeded) * 100, 100) : 100;
+  const currentLevelXp = getCurrentLevelXp(level);
+  const nextLevelXp = isMaxLevel(level) ? xp : getNextLevelXp(level);
+  const xpInLevel = Math.max(0, xp - currentLevelXp);
+  const xpNeeded = isMaxLevel(level) ? 0 : Math.max(1, nextLevelXp - currentLevelXp);
+  const xpPercent = isMaxLevel(level) ? 100 : Math.round(getLevelProgress(xp, level) * 100);
 
   const completedLessonIds = useMemo(() => new Set(progress.filter(p => p.status === 'completed').map(p => p.lesson_id)), [progress]);
   const completedCount = completedLessonIds.size;
@@ -209,21 +208,17 @@ export const ProfilePage: React.FC = () => {
     setEditSaving(true);
     setEditError('');
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: editForm.full_name || null,
-          username: editForm.username || null,
-          avatar_url: editForm.avatar_url || null,
-          current_goal: editForm.current_goal || '',
-          daily_minutes: editForm.daily_minutes,
-          explanation_style: editForm.explanation_style || '',
-        })
-        .eq('id', user.id)
-        .select('*')
-        .single();
-      if (error) throw error;
-      if (data) setProfile(data as Profile);
+      // Profile fields go through the SECURITY DEFINER RPC; clients
+      // cannot UPDATE profiles directly any more.
+      const next = await profileService.updateOwnProfile({
+        full_name:         editForm.full_name || null,
+        username:          editForm.username || null,
+        avatar_url:        editForm.avatar_url || null,
+        current_goal:      editForm.current_goal ?? '',
+        daily_minutes:     editForm.daily_minutes,
+        explanation_style: editForm.explanation_style ?? '',
+      });
+      setProfile(next);
       setEditOpen(false);
     } catch (e) {
       setEditError((e as Error).message);
@@ -231,6 +226,18 @@ export const ProfilePage: React.FC = () => {
       setEditSaving(false);
     }
   }, [user, editForm, setProfile]);
+
+  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
+  const handleAvatarUpload = useCallback(async (blob: Blob) => {
+    if (!user) return;
+    const next = await uploadAvatar({
+      userId: user.id,
+      blob,
+      previousAvatarUrl: profile?.avatar_url ?? editForm.avatar_url ?? null,
+    });
+    setProfile(next);
+    setEditForm(f => ({ ...f, avatar_url: next.avatar_url ?? '' }));
+  }, [user, profile?.avatar_url, editForm.avatar_url, setProfile]);
 
   /* ── Copy ID helper ─────────────────────────────────────── */
   const [copied, setCopied] = useState(false);
@@ -278,19 +285,13 @@ export const ProfilePage: React.FC = () => {
               {/* Avatar */}
               <div className="relative group">
                 <div className="absolute inset-0 rounded-full bg-accent-primary/20 blur-xl group-hover:bg-accent-primary/30 transition-all duration-500" />
-                {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt=""
-                    className="relative w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-accent-primary/30 object-cover shadow-glow-primary"
-                  />
-                ) : (
-                  <div className="relative w-28 h-28 md:w-32 md:h-32 rounded-full bg-gradient-to-br from-accent-primary/20 to-accent-primary/5 border-4 border-accent-primary/30 flex items-center justify-center shadow-glow-primary">
-                    <span className="text-4xl md:text-5xl font-black text-accent-primary">
-                      {profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                    </span>
-                  </div>
-                )}
+                <Avatar
+                  src={profile?.avatar_url}
+                  name={profile?.full_name}
+                  ring
+                  sizeClass="w-28 h-28 md:w-32 md:h-32"
+                  className="relative"
+                />
                 {/* Level badge */}
                 <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl bg-accent-primary text-white flex items-center justify-center text-sm font-black shadow-glow-primary">
                   {level}
@@ -679,23 +680,24 @@ export const ProfilePage: React.FC = () => {
               </div>
 
               <div className="p-4 sm:p-5 space-y-4">
-                {/* Avatar preview + URL */}
+                {/* Avatar preview + picker */}
                 <div className="flex items-center gap-4">
-                  {editForm.avatar_url ? (
-                    <img src={editForm.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-accent-primary/30" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-accent-primary/10 border-2 border-accent-primary/30 flex items-center justify-center text-2xl font-black text-accent-primary">
-                      {editForm.full_name?.charAt(0)?.toUpperCase() || 'U'}
-                    </div>
-                  )}
+                  <Avatar
+                    src={editForm.avatar_url}
+                    name={editForm.full_name}
+                    sizeClass="w-16 h-16"
+                  />
                   <div className="flex-1 min-w-0">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('profile_avatar_url')}</label>
-                    <input
-                      value={editForm.avatar_url}
-                      onChange={(e) => setEditForm(f => ({ ...f, avatar_url: e.target.value }))}
-                      placeholder="https://..."
-                      className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
-                    />
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                      {t('avatar_change')}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setAvatarPickerOpen(true)}
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2 active:bg-surface-2 transition-colors min-h-[44px] flex items-center justify-center gap-2"
+                    >
+                      {t('avatar_modal_pick_btn')}
+                    </button>
                   </div>
                 </div>
 
@@ -755,6 +757,13 @@ export const ProfilePage: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <AvatarPickerModal
+        open={avatarPickerOpen}
+        onClose={() => setAvatarPickerOpen(false)}
+        onCropped={handleAvatarUpload}
+        title={profile?.full_name ?? profile?.username ?? undefined}
+      />
     </MainLayout>
   );
 };
