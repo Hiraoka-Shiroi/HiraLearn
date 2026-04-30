@@ -205,6 +205,16 @@ serve(async (req: Request) => {
   }
   const tokens = (audRes.data ?? []) as AudienceRow[];
 
+  if (tokens.length === 0) {
+    return json(200, {
+      audience_size: 0,
+      sent: 0,
+      failed: 0,
+      invalid_tokens: 0,
+      error: 'no_active_tokens',
+    });
+  }
+
   // 3) Send via FCM
   let sent = 0;
   let failed = 0;
@@ -228,6 +238,7 @@ serve(async (req: Request) => {
       audience_size: tokens.length,
       sent: 0,
       failed,
+      invalid_tokens: 0,
       record_id: (recRes.data as { id?: string } | null)?.id ?? null,
     });
   }
