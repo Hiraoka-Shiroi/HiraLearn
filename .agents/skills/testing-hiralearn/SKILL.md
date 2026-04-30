@@ -125,7 +125,7 @@ Before testing, query Supabase to know the expected values:
 # Get profile data (use auth token, not anon key for RLS-protected queries)
 TOKEN=$(curl -s "$SUPABASE_URL/auth/v1/token?grant_type=password" \
   -H "apikey: $ANON_KEY" -H "Content-Type: application/json" \
-  -d '{"email":"$EMAIL","password":"$PASS"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+  -d "{\"email\":\"$EMAIL\",\"password\":\"$PASS\"}" | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
 curl -s "$SUPABASE_URL/rest/v1/profiles?select=*&id=eq.<USER_ID>" -H "apikey: $ANON_KEY" -H "Authorization: Bearer $TOKEN"
 curl -s "$SUPABASE_URL/rest/v1/user_progress?select=*&user_id=eq.<USER_ID>&status=eq.completed" -H "apikey: $ANON_KEY" -H "Authorization: Bearer $TOKEN"
 ```
