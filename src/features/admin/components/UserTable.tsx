@@ -62,8 +62,8 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
   };
 
   return (
-    <div className="bg-card border border-border rounded-[2.5rem] overflow-hidden">
-      <div className="flex items-center justify-between p-6 border-b border-border">
+    <div className="bg-card border border-border rounded-2xl md:rounded-[2.5rem] overflow-hidden">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-3 p-4 md:p-6 border-b border-border">
         <div>
           <h2 className="text-lg font-bold">{t('admin_users_table')}</h2>
           <p className="text-xs text-muted mt-1">{users.length}</p>
@@ -77,7 +77,7 @@ export const UserTable = ({ users: initialUsers, loading }: UserTableProps) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('admin_users_search')}
-            className="bg-background border border-border rounded-2xl pl-9 pr-4 py-2 text-sm placeholder:text-muted focus:outline-none focus:border-accent-primary w-64"
+            className="bg-background border border-border rounded-2xl pl-9 pr-4 py-2 text-sm placeholder:text-muted focus:outline-none focus:border-accent-primary w-full md:w-64"
           />
         </div>
       </div>

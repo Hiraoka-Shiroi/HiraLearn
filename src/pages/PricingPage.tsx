@@ -81,7 +81,7 @@ export const PricingPage = () => {
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      <main className="container mx-auto px-6 pt-32 pb-24">
+      <main className="container mx-auto px-4 md:px-6 pt-24 md:pt-32 pb-24">
         {paymentSubmitted && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
@@ -92,11 +92,11 @@ export const PricingPage = () => {
             <p className="text-sm">{t('pricing_payment_success')}</p>
           </motion.div>
         )}
-        <div className="text-center mb-20">
+        <div className="text-center mb-10 md:mb-20">
           <motion.h1
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-bold mb-6 tracking-tight"
+            className="text-3xl md:text-6xl font-bold mb-4 md:mb-6 tracking-tight"
           >
             {t('pricing_page_title')} <span className="text-accent-primary">{t('pricing_page_title_accent')}</span>.
           </motion.h1>
@@ -105,17 +105,17 @@ export const PricingPage = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 md:gap-8 max-w-6xl mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={plan.nameKey}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.1 }}
-              className={`relative p-8 rounded-[2.5rem] border transition-all ${
+              className={`relative p-5 md:p-8 rounded-2xl md:rounded-[2.5rem] border transition-all ${
                 plan.highlight
-                  ? 'bg-card border-accent-success shadow-2xl shadow-accent-success/10 scale-105 z-10'
-                  : 'bg-card border-border hover:border-muted'
+                  ? 'bg-card border-accent-success shadow-2xl shadow-accent-success/10 md:scale-105 z-10'
+                  : 'bg-card border-border active:border-muted md:hover:border-muted'
               }`}
             >
               {plan.highlight && (
@@ -124,8 +124,8 @@ export const PricingPage = () => {
                 </div>
               )}
 
-              <div className="mb-8">
-                <div className="w-12 h-12 rounded-2xl bg-background border border-border flex items-center justify-center mb-6">
+              <div className="mb-5 md:mb-8">
+                <div className="w-11 h-11 md:w-12 md:h-12 rounded-xl md:rounded-2xl bg-background border border-border flex items-center justify-center mb-4 md:mb-6">
                   {plan.icon}
                 </div>
                 <h3 className="text-xl font-bold mb-2">{t(plan.nameKey)}</h3>
@@ -135,7 +135,7 @@ export const PricingPage = () => {
                 </div>
               </div>
 
-              <ul className="space-y-4 mb-10">
+              <ul className="space-y-3 md:space-y-4 mb-6 md:mb-10">
                 {plan.featureKeys.map((featureKey) => (
                   <li key={featureKey} className="flex items-start text-sm">
                     <Check className="text-accent-success mr-3 mt-0.5 shrink-0" size={16} />
@@ -146,10 +146,10 @@ export const PricingPage = () => {
 
               <button
                 onClick={() => { void handlePurchase(plan); }}
-                className={`w-full py-4 rounded-2xl font-bold transition-all flex items-center justify-center gap-2 ${
+                className={`w-full py-4 rounded-xl md:rounded-2xl font-bold transition-all flex items-center justify-center gap-2 min-h-[48px] ${
                 plan.highlight
-                  ? 'bg-accent-success text-background hover:scale-[1.02]'
-                  : 'bg-background border border-border hover:bg-border'
+                  ? 'bg-accent-success text-background active:scale-[0.98] md:hover:scale-[1.02]'
+                  : 'bg-background border border-border active:bg-border md:hover:bg-border'
               }`}>
                 <CreditCard size={18} />
                 {t(plan.ctaKey)}
@@ -159,7 +159,7 @@ export const PricingPage = () => {
         </div>
 
         {/* Security / Trust */}
-        <div className="mt-24 pt-12 border-t border-border flex flex-col md:flex-row items-center justify-center gap-12 opacity-50 grayscale hover:grayscale-0 transition-all">
+        <div className="mt-12 md:mt-24 pt-8 md:pt-12 border-t border-border flex flex-col md:flex-row items-center justify-center gap-6 md:gap-12 opacity-50 grayscale hover:grayscale-0 transition-all">
           <div className="flex items-center space-x-2">
             <ShieldCheck size={20} />
             <span className="text-xs font-bold uppercase tracking-widest">{t('pricing_page_security')}</span>
@@ -176,11 +176,11 @@ export const PricingPage = () => {
 
       {/* Kaspi Payment Modal */}
       {selectedPlan && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-6">
+        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-0 md:p-6">
           <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-card border border-border rounded-[2.5rem] p-8 md:p-12 max-w-lg w-full shadow-2xl relative"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-card border border-border rounded-t-2xl md:rounded-[2.5rem] p-5 md:p-12 max-w-lg w-full shadow-2xl relative safe-bottom"
           >
             <button
               onClick={() => setSelectedPlan(null)}
@@ -246,7 +246,7 @@ export const PricingPage = () => {
                 setPaymentSubmitted(true);
               }}
               disabled={submitting}
-              className="w-full bg-accent-success text-background py-4 rounded-2xl font-bold hover:scale-[1.02] transition-all disabled:opacity-50"
+              className="w-full bg-accent-success text-background py-4 rounded-xl md:rounded-2xl font-bold active:scale-[0.98] md:hover:scale-[1.02] transition-all disabled:opacity-50 min-h-[48px]"
             >
               {submitting ? '...' : t('pricing_modal_done')}
             </button>

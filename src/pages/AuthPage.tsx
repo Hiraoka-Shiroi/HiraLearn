@@ -80,13 +80,13 @@ export const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-6">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4 md:p-6">
       <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent-success/5 rounded-full blur-[120px]" />
       </div>
 
-      <div className="absolute top-6 right-6 flex gap-3 z-20">
+      <div className="absolute top-3 right-3 md:top-6 md:right-6 flex gap-2 md:gap-3 z-20">
         <LanguageToggle />
         <ModeToggle />
         <ThemeToggle />
@@ -95,7 +95,7 @@ export const AuthPage = () => {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-card border border-border rounded-[2.5rem] p-8 md:p-12 shadow-2xl"
+        className="w-full max-w-md bg-card border border-border rounded-2xl md:rounded-[2.5rem] p-6 md:p-12 shadow-2xl"
       >
         <div className="text-center mb-10">
           <Link to="/" className="inline-flex items-center space-x-2 mb-6 group">
@@ -104,7 +104,7 @@ export const AuthPage = () => {
             </div>
             <span className="text-xl font-bold tracking-tight">HiraLearn</span>
           </Link>
-          <h1 className="text-3xl font-bold mb-2">
+          <h1 className="text-2xl md:text-3xl font-bold mb-2">
             {isLogin ? t('auth_welcome') : t('auth_begin')}
           </h1>
           <p className="text-muted text-sm">
@@ -173,7 +173,7 @@ export const AuthPage = () => {
 
           <button
             disabled={loading || !isSupabaseConfigured}
-            className="w-full bg-foreground text-background py-4 rounded-2xl font-bold flex items-center justify-center group hover:bg-accent-primary hover:text-white transition-all disabled:opacity-50"
+            className="w-full bg-foreground text-background py-4 rounded-xl md:rounded-2xl font-bold flex items-center justify-center group active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all disabled:opacity-50 min-h-[48px]"
           >
             {loading ? t('auth_processing') : isLogin ? t('auth_signin') : t('auth_signup')}
             {!loading && <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />}
@@ -192,7 +192,7 @@ export const AuthPage = () => {
         <button
           onClick={handleGithubLogin}
           disabled={!isSupabaseConfigured}
-          className="w-full bg-background border border-border py-3 rounded-2xl flex items-center justify-center space-x-2 hover:bg-border transition-colors mb-8 disabled:opacity-50"
+          className="w-full bg-background border border-border py-3 rounded-xl md:rounded-2xl flex items-center justify-center space-x-2 active:bg-border md:hover:bg-border transition-colors mb-8 disabled:opacity-50 min-h-[48px]"
         >
           <Github size={18} />
           <span className="text-sm font-medium">GitHub</span>

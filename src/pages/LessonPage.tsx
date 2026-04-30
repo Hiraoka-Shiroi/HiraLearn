@@ -68,13 +68,13 @@ export const LessonPage: React.FC = () => {
   return (
     <div className="h-screen bg-background flex flex-col">
       {/* Top Bar */}
-      <header className="h-16 border-b border-border px-6 flex items-center justify-between shrink-0">
+      <header className="h-14 md:h-16 border-b border-border px-3 md:px-6 flex items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-card rounded-xl transition-colors">
+          <button onClick={() => navigate('/dashboard')} className="p-2 active:bg-card md:hover:bg-card rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
             <ChevronLeft size={20} />
           </button>
           <div>
-            <h1 className="font-bold text-sm md:text-base">{lesson.title}</h1>
+            <h1 className="font-bold text-sm md:text-base truncate">{lesson.title}</h1>
             <p className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">{t('lesson_module')}</p>
           </div>
         </div>
@@ -91,11 +91,11 @@ export const LessonPage: React.FC = () => {
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col md:flex-row overflow-hidden">
         {/* Left: Theory & Task */}
-        <section className="w-full md:w-1/2 overflow-y-auto p-6 md:p-10 border-r border-border custom-scrollbar">
+        <section className="w-full md:w-1/2 overflow-y-auto p-4 md:p-10 border-r border-border custom-scrollbar">
           <div className="max-w-xl mx-auto">
-            <div className="bg-accent-primary/5 border border-accent-primary/10 rounded-2xl p-4 mb-8 flex gap-4">
-              <div className="shrink-0 w-10 h-10 bg-accent-primary text-white rounded-xl flex items-center justify-center">
-                <Info size={20} />
+            <div className="bg-accent-primary/5 border border-accent-primary/10 rounded-xl md:rounded-2xl p-3 md:p-4 mb-5 md:mb-8 flex gap-3 md:gap-4">
+              <div className="shrink-0 w-9 h-9 md:w-10 md:h-10 bg-accent-primary text-white rounded-lg md:rounded-xl flex items-center justify-center">
+                <Info size={18} />
               </div>
               <div>
                 <h3 className="font-bold text-sm mb-1 text-accent-primary">{t('lesson_theory')}</h3>
@@ -105,8 +105,8 @@ export const LessonPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="mb-10">
-              <h2 className="text-2xl font-bold mb-4">{t('lesson_task')}</h2>
+            <div className="mb-6 md:mb-10">
+              <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4">{t('lesson_task')}</h2>
               <p className="text-foreground/80 leading-relaxed">
                 {lesson.tasks[0]?.description}
               </p>
@@ -193,7 +193,7 @@ export const LessonPage: React.FC = () => {
              <div className="flex gap-3">
                 <button
                   onClick={() => setShowHint(!showHint)}
-                  className="px-4 py-2 border border-border rounded-xl hover:bg-card transition-colors flex items-center gap-2 text-sm font-medium"
+                  className="px-3 md:px-4 py-2.5 border border-border rounded-xl active:bg-card md:hover:bg-card transition-colors flex items-center gap-2 text-sm font-medium min-h-[44px]"
                 >
                   <Lightbulb size={16} /> {showHint ? t('lesson_hide_hint') : t('lesson_show_hint')}
                 </button>
@@ -202,14 +202,14 @@ export const LessonPage: React.FC = () => {
                   <button
                     onClick={handleComplete}
                     disabled={submitting}
-                    className="flex-1 bg-accent-success hover:bg-accent-success/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-success/20"
+                    className="flex-1 bg-accent-success active:bg-accent-success/90 md:hover:bg-accent-success/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-success/20 min-h-[44px] py-3"
                   >
                     {submitting ? t('lesson_completing') : t('lesson_complete')} <ArrowRight size={18} />
                   </button>
                 ) : (
                   <button
                     onClick={handleCheck}
-                    className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-primary/20"
+                    className="flex-1 bg-accent-primary active:bg-accent-primary/90 md:hover:bg-accent-primary/90 text-white rounded-xl font-bold flex items-center justify-center gap-2 transition-all shadow-lg shadow-accent-primary/20 min-h-[44px] py-3"
                   >
                     <Play size={16} fill="currentColor" /> {t('lesson_check')}
                   </button>

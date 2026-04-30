@@ -120,7 +120,7 @@ export const OnboardingPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6 overflow-hidden">
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 md:p-6 overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden">
         <div className="absolute top-[-10%] right-[-10%] w-[50%] h-[50%] bg-accent-primary/5 rounded-full blur-[120px]" />
         <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] bg-accent-success/5 rounded-full blur-[120px]" />
@@ -146,22 +146,22 @@ export const OnboardingPage: React.FC = () => {
             exit={{ opacity: 0, x: -20 }}
             className="text-center"
           >
-            <h1 className="text-3xl md:text-4xl font-bold mb-10 text-foreground">{t(currentStepData.titleKey)}</h1>
+            <h1 className="text-2xl md:text-4xl font-bold mb-6 md:mb-10 text-foreground">{t(currentStepData.titleKey)}</h1>
 
             <div className="grid grid-cols-1 gap-4">
               {currentStepData.options.map((option) => (
                 <button
                   key={option.id}
                   onClick={() => handleSelect(option.id)}
-                  className="group relative p-6 bg-card border border-border hover:border-accent-primary rounded-3xl text-left transition-all hover:shadow-2xl hover:shadow-accent-primary/5 overflow-hidden"
+                  className="group relative p-4 md:p-6 bg-card border border-border active:border-accent-primary md:hover:border-accent-primary rounded-2xl md:rounded-3xl text-left transition-all md:hover:shadow-2xl md:hover:shadow-accent-primary/5 overflow-hidden min-h-[72px]"
                 >
-                  <div className="flex items-center gap-6">
-                    <div className="w-14 h-14 bg-accent-primary/10 rounded-2xl flex items-center justify-center text-accent-primary group-hover:bg-accent-primary group-hover:text-white transition-all">
-                      {React.cloneElement(option.icon, { size: 28 })}
+                  <div className="flex items-center gap-4 md:gap-6">
+                    <div className="w-12 h-12 md:w-14 md:h-14 bg-accent-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center text-accent-primary group-active:bg-accent-primary group-active:text-white md:group-hover:bg-accent-primary md:group-hover:text-white transition-all shrink-0">
+                      {React.cloneElement(option.icon, { size: 24 })}
                     </div>
-                    <div>
-                      <h3 className="text-xl font-bold mb-1">{t(option.labelKey)}</h3>
-                      <p className="text-muted">{t(option.descKey)}</p>
+                    <div className="min-w-0">
+                      <h3 className="text-lg md:text-xl font-bold mb-0.5 md:mb-1">{t(option.labelKey)}</h3>
+                      <p className="text-muted text-sm md:text-base">{t(option.descKey)}</p>
                     </div>
                   </div>
                 </button>
