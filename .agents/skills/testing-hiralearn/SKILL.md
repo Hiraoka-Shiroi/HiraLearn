@@ -15,27 +15,34 @@ cd /home/ubuntu/repos/HiraLearn
 npm install --prefix frontend          # or simply: npm run install:frontend
 npm run dev                            # ≡ npm run dev --prefix frontend (Vite on localhost:5173)
 ```
-Requires `frontend/.env` file with Supabase credentials. If no `.env` exists, you can extract Supabase URL and key from the deployed bundle:
+Requires `frontend/.env` file with Supabase credentials. If no `.env` exists, you can extract Supabase URL and key from the deployed bundle.
+
+**Important**: The Netlify deploy serves JS/CSS as separate files (NOT inlined via vite-plugin-singlefile). To extract credentials, target the JS bundle:
 ```bash
-# Extract Supabase URL from deployed site
-curl -s "https://<deployed-url>/index.html" | grep -oP 'https://[a-z0-9]+\.supabase\.co' | head -1
-# Extract JWT key from deployed site
-curl -s "https://<deployed-url>/index.html" | grep -oP 'eyJ[A-Za-z0-9_/+=\-]+\.eyJ[A-Za-z0-9_/+=\-]+\.[A-Za-z0-9_/+=\-]+' | head -1
+# 1. Find the JS bundle filename from the HTML
+curl -s "https://hiraoka.netlify.app/" | grep -oP 'src="/assets/index-[^"]+\.js"'
+# 2. Extract Supabase URL from the JS bundle
+curl -s "https://hiraoka.netlify.app/assets/index-<HASH>.js" | grep -oP 'https://[a-z0-9]+\.supabase\.co' | head -1
+# 3. Extract anon key (JWT) from the JS bundle
+curl -s "https://hiraoka.netlify.app/assets/index-<HASH>.js" | grep -oP 'eyJ[A-Za-z0-9_/+=\-]+\.eyJ[A-Za-z0-9_/+=\-]+\.[A-Za-z0-9_/+=\-]+' | head -1
 ```
+The `npm run build` output (for APK) uses `vite-plugin-singlefile` and inlines everything into `frontend/dist/index.html`, but local `.env` may have placeholder values — always extract from the deployed site.
+
+**Port fallback**: If port 5173 is in use, Vite will auto-select the next available port (e.g., 5174). Check the terminal output for the actual URL.
 
 ## Build & Deploy for Testing
 ```bash
 npm run build                 # ≡ npm run build --prefix frontend; outputs to frontend/dist/
 # Then use Devin's deploy tool with command="frontend" dir="frontend/dist/"
 ```
-The build uses `vite-plugin-singlefile` so everything is inlined into `frontend/dist/index.html`.
 
 ## Devin Secrets Needed
-- `VITE_SUPABASE_URL` — Supabase project URL (e.g. `https://pckydjhjvunvgekppqqd.supabase.co`)
-- `VITE_SUPABASE_ANON_KEY` — Supabase anon/publishable key. **Note:** The user may provide keys in `sb_publishable_...` format (Supabase Management API key) rather than the standard JWT (`eyJ...`) format. Both formats work as the `apikey` header for Supabase auth endpoints. Write whichever format the user provides into the `.env` file.
-- Optional: Supabase service_role key (`sb_secret_...` format) for creating test users bypassing email confirmation, or for querying data directly via REST API bypassing RLS
+- `HIRALEARN_TEST_EMAIL` — Test account email (repo-scoped, non-sensitive)
+- `HIRALEARN_TEST_PASSWORD` — Test account password (repo-scoped)
+- Optional: `VITE_SUPABASE_URL` — Can be extracted from deployed bundle instead
+- Optional: `VITE_SUPABASE_ANON_KEY` — Can be extracted from deployed bundle instead
+- Optional: Supabase service_role key for bypassing RLS or creating test users
 - Optional: `VITE_PADDLE_CLIENT_TOKEN` for payment testing
-- **Test account credentials**: Ask the user for email + password for an existing account. Creating new accounts may hit email rate limits or require email confirmation.
 
 ## Verifying Supabase Connection Before Testing
 Before starting the dev server, verify the Supabase credentials work:
@@ -54,7 +61,7 @@ curl -s "https://<SUPABASE_URL>/rest/v1/profiles?select=id,full_name,level,xp,st
   -H "Authorization: Bearer <SERVICE_ROLE_KEY>"
 ```
 
-## Supabase Schema Notes
+## Supabase Schema & Migration Notes
 The actual database schema may differ from the TypeScript types in `frontend/src/types/database.ts`. Always verify with direct API queries:
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/<table>?select=*&limit=1" \
@@ -63,11 +70,13 @@ curl -s "${SUPABASE_URL}/rest/v1/<table>?select=*&limit=1" \
 ```
 
 **Known schema differences:**
-- `profiles` table does NOT have `last_active_at` column — use `updated_at` instead
-- `admin_user_list` view does not exist — the app falls back to querying `profiles` directly
+- `profiles` table might not have `last_active_at` column — use `updated_at` instead
+- `admin_user_list` view may not exist — the app falls back to querying `profiles` directly
 - `error_logs`, `page_metrics`, `payments` tables may not exist — the admin console code handles this gracefully
 - `subscriptions` table exists and supports upsert for Kaspi payments
-- `courses` table does NOT have `order_index` column — query without ordering
+- `courses` table might not have `order_index` column — query without ordering
+
+**Migration dependency**: The frontend code may reference Supabase RPC functions (e.g., `update_own_profile`, `complete_lesson`) that require migrations from `backend/migrations/` to be applied. If you get "Could not find the function" errors, the migration has not been run in Supabase SQL Editor. Check `backend/migrations/` for the relevant SQL file.
 
 **Profiles table actual columns:** `id, username, full_name, avatar_url, role, level, xp, streak, current_goal, daily_minutes, explanation_style, created_at, updated_at`
 
@@ -104,15 +113,21 @@ Requires a Supabase account. Potential blockers:
 - **RLS**: After login, the Supabase client uses the user's JWT (authenticated role), not the anon/service_role key. RLS policies apply to all queries. The admin console stats use `profiles` count which works, but detailed selects may be blocked by RLS.
 
 ## ProfilePage Testing
-The ProfilePage (`/#/profile`) is the most complex page. Before testing, query Supabase to know the expected values:
+The ProfilePage (`/#/profile`) is the most complex page. It was refactored into feature components:
+- `features/profile/components/ProfileHero.tsx` — avatar, name, level, XP bar
+- `features/profile/components/ProfileStats.tsx` — 2x2 grid (level, streak, lessons, XP)
+- `features/profile/components/ProfileEditModal.tsx` — edit name, goal, daily, style via RPC
+- `features/profile/components/AccountInfoCard.tsx` — user ID, email, role, status, plan
+- `features/profile/hooks/useProfileData.ts` — all data fetching and calculations
+
+Before testing, query Supabase to know the expected values:
 ```bash
-# Get profile data
-curl -s "${SUPABASE_URL}/rest/v1/profiles?select=*&id=eq.<USER_ID>" -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}"
-# Get courses, modules, lessons
-curl -s "${SUPABASE_URL}/rest/v1/courses?select=id,title,slug" -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}"
-curl -s "${SUPABASE_URL}/rest/v1/lessons?select=id,title,module_id,xp_reward" -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}"
-# Get user progress
-curl -s "${SUPABASE_URL}/rest/v1/user_progress?select=*&user_id=eq.<USER_ID>" -H "apikey: ${KEY}" -H "Authorization: Bearer ${KEY}"
+# Get profile data (use auth token, not anon key for RLS-protected queries)
+TOKEN=$(curl -s "$SUPABASE_URL/auth/v1/token?grant_type=password" \
+  -H "apikey: $ANON_KEY" -H "Content-Type: application/json" \
+  -d '{"email":"$EMAIL","password":"$PASS"}' | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+curl -s "$SUPABASE_URL/rest/v1/profiles?select=*&id=eq.<USER_ID>" -H "apikey: $ANON_KEY" -H "Authorization: Bearer $TOKEN"
+curl -s "$SUPABASE_URL/rest/v1/user_progress?select=*&user_id=eq.<USER_ID>&status=eq.completed" -H "apikey: $ANON_KEY" -H "Authorization: Bearer $TOKEN"
 ```
 
 **Key things to verify on ProfilePage:**
@@ -176,4 +191,5 @@ The app supports Russian (default) and English. Language toggle is in the sideba
 - Several Supabase tables referenced in code may not exist: `error_logs`, `page_metrics`, `payments`, `admin_user_list` view
 - The app uses HashRouter — direct URL navigation like `google-chrome "url/#/admin"` may redirect to dashboard; use sidebar navigation instead
 - XP may exceed level threshold without auto-incrementing the level (DB data inconsistency) — the UI correctly caps the XP bar at 100%
-- `courses` table has no `order_index` column — avoid ordering by it in API queries
+- `courses` table might not have `order_index` column — avoid ordering by it in API queries
+- RPC functions (`update_own_profile`, `complete_lesson`) might not exist if migrations haven't been applied — check `backend/migrations/` for the SQL and advise the user to apply it
