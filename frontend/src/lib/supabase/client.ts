@@ -1,3 +1,16 @@
+/**
+ * Supabase client singleton.
+ *
+ * Key design decisions:
+ * - `persistSession: true` — keeps the JWT in storage so the user stays
+ *   logged in across page reloads.
+ * - `detectSessionInUrl` — set to `false` inside Capacitor (APK / file://
+ *   protocol) because the OAuth redirect URL doesn't contain a valid hash
+ *   fragment; leaving it `true` would cause auth to silently fail.
+ * - `customStorage` — a memory-backed fallback is used when `localStorage`
+ *   is blocked (e.g. in some WebView / file:// environments on Android).
+ *   This keeps the app functional even without persistent storage.
+ */
 
 import { createClient } from '@supabase/supabase-js';
 import { Database } from '@/types/database';
@@ -5,7 +18,6 @@ import { Database } from '@/types/database';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Custom storage to prevent crashes on file:// if localStorage is blocked
 const isLocalStorageAvailable = () => {
   try {
     const test = '__storage_test__';

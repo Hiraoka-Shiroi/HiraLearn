@@ -32,26 +32,23 @@ export const OnboardingPage: React.FC = () => {
     if (!user) return;
     const d = finalData ?? data;
 
-    const { data: updatedProfile, error } = await supabase
-      .from('profiles')
-      .update({
-        current_goal: d.goal,
-        daily_minutes: d.daily_minutes,
-        explanation_style: d.explanation_style,
-      })
-      .eq('id', user.id)
-      .select()
-      .single();
+    const { data: updatedProfile, error } = await supabase.rpc('update_own_profile', {
+      p_full_name: null,
+      p_username: null,
+      p_avatar_url: null,
+      p_current_goal: d.goal,
+      p_daily_minutes: d.daily_minutes,
+      p_explanation_style: d.explanation_style,
+    });
 
     if (error) {
       console.error("Error updating profile:", error);
-      try { localStorage.setItem('hiralearn_onboarding_done', '1'); } catch (_e) { /* noop */ }
-      navigate('/dashboard');
-    } else {
-      setProfile(updatedProfile);
-      try { localStorage.setItem('hiralearn_onboarding_done', '1'); } catch (_e) { /* noop */ }
-      navigate('/dashboard');
+    } else if (updatedProfile) {
+      const profile = Array.isArray(updatedProfile) ? updatedProfile[0] : updatedProfile;
+      if (profile) setProfile(profile);
     }
+    try { localStorage.setItem('hiralearn_onboarding_done', '1'); } catch (_e) { /* noop */ }
+    navigate('/dashboard');
   };
 
   interface StepOption {

@@ -1,3 +1,18 @@
+/**
+ * Root application component.
+ *
+ * Routing: HashRouter is used instead of BrowserRouter so that the app works
+ * correctly when served from `file://` in a Capacitor APK (where there is no
+ * server to handle HTML5 history fallbacks).
+ *
+ * Auth initialization: on mount, `initAuth` tries to restore the Supabase
+ * session. A 10-second emergency timeout ensures the app renders even if the
+ * Capacitor WebView stalls on session restore.
+ *
+ * Route protection: `<ProtectedRoute>` redirects unauthenticated users to
+ * `/login`. Admin routes are additionally guarded by `<AdminGate>` which
+ * checks `profile.role`.
+ */
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { LandingPage } from '@/pages/LandingPage'
 import { Dashboard } from '@/pages/Dashboard'
