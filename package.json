@@ -5,12 +5,15 @@
   "description": "HiraLearn — root workspace. Contains a Vite/React frontend (frontend/) and Supabase backend (backend/: migrations, edge functions, seeds).",
   "scripts": {
     "dev": "npm run dev --prefix frontend",
+    "dev:host": "npm run dev --prefix frontend -- --host 0.0.0.0",
     "build": "npm run build --prefix frontend",
     "build:web": "npm run build:web --prefix frontend",
     "preview": "npm run preview --prefix frontend",
     "lint": "npm run lint --prefix frontend",
     "typecheck": "npm run typecheck --prefix frontend",
     "install:frontend": "npm install --prefix frontend",
+    "android:sync": "npm run build --prefix frontend && cd frontend && npx cap sync android",
+    "android:open": "cd frontend && npx cap open android",
     "db:diff": "supabase db diff --workdir backend",
     "db:push": "supabase db push --workdir backend",
     "db:reset": "supabase db reset --workdir backend"

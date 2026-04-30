@@ -6,37 +6,59 @@ Structured path from zero to production-ready frontend projects with AI-guided s
 
 ```
 HiraLearn/
-├── frontend/         # Vite + React + TypeScript app (всё по фронту)
+├── frontend/                # Vite + React + TypeScript app
 │   ├── src/
+│   │   ├── pages/           # Страницы (Dashboard, Lesson, Profile, ...)
+│   │   ├── features/        # Feature-модули (admin, profile, billing, ...)
+│   │   ├── components/      # Общие компоненты (layout, auth, avatar)
+│   │   ├── lib/             # Supabase client, сервисы, Firebase, утилиты
+│   │   ├── store/           # Zustand stores (auth, theme)
+│   │   ├── i18n/            # Переводы RU / EN
+│   │   └── types/           # TypeScript типы
 │   ├── public/
-│   ├── index.html
-│   ├── vite.config.ts / vite.config.web.ts
-│   ├── tsconfig*.json
-│   ├── tailwind.config.ts / postcss.config.js
-│   ├── .eslintrc.cjs
-│   ├── patch-build.js
-│   ├── .env.example
-│   └── package.json   (фронтэндные зависимости)
-├── backend/          # Supabase: миграции, edge функции, seeds
-│   ├── migrations/
-│   ├── functions/
-│   └── seeds/
-├── supabase → backend/   # симлинк, чтобы Supabase CLI находил проект
-├── netlify.toml      # билдит из frontend/
-└── package.json      # root: прокси-скрипты к frontend/ и supabase CLI
+│   ├── package.json         # Фронтэндные зависимости
+│   └── README.md
+├── backend/                 # Supabase: миграции, edge функции, seeds
+│   ├── migrations/          # SQL-миграции (применять по порядку дат)
+│   ├── functions/           # Edge Functions (send-push, paddle-webhook)
+│   ├── seeds/               # SQL-сиды (full_content_seed, admin_setup)
+│   └── README.md
+├── supabase → backend/      # Симлинк для Supabase CLI
+├── netlify.toml             # Netlify: билдит из frontend/
+├── package.json             # Root: прокси-скрипты к frontend/ и Supabase CLI
+└── README.md
 ```
 
-NB: `supabase` в корне — это символическая ссылка на `backend/`. Сделана для того, чтобы `supabase` CLI без флагов (`supabase db push`, `supabase functions deploy ...`) продолжал работать. На Windows git может потребовать `git config core.symlinks true` и реклон — или можно заменить симлинк на флаг `--workdir backend`.
+> `supabase` в корне — символическая ссылка на `backend/`. Нужна чтобы
+> `supabase` CLI (`supabase db push`, `supabase functions deploy ...`) работал
+> без флага `--workdir`. На Windows может потребоваться `git config core.symlinks true`
+> и реклон — или заменить симлинк на флаг `--workdir backend`.
 
 ## Quick Start
 
 ```bash
-npm install --prefix frontend
-cp frontend/.env.example frontend/.env  # fill in your keys
-npm run dev          # эквивалентно: npm run dev --prefix frontend
+npm run install:frontend
+cp frontend/.env.example frontend/.env  # заполните ключи Supabase
+npm run dev              # localhost
+npm run dev:host         # + доступ по IP (для телефона в одной Wi-Fi сети)
 ```
 
-Рутовый `package.json` содержит удобные прокси-скрипты: `npm run dev`, `npm run build`, `npm run build:web`, `npm run lint`, `npm run typecheck` все делегируют в `frontend/`. Для Supabase: `npm run db:push`, `npm run db:reset`, `npm run db:diff`.
+### Все root-скрипты
+
+| Команда | Что делает |
+|---------|-----------|
+| `npm run dev` | Запуск Vite dev-сервера |
+| `npm run dev:host` | Dev-сервер с `--host 0.0.0.0` (Network URL для телефона) |
+| `npm run build` | Сборка SPA (для Capacitor APK) |
+| `npm run build:web` | Сборка для Netlify |
+| `npm run typecheck` | Проверка типов TypeScript |
+| `npm run lint` | ESLint |
+| `npm run install:frontend` | Установка зависимостей фронтенда |
+| `npm run android:sync` | Build + Capacitor sync android |
+| `npm run android:open` | Открыть Android Studio |
+| `npm run db:push` | Supabase DB push |
+| `npm run db:reset` | Supabase DB reset |
+| `npm run db:diff` | Supabase DB diff |
 
 ## Push Notifications Setup
 
@@ -137,12 +159,33 @@ Returns: { audience_size, sent, failed, invalid_tokens }
 | `VITE_FCM_VAPID_KEY` | `.env` | Web Push VAPID key (client-side) |
 | `VITE_FIREBASE_*` | `.env` | Firebase client config (analytics + messaging) |
 
+## Security
+
+- XP, level, streak, role, status — **не обновляются напрямую с клиента**.
+  Триггер `profiles_protect_columns` откатывает любые прямые UPDATE от `authenticated`.
+- Начисление XP → `complete_lesson` / `award_xp` RPC (SECURITY DEFINER).
+- Обновление профиля → `update_own_profile` RPC (только safe fields).
+- Admin-действия → RPC с проверкой роли (`admin_resolve_push_audience` и т.д.).
+- `service_role` ключ **не используется** на фронтенде.
+- `.env` / `.env.local` / service account JSON файлы в `.gitignore`.
+
+## Android / APK
+
+Android-платформа не закоммичена в репозиторий. Создаётся командой:
+
+```bash
+cd frontend && npx cap add android
+```
+
+Подробности — в `frontend/README.md`.
+
 ## Tech Stack
 
 - **Frontend:** React + TypeScript + Vite + Tailwind CSS
 - **Backend:** Supabase (Auth, Database, Edge Functions, RLS)
 - **Push:** Firebase Cloud Messaging (FCM HTTP v1)
 - **State:** Zustand
-- **Routing:** React Router
+- **Routing:** React Router (HashRouter для Capacitor совместимости)
 - **i18n:** Custom RU/EN toggle
 - **Theme:** 5 color themes with persistence
+- **Payments:** Paddle (Merchant of Record)

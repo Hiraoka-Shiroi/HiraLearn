@@ -1,3 +1,16 @@
+/**
+ * Lesson page — full lifecycle of a single lesson:
+ *
+ * 1. Load lesson + tasks via `contentCardService.getLessonWithTasks`.
+ * 2. Render theory panel (always) and code editor (when tasks exist).
+ * 3. User edits starter code and clicks "Check" → `checkHTML` validates
+ *    the answer against `task.validation_rules` (client-side).
+ * 4. On correct answer (or theory-only), user clicks "Complete" →
+ *    `progressService.completeLesson` calls the `complete_lesson` RPC
+ *    which awards XP, updates level/streak atomically on the server.
+ * 5. A celebration overlay shows the XP earned and whether the user
+ *    leveled up, then navigates back to the dashboard.
+ */
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';

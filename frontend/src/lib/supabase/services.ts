@@ -1,6 +1,20 @@
+/**
+ * Supabase data-access services.
+ *
+ * `contentCardService` — read-only queries for courses / modules / lessons / tasks.
+ * `progressService`    — user progress & lesson completion (via `complete_lesson` RPC).
+ * `profileService`     — safe profile field updates (via `update_own_profile` RPC).
+ *
+ * All write operations go through SECURITY DEFINER RPCs so that the client
+ * cannot tamper with XP, level, streak, or role. See also the
+ * `profiles_protect_columns` trigger in the 20260430 migration.
+ */
 
 import { supabase } from './client';
 import { Course, Module, Lesson, Task, UserProgress, Profile } from '@/types/database';
+
+// TODO: migrate completeLesson flow to a single Supabase RPC that also
+//       validates task answers server-side (currently validation is client-only).
 
 export const contentCardService = {
   async getCourses() {

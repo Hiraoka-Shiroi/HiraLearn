@@ -1,34 +1,24 @@
-
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
-import { contentCardService, progressService, profileService } from '@/lib/supabase/services';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  User, Award, LogOut, ChevronRight, Zap, Trophy, Target, Shield,
-  Flame, Clock, BookOpen, TrendingUp, Calendar, Star, Lock, ArrowRight,
-  Sparkles, Brain, Edit3, Copy, Check, X, Save, Info,
+  User, Award, LogOut, ChevronRight, Flame, Clock, BookOpen, TrendingUp,
+  Star, Lock, ArrowRight, Sparkles, Brain, Edit3, Shield, Target,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
-import { TranslationKey } from '@/i18n/translations';
-import { billingService } from '@/features/billing/billingService';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
 import { isStaff } from '@/features/admin/permissions';
-import type { Subscription, Course, Module, Lesson, UserProgress } from '@/types/database';
-import {
-  getCurrentLevelXp,
-  getLevelProgress,
-  getNextLevelXp,
-  isMaxLevel,
-} from '@/lib/progress/levels';
-import { Avatar } from '@/components/avatar/Avatar';
-import { AvatarPickerModal } from '@/components/avatar/AvatarPickerModal';
-import { uploadAvatar } from '@/lib/avatar/uploadAvatar';
 
-/* ── Fade-in wrapper ────────────────────────────────────────── */
+import { useProfileData } from '@/features/profile/hooks/useProfileData';
+import { ProfileHero } from '@/features/profile/components/ProfileHero';
+import { ProfileStats } from '@/features/profile/components/ProfileStats';
+import { ProfileEditModal } from '@/features/profile/components/ProfileEditModal';
+import { AccountInfoCard } from '@/features/profile/components/AccountInfoCard';
+
 const FadeIn: React.FC<{ children: React.ReactNode; delay?: number; className?: string }> = ({ children, delay = 0, className = '' }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
@@ -41,224 +31,26 @@ const FadeIn: React.FC<{ children: React.ReactNode; delay?: number; className?: 
 );
 
 export const ProfilePage: React.FC = () => {
-  const { profile, user, signOut, setProfile } = useAuthStore();
+  const { profile, signOut } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [editOpen, setEditOpen] = useState(false);
 
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [progress, setProgress] = useState<UserProgress[]>([]);
-  const [courses, setCourses] = useState<Course[]>([]);
-  const [allModules, setAllModules] = useState<Module[]>([]);
-  const [allLessons, setAllLessons] = useState<Lesson[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const load = async () => {
-      try {
-        const promises: Promise<void>[] = [];
-
-        if (user) {
-          promises.push(
-            billingService.getSubscription(user.id).then(setSubscription).catch(() => {}),
-          );
-        }
-
-        if (profile) {
-          promises.push(
-            progressService.getUserProgress(profile.id).then(setProgress).catch(() => {}),
-          );
-        }
-
-        const fetchedCourses = await contentCardService.getCourses().catch(() => [] as Course[]);
-        setCourses(fetchedCourses);
-
-        const modulesArr: Module[] = [];
-        const lessonsArr: Lesson[] = [];
-        for (const course of fetchedCourses) {
-          const mods = await contentCardService.getModules(course.id).catch(() => [] as Module[]);
-          modulesArr.push(...mods);
-          for (const m of mods) {
-            const ls = await contentCardService.getLessons(m.id).catch(() => [] as Lesson[]);
-            lessonsArr.push(...ls);
-          }
-        }
-        setAllModules(modulesArr);
-        setAllLessons(lessonsArr);
-
-        await Promise.all(promises);
-      } catch {
-        /* silent */
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  }, [user, profile]);
-
-  /* ── Derived data ────────────────────────────────────────── */
-  const level = profile?.level ?? 1;
-  const xp = profile?.xp ?? 0;
-  const streak = profile?.streak ?? 0;
-  const currentLevelXp = getCurrentLevelXp(level);
-  const nextLevelXp = isMaxLevel(level) ? xp : getNextLevelXp(level);
-  const xpInLevel = Math.max(0, xp - currentLevelXp);
-  const xpNeeded = isMaxLevel(level) ? 0 : Math.max(1, nextLevelXp - currentLevelXp);
-  const xpPercent = isMaxLevel(level) ? 100 : Math.round(getLevelProgress(xp, level) * 100);
-
-  const completedLessonIds = useMemo(() => new Set(progress.filter(p => p.status === 'completed').map(p => p.lesson_id)), [progress]);
-  const completedCount = completedLessonIds.size;
-
-  const nextLesson = useMemo(() => {
-    for (const lesson of allLessons) {
-      if (!completedLessonIds.has(lesson.id)) return lesson;
-    }
-    return null;
-  }, [allLessons, completedLessonIds]);
-
-  const currentModule = useMemo(() => {
-    if (!nextLesson) return allModules[allModules.length - 1] ?? null;
-    return allModules.find(m => m.id === nextLesson.module_id) ?? null;
-  }, [nextLesson, allModules]);
-
-  const currentCourse = useMemo(() => {
-    if (!currentModule) return courses[0] ?? null;
-    return courses.find(c => c.id === currentModule.course_id) ?? null;
-  }, [currentModule, courses]);
-
-  /* Course-scoped progress for learning path card */
-  const courseLessons = useMemo(() => {
-    if (!currentCourse) return [];
-    const courseModuleIds = new Set(allModules.filter(m => m.course_id === currentCourse.id).map(m => m.id));
-    return allLessons.filter(l => courseModuleIds.has(l.module_id));
-  }, [currentCourse, allModules, allLessons]);
-  const courseCompletedCount = useMemo(() => courseLessons.filter(l => completedLessonIds.has(l.id)).length, [courseLessons, completedLessonIds]);
-  const courseTotalLessons = courseLessons.length;
-
-  /* Weak topics = modules where user hasn't completed at least 50% */
-  const weakModules = useMemo(() => {
-    return allModules.filter(m => {
-      const moduleLessons = allLessons.filter(l => l.module_id === m.id);
-      if (moduleLessons.length === 0) return false;
-      const done = moduleLessons.filter(l => completedLessonIds.has(l.id)).length;
-      return done > 0 && done < moduleLessons.length * 0.5;
-    }).slice(0, 3);
-  }, [allModules, allLessons, completedLessonIds]);
-
-  /* Recent activity */
-  const recentActivity = useMemo(() => {
-    return progress
-      .filter(p => p.status === 'completed' && p.completed_at)
-      .sort((a, b) => new Date(b.completed_at!).getTime() - new Date(a.completed_at!).getTime())
-      .slice(0, 5)
-      .map(p => {
-        const lesson = allLessons.find(l => l.id === p.lesson_id);
-        return { ...p, lessonTitle: lesson?.title ?? p.lesson_id, xpReward: lesson?.xp_reward ?? 0 };
-      });
-  }, [progress, allLessons]);
-
-  /* Days since registration */
-  const daysSinceJoin = useMemo(() => {
-    if (!profile?.created_at) return 0;
-    return Math.floor((Date.now() - new Date(profile.created_at).getTime()) / 86400000);
-  }, [profile?.created_at]);
-
-  /* Achievements with unlock logic */
-  const achievements = useMemo(() => {
-    const list: { id: string; titleKey: TranslationKey; descKey: TranslationKey; icon: React.ReactNode; unlocked: boolean; color: string }[] = [
-      { id: 'first_step', titleKey: 'ach_first_step', descKey: 'ach_first_step_desc', icon: <Zap size={22} />, unlocked: completedCount >= 1, color: 'text-accent-warning' },
-      { id: 'ninja', titleKey: 'ach_ninja', descKey: 'ach_ninja_desc', icon: <Target size={22} />, unlocked: completedCount >= 5, color: 'text-accent-primary' },
-      { id: 'streak', titleKey: 'ach_streak', descKey: 'ach_streak_desc', icon: <Trophy size={22} />, unlocked: streak >= 3, color: 'text-accent-success' },
-    ];
-    return list;
-  }, [completedCount, streak]);
+  const {
+    loading, subscription,
+    level, xp, streak,
+    xpInLevel, xpNeeded, xpPercent,
+    completedCount, completedLessonIds,
+    nextLesson, currentCourse, currentModule,
+    courseCompletedCount, courseTotalLessons,
+    weakModules, recentActivity,
+    daysSinceJoin, achievements, allLessons,
+  } = useProfileData();
 
   const handleLogout = async () => {
     await signOut();
     navigate('/login');
   };
-
-  /* ── Edit profile state ─────────────────────────────────── */
-  const [editOpen, setEditOpen] = useState(false);
-  const [editForm, setEditForm] = useState({
-    full_name: '',
-    username: '',
-    avatar_url: '',
-    current_goal: '',
-    daily_minutes: 30,
-    explanation_style: '',
-  });
-  const [editSaving, setEditSaving] = useState(false);
-  const [editError, setEditError] = useState('');
-
-  const openEdit = useCallback(() => {
-    setEditForm({
-      full_name: profile?.full_name || '',
-      username: profile?.username || '',
-      avatar_url: profile?.avatar_url || '',
-      current_goal: profile?.current_goal || '',
-      daily_minutes: profile?.daily_minutes ?? 30,
-      explanation_style: profile?.explanation_style || '',
-    });
-    setEditError('');
-    setEditOpen(true);
-  }, [profile]);
-
-  const saveEdit = useCallback(async () => {
-    if (!user) return;
-    setEditSaving(true);
-    setEditError('');
-    try {
-      // Profile fields go through the SECURITY DEFINER RPC; clients
-      // cannot UPDATE profiles directly any more.
-      const next = await profileService.updateOwnProfile({
-        full_name:         editForm.full_name || null,
-        username:          editForm.username || null,
-        avatar_url:        editForm.avatar_url || null,
-        current_goal:      editForm.current_goal ?? '',
-        daily_minutes:     editForm.daily_minutes,
-        explanation_style: editForm.explanation_style ?? '',
-      });
-      setProfile(next);
-      setEditOpen(false);
-    } catch (e) {
-      setEditError((e as Error).message);
-    } finally {
-      setEditSaving(false);
-    }
-  }, [user, editForm, setProfile]);
-
-  const [avatarPickerOpen, setAvatarPickerOpen] = useState(false);
-  const handleAvatarUpload = useCallback(async (blob: Blob) => {
-    if (!user) return;
-    const next = await uploadAvatar({
-      userId: user.id,
-      blob,
-      previousAvatarUrl: profile?.avatar_url ?? editForm.avatar_url ?? null,
-    });
-    setProfile(next);
-    setEditForm(f => ({ ...f, avatar_url: next.avatar_url ?? '' }));
-  }, [user, profile?.avatar_url, editForm.avatar_url, setProfile]);
-
-  /* ── Copy ID helper ─────────────────────────────────────── */
-  const [copied, setCopied] = useState(false);
-  const copyId = useCallback(async () => {
-    if (!user?.id) return;
-    try {
-      await navigator.clipboard.writeText(user.id);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      /* fallback */
-      const ta = document.createElement('textarea');
-      ta.value = user.id;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand('copy');
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    }
-  }, [user?.id]);
 
   if (loading) {
     return (
@@ -274,84 +66,18 @@ export const ProfilePage: React.FC = () => {
     <MainLayout>
       <div className="p-4 md:p-8 lg:p-10 max-w-6xl mx-auto space-y-5 md:space-y-8 pb-4 md:pb-12">
 
-        {/* ═══════ HERO PROFILE CARD ═══════ */}
+        {/* ═══════ HERO + STATS ═══════ */}
         <FadeIn>
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-surface-2 border border-border p-6 md:p-10">
-            {/* Background decorations */}
-            <div className="absolute top-0 right-0 w-72 h-72 bg-accent-primary/[0.06] rounded-full blur-[80px] -translate-y-1/3 translate-x-1/4" />
-            <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent-success/[0.04] rounded-full blur-[60px] translate-y-1/3 -translate-x-1/4" />
+          <ProfileHero
+            level={level} xp={xp}
+            xpInLevel={xpInLevel} xpNeeded={xpNeeded} xpPercent={xpPercent}
+            subscription={subscription}
+            daysSinceJoin={daysSinceJoin}
+          />
+        </FadeIn>
 
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-              {/* Avatar */}
-              <div className="relative group">
-                <div className="absolute inset-0 rounded-full bg-accent-primary/20 blur-xl group-hover:bg-accent-primary/30 transition-all duration-500" />
-                <Avatar
-                  src={profile?.avatar_url}
-                  name={profile?.full_name}
-                  ring
-                  sizeClass="w-28 h-28 md:w-32 md:h-32"
-                  className="relative"
-                />
-                {/* Level badge */}
-                <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl bg-accent-primary text-white flex items-center justify-center text-sm font-black shadow-glow-primary">
-                  {level}
-                </div>
-              </div>
-
-              {/* Info */}
-              <div className="flex-1 text-center md:text-left min-w-0">
-                <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1 truncate">
-                  {profile?.full_name || t('profile_default_name')}
-                </h1>
-                {profile?.username && (
-                  <p className="text-muted-foreground text-sm mb-3">@{profile.username}</p>
-                )}
-                <div className="flex flex-wrap gap-2 justify-center md:justify-start mb-4">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-accent-primary/10 text-accent-primary text-xs font-bold border border-accent-primary/20">
-                    <TrendingUp size={12} /> {t('profile_xp_level').replace('{level}', String(level)).replace('{xp}', String(xp))}
-                  </span>
-                  <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border ${
-                    subscription?.status === 'active'
-                      ? 'bg-accent-success/10 text-accent-success border-accent-success/20'
-                      : 'bg-surface-2 text-muted-foreground border-border'
-                  }`}>
-                    {subscription?.status === 'active'
-                      ? (subscription.plan === 'lifetime' ? 'Lifetime' : subscription.plan)
-                      : t('profile_free_plan')}
-                  </span>
-                  {daysSinceJoin > 0 && (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-surface-2 text-muted-foreground text-xs font-bold border border-border">
-                      <Calendar size={12} /> {t('profile_days_in_hira').replace('{n}', String(daysSinceJoin))}
-                    </span>
-                  )}
-                </div>
-
-                {/* XP Progress bar */}
-                <div className="max-w-md">
-                  <div className="flex justify-between text-xs mb-1.5">
-                    <span className="text-muted-foreground font-medium">{t('profile_xp_to_next')}</span>
-                    <span className="font-bold text-accent-primary">{xpInLevel} / {xpNeeded} XP</span>
-                  </div>
-                  <div className="h-2.5 bg-surface-1 rounded-full overflow-hidden border border-border/50">
-                    <motion.div
-                      initial={{ width: 0 }}
-                      animate={{ width: `${xpPercent}%` }}
-                      transition={{ duration: 0.8, ease: 'easeOut' }}
-                      className="h-full rounded-full bg-gradient-to-r from-accent-primary to-[color:var(--accent-primary)] shadow-glow-primary"
-                    />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick stats row */}
-            <div className="relative z-10 grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-              <StatMini icon={<Zap size={16} />} value={String(xp)} label="XP" color="text-accent-warning" />
-              <StatMini icon={<Flame size={16} />} value={String(streak)} label={t('dash_streak')} color="text-orange-400" />
-              <StatMini icon={<BookOpen size={16} />} value={String(completedCount)} label={t('dash_lessons_done')} color="text-accent-success" />
-              <StatMini icon={<Trophy size={16} />} value={String(level)} label={t('sidebar_level')} color="text-accent-primary" />
-            </div>
-          </div>
+        <FadeIn delay={0.05}>
+          <ProfileStats level={level} streak={streak} completedCount={completedCount} xp={xp} />
         </FadeIn>
 
         {/* ═══════ MAIN GRID ═══════ */}
@@ -580,40 +306,7 @@ export const ProfilePage: React.FC = () => {
 
             {/* Account info */}
             <FadeIn delay={0.22}>
-              <section>
-                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
-                  <Info size={18} className="text-muted-foreground" /> {t('profile_account_info')}
-                </h2>
-                <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden text-sm">
-                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
-                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">User ID</span>
-                    <span className="font-mono text-xs truncate flex-1 min-w-0">{user?.id ?? '—'}</span>
-                    <button onClick={copyId} className="shrink-0 p-1.5 rounded-lg hover:bg-surface-2 active:bg-surface-2 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" title={t('profile_copy_id')}>
-                      {copied ? <Check size={14} className="text-accent-success" /> : <Copy size={14} className="text-muted-foreground" />}
-                    </button>
-                  </div>
-                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
-                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">Email</span>
-                    <span className="text-xs truncate">{user?.email ?? '—'}</span>
-                  </div>
-                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
-                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_role')}</span>
-                    <span className="text-xs font-bold capitalize">{profile?.role ?? '—'}</span>
-                  </div>
-                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
-                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_status')}</span>
-                    <span className="text-xs capitalize">{profile?.status ?? '—'}</span>
-                  </div>
-                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
-                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_plan')}</span>
-                    <span className="text-xs font-bold capitalize">{subscription?.plan ?? 'free'}</span>
-                  </div>
-                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
-                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_joined')}</span>
-                    <span className="text-xs">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : '—'}</span>
-                  </div>
-                </div>
-              </section>
+              <AccountInfoCard subscription={subscription} />
             </FadeIn>
 
             {/* Mobile toggles (hidden on desktop where sidebar has them) */}
@@ -629,7 +322,7 @@ export const ProfilePage: React.FC = () => {
             <FadeIn delay={0.26}>
               <div className="space-y-2.5">
                 <button
-                  onClick={openEdit}
+                  onClick={() => setEditOpen(true)}
                   className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/20 text-accent-primary font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
                 >
                   <Edit3 size={18} /> {t('profile_edit')}
@@ -654,143 +347,12 @@ export const ProfilePage: React.FC = () => {
         </div>
       </div>
 
-      {/* ═══════ EDIT PROFILE MODAL ═══════ */}
-      <AnimatePresence>
-        {editOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-            onClick={() => setEditOpen(false)}
-          >
-            <motion.div
-              initial={{ y: 100, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 100, opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="bg-card border border-border rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto"
-            >
-              <div className="sticky top-0 bg-card border-b border-border p-4 sm:p-5 flex items-center justify-between z-10 rounded-t-3xl sm:rounded-t-2xl">
-                <h2 className="text-lg font-bold">{t('profile_edit')}</h2>
-                <button onClick={() => setEditOpen(false)} className="p-2 rounded-lg hover:bg-surface-2 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-                  <X size={20} />
-                </button>
-              </div>
-
-              <div className="p-4 sm:p-5 space-y-4">
-                {/* Avatar preview + picker */}
-                <div className="flex items-center gap-4">
-                  <Avatar
-                    src={editForm.avatar_url}
-                    name={editForm.full_name}
-                    sizeClass="w-16 h-16"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                      {t('avatar_change')}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => setAvatarPickerOpen(true)}
-                      className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-surface-2 active:bg-surface-2 transition-colors min-h-[44px] flex items-center justify-center gap-2"
-                    >
-                      {t('avatar_modal_pick_btn')}
-                    </button>
-                  </div>
-                </div>
-
-                <EditField label={t('profile_field_name')} value={editForm.full_name} onChange={v => setEditForm(f => ({ ...f, full_name: v }))} />
-                <EditField label={t('profile_field_username')} value={editForm.username} onChange={v => setEditForm(f => ({ ...f, username: v }))} placeholder="@username" />
-                <EditField label={t('profile_goal_label')} value={editForm.current_goal} onChange={v => setEditForm(f => ({ ...f, current_goal: v }))} />
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('profile_daily_label')}</label>
-                  <select
-                    value={editForm.daily_minutes}
-                    onChange={(e) => setEditForm(f => ({ ...f, daily_minutes: Number(e.target.value) }))}
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
-                  >
-                    <option value={15}>15 {t('profile_minutes_short')}</option>
-                    <option value={30}>30 {t('profile_minutes_short')}</option>
-                    <option value={60}>60 {t('profile_minutes_short')}</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('profile_style_label')}</label>
-                  <select
-                    value={editForm.explanation_style}
-                    onChange={(e) => setEditForm(f => ({ ...f, explanation_style: e.target.value }))}
-                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
-                  >
-                    <option value="">{t('profile_style_default')}</option>
-                    <option value="concise">{t('onboarding_style_concise')}</option>
-                    <option value="detailed">{t('onboarding_style_detailed')}</option>
-                    <option value="visual">{t('onboarding_style_visual')}</option>
-                  </select>
-                </div>
-
-                {editError && (
-                  <p className="text-accent-danger text-sm bg-accent-danger/10 rounded-lg p-3">{editError}</p>
-                )}
-              </div>
-
-              <div className="sticky bottom-0 bg-card border-t border-border p-4 sm:p-5 flex gap-3">
-                <button
-                  onClick={() => setEditOpen(false)}
-                  className="flex-1 py-3 rounded-xl border border-border font-bold text-sm hover:bg-surface-2 active:bg-surface-2 transition-colors min-h-[48px]"
-                >
-                  {t('common_cancel')}
-                </button>
-                <button
-                  onClick={saveEdit}
-                  disabled={editSaving}
-                  className="flex-1 py-3 rounded-xl bg-accent-primary text-white font-bold text-sm hover:opacity-90 active:opacity-90 transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center gap-2"
-                >
-                  {editSaving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={16} />}
-                  {t('common_save')}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AvatarPickerModal
-        open={avatarPickerOpen}
-        onClose={() => setAvatarPickerOpen(false)}
-        onCropped={handleAvatarUpload}
-        title={profile?.full_name ?? profile?.username ?? undefined}
-      />
+      <ProfileEditModal open={editOpen} onClose={() => setEditOpen(false)} />
     </MainLayout>
   );
 };
 
 /* ── Sub-components ────────────────────────────────────────── */
-
-const EditField: React.FC<{ label: string; value: string; onChange: (v: string) => void; placeholder?: string }> = ({ label, value, onChange, placeholder }) => (
-  <div>
-    <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
-    <input
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      placeholder={placeholder}
-      className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
-    />
-  </div>
-);
-
-const StatMini: React.FC<{ icon: React.ReactNode; value: string; label: string; color: string }> = ({ icon, value, label, color }) => (
-  <div className="flex items-center gap-3 rounded-xl bg-surface-1/80 border border-border/50 p-3">
-    <div className={`shrink-0 ${color}`}>{icon}</div>
-    <div>
-      <p className="text-lg font-black leading-none">{value}</p>
-      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{label}</p>
-    </div>
-  </div>
-);
 
 const SettingRow: React.FC<{ icon: React.ReactNode; label: string; value: string; color: string; onClick: () => void }> = ({ icon, label, value, color, onClick }) => (
   <div onClick={onClick} className="p-4 flex items-center gap-3 active:bg-card-hover md:hover:bg-card-hover transition-colors cursor-pointer group min-h-[52px]">

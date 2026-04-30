@@ -1,3 +1,9 @@
+/**
+ * Responsive shell: desktop shows a fixed `<Sidebar>` on the left;
+ * mobile hides the sidebar and shows `<BottomNavigation>` instead.
+ * The breakpoint is `md` (768px). Decorative blurred blobs provide
+ * subtle depth behind the page content.
+ */
 
 import React from 'react';
 import { Sidebar } from './Sidebar';

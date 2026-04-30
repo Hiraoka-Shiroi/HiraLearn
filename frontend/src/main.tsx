@@ -48,7 +48,7 @@ window.onerror = function(message) {
 };
 
 function initApp() {
-  console.log('HiraLearn initializing...');
+
 
   const rootElement = document.getElementById('root');
 
@@ -65,7 +65,7 @@ function initApp() {
         <App />
       </React.StrictMode>,
     );
-    console.log('HiraLearn mounted successfully.');
+
   } catch (err: unknown) {
     console.error("Mount error:", err);
     const message = err instanceof Error ? err.message : String(err);
