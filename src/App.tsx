@@ -46,13 +46,13 @@ function App() {
     let mounted = true;
 
     const initAuth = async () => {
-      // Emergency timeout to prevent stuck loading screen
+      // Emergency timeout — generous for slow Capacitor WebView session restore
       const timeoutId = setTimeout(() => {
         if (mounted) {
-           console.warn("Auth initialization timed out. Proceeding as guest.");
-           setProfile(null); // This stops the loading state
+           console.warn("Auth initialization timed out after 10s. Proceeding as guest.");
+           setProfile(null);
         }
-      }, 3000);
+      }, 10000);
 
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();

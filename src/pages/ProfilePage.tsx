@@ -1,12 +1,13 @@
 
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { contentCardService, progressService } from '@/lib/supabase/services';
-import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabase/client';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   User, Award, LogOut, ChevronRight, Zap, Trophy, Target, Shield,
   Flame, Clock, BookOpen, TrendingUp, Calendar, Star, Lock, ArrowRight,
-  Sparkles, Brain,
+  Sparkles, Brain, Edit3, Copy, Check, X, Save, Info,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
@@ -16,7 +17,8 @@ import { billingService } from '@/features/billing/billingService';
 import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
-import type { Subscription, Course, Module, Lesson, UserProgress } from '@/types/database';
+import { isStaff } from '@/features/admin/permissions';
+import type { Subscription, Course, Module, Lesson, UserProgress, Profile } from '@/types/database';
 
 /* ── XP thresholds (mirrors services.ts) ─────────────────────── */
 const XP_THRESHOLDS = [0, 100, 300, 600, 1000, 1500, 2100, 2800, 3600, 4500];
@@ -40,7 +42,7 @@ const FadeIn: React.FC<{ children: React.ReactNode; delay?: number; className?: 
 );
 
 export const ProfilePage: React.FC = () => {
-  const { profile, user, signOut } = useAuthStore();
+  const { profile, user, signOut, setProfile } = useAuthStore();
   const navigate = useNavigate();
   const { t } = useLanguage();
 
@@ -175,6 +177,81 @@ export const ProfilePage: React.FC = () => {
     await signOut();
     navigate('/login');
   };
+
+  /* ── Edit profile state ─────────────────────────────────── */
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({
+    full_name: '',
+    username: '',
+    avatar_url: '',
+    current_goal: '',
+    daily_minutes: 30,
+    explanation_style: '',
+  });
+  const [editSaving, setEditSaving] = useState(false);
+  const [editError, setEditError] = useState('');
+
+  const openEdit = useCallback(() => {
+    setEditForm({
+      full_name: profile?.full_name || '',
+      username: profile?.username || '',
+      avatar_url: profile?.avatar_url || '',
+      current_goal: profile?.current_goal || '',
+      daily_minutes: profile?.daily_minutes ?? 30,
+      explanation_style: profile?.explanation_style || '',
+    });
+    setEditError('');
+    setEditOpen(true);
+  }, [profile]);
+
+  const saveEdit = useCallback(async () => {
+    if (!user) return;
+    setEditSaving(true);
+    setEditError('');
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: editForm.full_name || null,
+          username: editForm.username || null,
+          avatar_url: editForm.avatar_url || null,
+          current_goal: editForm.current_goal || '',
+          daily_minutes: editForm.daily_minutes,
+          explanation_style: editForm.explanation_style || '',
+        })
+        .eq('id', user.id)
+        .select('*')
+        .single();
+      if (error) throw error;
+      if (data) setProfile(data as Profile);
+      setEditOpen(false);
+    } catch (e) {
+      setEditError((e as Error).message);
+    } finally {
+      setEditSaving(false);
+    }
+  }, [user, editForm, setProfile]);
+
+  /* ── Copy ID helper ─────────────────────────────────────── */
+  const [copied, setCopied] = useState(false);
+  const copyId = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      await navigator.clipboard.writeText(user.id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* fallback */
+      const ta = document.createElement('textarea');
+      ta.value = user.id;
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand('copy');
+      document.body.removeChild(ta);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  }, [user?.id]);
 
   if (loading) {
     return (
@@ -500,8 +577,46 @@ export const ProfilePage: React.FC = () => {
               </section>
             </FadeIn>
 
-            {/* Mobile toggles (hidden on desktop where sidebar has them) */}
+            {/* Account info */}
             <FadeIn delay={0.22}>
+              <section>
+                <h2 className="text-lg font-bold mb-3 flex items-center gap-2">
+                  <Info size={18} className="text-muted-foreground" /> {t('profile_account_info')}
+                </h2>
+                <div className="rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden text-sm">
+                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
+                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">User ID</span>
+                    <span className="font-mono text-xs truncate flex-1 min-w-0">{user?.id ?? '—'}</span>
+                    <button onClick={copyId} className="shrink-0 p-1.5 rounded-lg hover:bg-surface-2 active:bg-surface-2 transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center" title={t('profile_copy_id')}>
+                      {copied ? <Check size={14} className="text-accent-success" /> : <Copy size={14} className="text-muted-foreground" />}
+                    </button>
+                  </div>
+                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
+                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">Email</span>
+                    <span className="text-xs truncate">{user?.email ?? '—'}</span>
+                  </div>
+                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
+                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_role')}</span>
+                    <span className="text-xs font-bold capitalize">{profile?.role ?? '—'}</span>
+                  </div>
+                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
+                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_status')}</span>
+                    <span className="text-xs capitalize">{profile?.status ?? '—'}</span>
+                  </div>
+                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
+                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_plan')}</span>
+                    <span className="text-xs font-bold capitalize">{subscription?.plan ?? 'free'}</span>
+                  </div>
+                  <div className="p-3.5 flex items-center gap-3 min-h-[48px]">
+                    <span className="text-muted-foreground text-xs font-medium w-20 shrink-0">{t('profile_joined')}</span>
+                    <span className="text-xs">{profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : '—'}</span>
+                  </div>
+                </div>
+              </section>
+            </FadeIn>
+
+            {/* Mobile toggles (hidden on desktop where sidebar has them) */}
+            <FadeIn delay={0.24}>
               <div className="flex md:hidden gap-2 px-1">
                 <LanguageToggle />
                 <ModeToggle />
@@ -510,12 +625,18 @@ export const ProfilePage: React.FC = () => {
             </FadeIn>
 
             {/* Actions */}
-            <FadeIn delay={0.25}>
+            <FadeIn delay={0.26}>
               <div className="space-y-2.5">
-                {profile?.role === 'admin' && (
+                <button
+                  onClick={openEdit}
+                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/20 text-accent-primary font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
+                >
+                  <Edit3 size={18} /> {t('profile_edit')}
+                </button>
+                {isStaff(profile) && (
                   <button
                     onClick={() => navigate('/admin')}
-                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/20 text-accent-primary font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
+                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-surface-2 border border-border text-foreground font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
                   >
                     <Shield size={18} /> {t('profile_admin_panel')}
                   </button>
@@ -531,11 +652,126 @@ export const ProfilePage: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* ═══════ EDIT PROFILE MODAL ═══════ */}
+      <AnimatePresence>
+        {editOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            onClick={() => setEditOpen(false)}
+          >
+            <motion.div
+              initial={{ y: 100, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 100, opacity: 0 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-card border border-border rounded-t-3xl sm:rounded-2xl w-full sm:max-w-lg max-h-[90vh] overflow-y-auto"
+            >
+              <div className="sticky top-0 bg-card border-b border-border p-4 sm:p-5 flex items-center justify-between z-10 rounded-t-3xl sm:rounded-t-2xl">
+                <h2 className="text-lg font-bold">{t('profile_edit')}</h2>
+                <button onClick={() => setEditOpen(false)} className="p-2 rounded-lg hover:bg-surface-2 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-4 sm:p-5 space-y-4">
+                {/* Avatar preview + URL */}
+                <div className="flex items-center gap-4">
+                  {editForm.avatar_url ? (
+                    <img src={editForm.avatar_url} alt="" className="w-16 h-16 rounded-full object-cover border-2 border-accent-primary/30" />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-accent-primary/10 border-2 border-accent-primary/30 flex items-center justify-center text-2xl font-black text-accent-primary">
+                      {editForm.full_name?.charAt(0)?.toUpperCase() || 'U'}
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('profile_avatar_url')}</label>
+                    <input
+                      value={editForm.avatar_url}
+                      onChange={(e) => setEditForm(f => ({ ...f, avatar_url: e.target.value }))}
+                      placeholder="https://..."
+                      className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
+                    />
+                  </div>
+                </div>
+
+                <EditField label={t('profile_field_name')} value={editForm.full_name} onChange={v => setEditForm(f => ({ ...f, full_name: v }))} />
+                <EditField label={t('profile_field_username')} value={editForm.username} onChange={v => setEditForm(f => ({ ...f, username: v }))} placeholder="@username" />
+                <EditField label={t('profile_goal_label')} value={editForm.current_goal} onChange={v => setEditForm(f => ({ ...f, current_goal: v }))} />
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('profile_daily_label')}</label>
+                  <select
+                    value={editForm.daily_minutes}
+                    onChange={(e) => setEditForm(f => ({ ...f, daily_minutes: Number(e.target.value) }))}
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
+                  >
+                    <option value={15}>15 {t('profile_minutes_short')}</option>
+                    <option value={30}>30 {t('profile_minutes_short')}</option>
+                    <option value={60}>60 {t('profile_minutes_short')}</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-xs font-medium text-muted-foreground mb-1 block">{t('profile_style_label')}</label>
+                  <select
+                    value={editForm.explanation_style}
+                    onChange={(e) => setEditForm(f => ({ ...f, explanation_style: e.target.value }))}
+                    className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
+                  >
+                    <option value="">{t('profile_style_default')}</option>
+                    <option value="concise">{t('onboarding_style_concise')}</option>
+                    <option value="detailed">{t('onboarding_style_detailed')}</option>
+                    <option value="visual">{t('onboarding_style_visual')}</option>
+                  </select>
+                </div>
+
+                {editError && (
+                  <p className="text-accent-danger text-sm bg-accent-danger/10 rounded-lg p-3">{editError}</p>
+                )}
+              </div>
+
+              <div className="sticky bottom-0 bg-card border-t border-border p-4 sm:p-5 flex gap-3">
+                <button
+                  onClick={() => setEditOpen(false)}
+                  className="flex-1 py-3 rounded-xl border border-border font-bold text-sm hover:bg-surface-2 active:bg-surface-2 transition-colors min-h-[48px]"
+                >
+                  {t('common_cancel')}
+                </button>
+                <button
+                  onClick={saveEdit}
+                  disabled={editSaving}
+                  className="flex-1 py-3 rounded-xl bg-accent-primary text-white font-bold text-sm hover:opacity-90 active:opacity-90 transition-all disabled:opacity-50 min-h-[48px] flex items-center justify-center gap-2"
+                >
+                  {editSaving ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> : <Save size={16} />}
+                  {t('common_save')}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </MainLayout>
   );
 };
 
 /* ── Sub-components ────────────────────────────────────────── */
+
+const EditField: React.FC<{ label: string; value: string; onChange: (v: string) => void; placeholder?: string }> = ({ label, value, onChange, placeholder }) => (
+  <div>
+    <label className="text-xs font-medium text-muted-foreground mb-1 block">{label}</label>
+    <input
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className="w-full bg-background border border-border rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-accent-primary min-h-[44px]"
+    />
+  </div>
+);
 
 const StatMini: React.FC<{ icon: React.ReactNode; value: string; label: string; color: string }> = ({ icon, value, label, color }) => (
   <div className="flex items-center gap-3 rounded-xl bg-surface-1/80 border border-border/50 p-3">

@@ -28,6 +28,9 @@ const customStorage = isLocalStorageAvailable()
 
 export const isSupabaseConfigured = Boolean(supabaseUrl && supabaseAnonKey);
 
+const isCapacitor = typeof window !== 'undefined' &&
+  (window.location.protocol === 'file:' || navigator.userAgent.includes('HiraLearn'));
+
 export const supabase = createClient<Database>(
   supabaseUrl || 'https://placeholder.supabase.co',
   supabaseAnonKey || 'placeholder',
@@ -36,7 +39,7 @@ export const supabase = createClient<Database>(
       storage: customStorage,
       autoRefreshToken: true,
       persistSession: true,
-      detectSessionInUrl: true,
+      detectSessionInUrl: !isCapacitor,
     }
   }
 );
