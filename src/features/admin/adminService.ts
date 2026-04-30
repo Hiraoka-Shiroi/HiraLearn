@@ -169,20 +169,78 @@ export const adminService = {
     invalid_tokens: number;
     error?: string;
   }> {
-    const { data, error } = await supabase.functions.invoke('send-push', {
-      body: payload,
-    });
-    if (error) {
-      // The Edge Function returns a JSON body even on non-2xx; surface the message.
-      const msg =
-        (data as { error?: string } | null)?.error ?? error.message ?? 'Push send failed';
-      throw new Error(msg);
+    let data: Record<string, unknown> | null = null;
+    let error: { message: string } | null = null;
+
+    try {
+      const res = await supabase.functions.invoke('send-push', {
+        body: payload,
+      });
+      data = res.data as Record<string, unknown> | null;
+      error = res.error as { message: string } | null;
+    } catch (e) {
+      const msg = (e as Error).message ?? '';
+      // Edge Function not deployed or unreachable
+      if (/FunctionsHttpError|FetchError|Failed to send a request|ECONNREFUSED|fetch/i.test(msg)) {
+        throw new Error(
+          'Edge Function send-push не найдена. Задеплойте функцию в Supabase:\n' +
+            'supabase functions deploy send-push',
+        );
+      }
+      throw new Error(msg || 'Push send failed');
     }
-    return data as {
+
+    if (error) {
+      const serverMsg = (data as { error?: string } | null)?.error ?? error.message ?? '';
+
+      // Edge Function not deployed (404 / relay error)
+      if (/not found|404|FunctionsRelayError|FunctionsHttpError/i.test(serverMsg)) {
+        throw new Error(
+          'Edge Function send-push не найдена. Задеплойте функцию в Supabase:\n' +
+            'supabase functions deploy send-push',
+        );
+      }
+
+      // FCM not configured
+      if (/FCM not configured|FCM_SERVICE_ACCOUNT_JSON/i.test(serverMsg)) {
+        throw new Error(
+          'Firebase Cloud Messaging не настроен. Добавьте FCM_SERVICE_ACCOUNT_JSON:\n' +
+            'supabase secrets set FCM_SERVICE_ACCOUNT_JSON=\'{"type":"service_account",...}\'',
+        );
+      }
+
+      // FCM auth failed
+      if (/FCM auth failed/i.test(serverMsg)) {
+        throw new Error(
+          'Ошибка авторизации FCM. Проверьте правильность FCM_SERVICE_ACCOUNT_JSON.',
+        );
+      }
+
+      // No tokens / empty audience
+      if (
+        data &&
+        typeof data === 'object' &&
+        'audience_size' in data &&
+        (data as { audience_size: number }).audience_size === 0
+      ) {
+        throw new Error('Нет активных устройств для отправки.');
+      }
+
+      throw new Error(serverMsg || 'Push send failed');
+    }
+
+    const result = data as {
       audience_size: number;
       sent: number;
       failed: number;
       invalid_tokens: number;
     };
+
+    // Edge function returned success but audience was empty
+    if (result.audience_size === 0) {
+      throw new Error('Нет активных устройств для отправки.');
+    }
+
+    return result;
   },
 };
