@@ -1,9 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ImagePlus, X, ZoomIn, ZoomOut, Check } from 'lucide-react';
+import { ImagePlus, X, ZoomIn, ZoomOut, Check, AlertCircle } from 'lucide-react';
 import { useLanguage } from '@/i18n/useLanguage';
 import { getCroppedJpegBlob } from './cropImage';
+import { AvatarUploadError } from '@/lib/avatar/uploadAvatar';
+import type { TranslationKey } from '@/i18n/translations';
 
 const MAX_FILE_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -30,7 +32,8 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
   const [zoom, setZoom] = useState(1);
   const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
   const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [errorKey, setErrorKey] = useState<TranslationKey | null>(null);
+  const [errorDetail, setErrorDetail] = useState<string | null>(null);
 
   // Reset state when the modal closes.
   useEffect(() => {
@@ -40,18 +43,20 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
       setZoom(1);
       setCroppedAreaPixels(null);
       setBusy(false);
-      setError(null);
+      setErrorKey(null);
+      setErrorDetail(null);
     }
   }, [open]);
 
   const handleFile = (file: File) => {
-    setError(null);
+    setErrorKey(null);
+    setErrorDetail(null);
     if (!file.type.startsWith('image/')) {
-      setError(t('avatar_err_not_image'));
+      setErrorKey('avatar_err_not_image');
       return;
     }
     if (file.size > MAX_FILE_BYTES) {
-      setError(t('avatar_err_too_big'));
+      setErrorKey('avatar_err_too_big');
       return;
     }
     const url = URL.createObjectURL(file);
@@ -65,13 +70,20 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
   const handleConfirm = async () => {
     if (!imageSrc || !croppedAreaPixels) return;
     setBusy(true);
-    setError(null);
+    setErrorKey(null);
+    setErrorDetail(null);
     try {
       const { blob } = await getCroppedJpegBlob(imageSrc, croppedAreaPixels);
       await onCropped(blob);
       onClose();
     } catch (e) {
-      setError((e as Error).message || t('avatar_err_generic'));
+      if (e instanceof AvatarUploadError) {
+        setErrorKey(e.codeKey);
+        setErrorDetail(e.detail ?? null);
+      } else {
+        setErrorKey('avatar_err_generic');
+        setErrorDetail((e as Error)?.message ?? null);
+      }
     } finally {
       setBusy(false);
     }
@@ -192,9 +204,15 @@ export const AvatarPickerModal: React.FC<AvatarPickerModalProps> = ({
               </div>
             )}
 
-            {error && (
-              <div className="mx-4 mb-3 p-3 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-xs">
-                {error}
+            {errorKey && (
+              <div className="mx-4 mb-3 p-3 rounded-xl bg-accent-danger/10 border border-accent-danger/20 text-accent-danger text-xs flex gap-2">
+                <AlertCircle size={14} className="shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="leading-relaxed">{t(errorKey)}</p>
+                  {errorDetail && (
+                    <p className="mt-1 text-accent-danger/70 font-mono text-[10px] break-all">{errorDetail}</p>
+                  )}
+                </div>
               </div>
             )}
           </motion.div>
