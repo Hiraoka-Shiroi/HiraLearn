@@ -108,7 +108,7 @@ export const AdminLayout = () => {
       {mobileMenuOpen && (
         <>
           <div
-            className="md:hidden fixed inset-0 z-40 bg-black/50"
+            className="md:hidden fixed top-14 left-0 right-0 bottom-0 z-40 bg-black/50"
             onClick={() => setMobileMenuOpen(false)}
           />
           <aside className="md:hidden fixed top-14 left-0 bottom-0 z-50 w-72 bg-card border-r border-border flex flex-col overflow-y-auto">
