@@ -105,6 +105,8 @@ export const translations = {
     dash_html_path: 'HTML / CSS Путь',
     dash_mastery_lessons: 'Уроков мастерства',
     dash_completed: 'Завершено',
+    dash_continue: 'Продолжить',
+    dash_locked: 'Закрыто',
 
     // Sidebar
     sidebar_path: 'Путь',
@@ -178,6 +180,24 @@ export const translations = {
     lesson_hint_default: 'Внимательно прочитай задание и попробуй ещё раз.',
     lesson_hint_use_tag: 'Используй тег: <{tag}>',
     lesson_hint_must_contain: 'Текст должен содержать: "{text}"',
+    lesson_no_task: 'Урок без практики',
+    lesson_no_task_desc: 'Прочитай теорию и нажми «Завершить», чтобы получить XP.',
+    lesson_xp_gained: 'Получено {xp} XP',
+    lesson_level_up_title: 'Новый уровень!',
+    lesson_level_up_desc: 'Ты дорос до уровня {level}.',
+    lesson_continue: 'Продолжить',
+
+    // Avatar picker
+    avatar_change: 'Изменить аватар',
+    avatar_modal_title: 'Аватар',
+    avatar_modal_pick_hint: 'Выбери фото из галереи. Мы обрежем его до круга 512×512 и сохраним в твой профиль.',
+    avatar_modal_pick_btn: 'Выбрать фото',
+    avatar_modal_change: 'Заменить',
+    avatar_modal_save: 'Сохранить',
+    avatar_modal_uploading: 'Загружаю…',
+    avatar_err_not_image: 'Это не изображение. Выбери JPG или PNG.',
+    avatar_err_too_big: 'Файл слишком большой (максимум 8 МБ).',
+    avatar_err_generic: 'Не удалось обработать фото. Попробуй ещё раз.',
 
     // AI Service
     ai_error_connection: 'Произошла ошибка при подключении к AI. Попробуйте ещё раз или проверьте структуру кода.',
@@ -414,6 +434,11 @@ export const translations = {
     courses_beginner: 'Начальный',
     courses_intermediate: 'Средний',
     courses_advanced: 'Продвинутый',
+    courses_filter_all: 'Все',
+    courses_search_placeholder: 'Поиск курса…',
+    courses_progress_label: 'Прогресс',
+    courses_start_btn: 'Начать',
+    courses_empty_filtered: 'Нет курсов по этому фильтру.',
   },
 
   en: {
@@ -522,6 +547,8 @@ export const translations = {
     dash_html_path: 'HTML / CSS Path',
     dash_mastery_lessons: 'Mastery Lessons',
     dash_completed: 'Completed',
+    dash_continue: 'Continue',
+    dash_locked: 'Locked',
 
     // Sidebar
     sidebar_path: 'Path',
@@ -595,6 +622,24 @@ export const translations = {
     lesson_hint_default: 'Read the task carefully and try again.',
     lesson_hint_use_tag: 'Use the tag: <{tag}>',
     lesson_hint_must_contain: 'Text must contain: "{text}"',
+    lesson_no_task: 'Theory-only lesson',
+    lesson_no_task_desc: 'Read the theory and tap “Complete” to claim your XP.',
+    lesson_xp_gained: '+{xp} XP earned',
+    lesson_level_up_title: 'Level up!',
+    lesson_level_up_desc: 'You reached level {level}.',
+    lesson_continue: 'Continue',
+
+    // Avatar picker
+    avatar_change: 'Change avatar',
+    avatar_modal_title: 'Avatar',
+    avatar_modal_pick_hint: 'Pick a photo from your gallery. We will crop it to a 512×512 circle and save it to your profile.',
+    avatar_modal_pick_btn: 'Pick a photo',
+    avatar_modal_change: 'Replace',
+    avatar_modal_save: 'Save',
+    avatar_modal_uploading: 'Uploading…',
+    avatar_err_not_image: 'That is not an image. Pick a JPG or PNG.',
+    avatar_err_too_big: 'File is too large (8 MB max).',
+    avatar_err_generic: 'Could not process the photo. Try again.',
 
     // AI Service
     ai_error_connection: 'AI connection error. Please try again or check your code structure.',
@@ -831,6 +876,11 @@ export const translations = {
     courses_beginner: 'Beginner',
     courses_intermediate: 'Intermediate',
     courses_advanced: 'Advanced',
+    courses_filter_all: 'All',
+    courses_search_placeholder: 'Search a course…',
+    courses_progress_label: 'Progress',
+    courses_start_btn: 'Start',
+    courses_empty_filtered: 'No courses match this filter.',
   }
 } as const;
 

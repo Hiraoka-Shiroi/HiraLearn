@@ -1,19 +1,24 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { contentCardService, progressService } from '@/lib/supabase/services';
 import { Module, Lesson, UserProgress, Course } from '@/types/database';
 import { motion } from 'framer-motion';
-import { BookOpen, Star, Trophy, ArrowRight, Flame } from 'lucide-react';
+import { BookOpen, Trophy, ArrowRight, Flame, CheckCircle2, Lock, Sparkles } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
+import { Avatar } from '@/components/avatar/Avatar';
+
+interface ModuleWithLessons extends Module {
+  lessons: Lesson[];
+}
 
 export const Dashboard: React.FC = () => {
   const { profile } = useAuthStore();
   const { t } = useLanguage();
   const [searchParams] = useSearchParams();
-  const [modules, setModules] = useState<Module[]>([]);
+  const [modulesWithLessons, setModulesWithLessons] = useState<ModuleWithLessons[]>([]);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeCourse, setActiveCourse] = useState<Course | null>(null);
@@ -22,7 +27,6 @@ export const Dashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const fetchedCourses = await contentCardService.getCourses();
-
         if (fetchedCourses.length > 0) {
           const courseSlug = searchParams.get('course');
           const selectedCourse = (courseSlug
@@ -30,7 +34,14 @@ export const Dashboard: React.FC = () => {
             : undefined) ?? fetchedCourses[0];
           setActiveCourse(selectedCourse);
           const fetchedModules = await contentCardService.getModules(selectedCourse.id);
-          setModules(fetchedModules);
+          // Resolve lessons per module in parallel.
+          const withLessons = await Promise.all(
+            fetchedModules.map(async (m) => ({
+              ...m,
+              lessons: await contentCardService.getLessons(m.id).catch(() => [] as Lesson[]),
+            })),
+          );
+          setModulesWithLessons(withLessons);
         }
 
         if (profile) {
@@ -38,14 +49,35 @@ export const Dashboard: React.FC = () => {
           setProgress(fetchedProgress);
         }
       } catch (error) {
-        console.error("Error fetching dashboard data:", error);
+        console.error('Error fetching dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchData();
   }, [profile, searchParams]);
+
+  const completedIds = useMemo(
+    () => new Set(progress.filter(p => p.status === 'completed').map(p => p.lesson_id)),
+    [progress],
+  );
+
+  // Flatten lessons in order to determine the next lesson and "locked" state.
+  const flatLessons = useMemo(
+    () => modulesWithLessons.flatMap(m => m.lessons),
+    [modulesWithLessons],
+  );
+
+  const nextLessonId = useMemo(() => {
+    for (const l of flatLessons) {
+      if (!completedIds.has(l.id)) return l.id;
+    }
+    return null;
+  }, [flatLessons, completedIds]);
+
+  const totalLessons = flatLessons.length;
+  const doneLessons = flatLessons.filter(l => completedIds.has(l.id)).length;
+  const coursePct = totalLessons > 0 ? Math.round((doneLessons / totalLessons) * 100) : 0;
 
   if (loading) return (
     <MainLayout>
@@ -55,66 +87,86 @@ export const Dashboard: React.FC = () => {
     </MainLayout>
   );
 
+  const continueHref = nextLessonId ? `/lessons/${nextLessonId}` : null;
+
   return (
     <MainLayout>
-      <div className="p-4 md:p-8 lg:p-10 max-w-6xl mx-auto">
+      <div className="p-4 md:p-8 lg:p-10 max-w-4xl mx-auto">
         {/* Header / Stats */}
         <header className="mb-6 md:mb-10 bg-gradient-to-br from-card via-card to-surface-2 p-5 md:p-8 rounded-2xl md:rounded-3xl border border-border relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-56 h-56 bg-accent-primary/[0.05] rounded-full blur-[60px] -translate-y-1/3 translate-x-1/4" />
+          <div className="absolute top-0 right-0 w-56 h-56 bg-accent-primary/[0.06] rounded-full blur-[60px] -translate-y-1/3 translate-x-1/4" />
 
-          <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
             <div className="flex items-center gap-4 md:gap-5 min-w-0">
-              {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl border-2 border-accent-primary/20 object-cover shrink-0" />
-              ) : (
-                <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-gradient-to-br from-accent-primary/15 to-accent-primary/5 rounded-xl md:rounded-2xl flex items-center justify-center text-accent-primary border border-accent-primary/20">
-                  <span className="text-xl md:text-2xl font-black">{profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
-                </div>
-              )}
+              <Avatar
+                src={profile?.avatar_url}
+                name={profile?.full_name}
+                sizeClass="w-14 h-14 md:w-16 md:h-16"
+              />
               <div className="min-w-0">
-                <h1 className="text-xl md:text-3xl font-bold mb-1 truncate">{profile?.full_name || t('profile_default_name')}</h1>
-                <div className="flex items-center gap-2">
-                  <span className="px-2.5 py-0.5 bg-accent-primary text-white text-[10px] font-bold rounded-lg uppercase tracking-wider shrink-0">Lvl {profile?.level || 1}</span>
+                <h1 className="text-xl md:text-2xl font-bold mb-1 truncate">
+                  {profile?.full_name || t('profile_default_name')}
+                </h1>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="px-2.5 py-0.5 bg-accent-primary text-white text-[10px] font-bold rounded-lg uppercase tracking-wider shrink-0">
+                    Lvl {profile?.level || 1}
+                  </span>
                   <p className="text-muted-foreground text-sm font-medium shrink-0">{profile?.xp || 0} XP</p>
                 </div>
               </div>
             </div>
 
-            <div className="flex gap-4 md:gap-6 shrink-0">
-              <div className="text-center">
-                <div className="flex items-center gap-1.5 text-accent-warning font-black text-xl">
-                  <Flame size={20} className="text-orange-400" /> {profile?.streak ?? 0}
-                </div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('dash_streak')}</p>
-              </div>
-              <div className="text-center">
-                <div className="flex items-center gap-1.5 text-accent-success font-black text-xl">
-                  <Trophy size={18} /> {progress.length}
-                </div>
-                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{t('dash_lessons_done')}</p>
-              </div>
+            <div className="flex gap-4 md:gap-6 shrink-0 w-full sm:w-auto justify-around sm:justify-start">
+              <Stat icon={<Flame size={20} className="text-orange-400" />} value={profile?.streak ?? 0} label={t('dash_streak')} />
+              <Stat icon={<Trophy size={18} className="text-accent-success" />} value={doneLessons} label={t('dash_lessons_done')} />
             </div>
           </div>
+
+          {/* Course progress bar + Continue CTA */}
+          {activeCourse && (
+            <div className="relative z-10 mt-5 flex flex-col sm:flex-row sm:items-center gap-3">
+              <div className="flex-1">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{activeCourse.title}</span>
+                  <span className="text-xs font-bold text-accent-primary">{coursePct}%</span>
+                </div>
+                <div className="h-2 rounded-full bg-border overflow-hidden">
+                  <motion.div
+                    className="h-full bg-gradient-to-r from-accent-primary to-indigo-400"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${coursePct}%` }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                  />
+                </div>
+              </div>
+              {continueHref && (
+                <Link
+                  to={continueHref}
+                  className="bg-accent-primary text-white rounded-xl font-bold text-sm px-4 py-3 inline-flex items-center justify-center gap-2 min-h-[44px] shadow-lg shadow-accent-primary/20"
+                >
+                  {t('dash_continue')} <ArrowRight size={16} />
+                </Link>
+              )}
+            </div>
+          )}
         </header>
 
-        {/* Course Map */}
+        {/* Path */}
         <section>
           <div className="flex items-center justify-between mb-5 md:mb-8">
             <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2.5">
               <BookOpen className="text-accent-primary" size={24} /> {t('dash_your_learning')}
             </h2>
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{activeCourse?.title ?? t('dash_html_path')}</span>
           </div>
 
-          <div className="space-y-8 md:space-y-12 relative">
-            <div className="absolute left-9 top-10 bottom-10 w-px bg-border hidden md:block" />
-
-            {modules.map((module, idx) => (
-              <ModuleSection
+          <div className="space-y-8">
+            {modulesWithLessons.map((module, idx) => (
+              <ModulePath
                 key={module.id}
                 module={module}
                 index={idx}
-                progress={progress}
+                completedIds={completedIds}
+                nextLessonId={nextLessonId}
               />
             ))}
           </div>
@@ -124,64 +176,149 @@ export const Dashboard: React.FC = () => {
   );
 };
 
-const ModuleSection: React.FC<{ module: Module, index: number, progress: UserProgress[] }> = ({ module, index, progress }) => {
-  const [lessons, setLessons] = useState<Lesson[]>([]);
-  const { t } = useLanguage();
+const Stat: React.FC<{ icon: React.ReactNode; value: React.ReactNode; label: string }> = ({ icon, value, label }) => (
+  <div className="text-center">
+    <div className="flex items-center gap-1.5 font-black text-xl">
+      {icon} {value}
+    </div>
+    <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{label}</p>
+  </div>
+);
 
-  useEffect(() => {
-    contentCardService.getLessons(module.id).then(setLessons);
-  }, [module.id]);
+interface ModulePathProps {
+  module: ModuleWithLessons;
+  index: number;
+  completedIds: Set<string>;
+  nextLessonId: string | null;
+}
+
+const ModulePath: React.FC<ModulePathProps> = ({ module, index, completedIds, nextLessonId }) => {
+  const { t } = useLanguage();
+  const total = module.lessons.length;
+  const done = module.lessons.filter(l => completedIds.has(l.id)).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const moduleStarted = done > 0 || module.lessons.some(l => l.id === nextLessonId);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="relative z-10"
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: 0.4 }}
+      className="relative"
     >
-      <div className="flex items-center gap-4 md:gap-6 mb-5 md:mb-8">
-        <div className="w-14 h-14 md:w-[72px] md:h-[72px] shrink-0 bg-card border-2 border-accent-primary/30 rounded-xl md:rounded-2xl flex items-center justify-center text-accent-primary font-black text-lg md:text-xl shadow-glow-primary">
-          {index + 1}
+      {/* Module header */}
+      <div className="flex items-center gap-3 md:gap-4 mb-5">
+        <div className={`w-12 h-12 md:w-14 md:h-14 shrink-0 rounded-xl md:rounded-2xl flex items-center justify-center font-black text-base md:text-lg border-2 ${
+          done === total && total > 0
+            ? 'bg-accent-success text-white border-accent-success/40 shadow-glow-success'
+            : moduleStarted
+              ? 'bg-card text-accent-primary border-accent-primary/40 shadow-glow-primary'
+              : 'bg-card text-muted-foreground border-border'
+        }`}>
+          {done === total && total > 0 ? <CheckCircle2 size={22} /> : index + 1}
         </div>
-        <div>
-          <h3 className="text-lg md:text-xl font-black mb-0.5">{module.title}</h3>
-          <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{lessons.length} {t('dashboard_lessons')}</p>
+        <div className="flex-1 min-w-0">
+          <h3 className="text-base md:text-lg font-black truncate">{module.title}</h3>
+          <div className="mt-1 flex items-center gap-3">
+            <div className="h-1.5 flex-1 rounded-full bg-border overflow-hidden max-w-[180px]">
+              <div className="h-full bg-accent-primary transition-all" style={{ width: `${pct}%` }} />
+            </div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">
+              {done}/{total} {t('dashboard_lessons')}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 ml-0 md:ml-24">
-        {lessons.map((lesson) => {
-          const isCompleted = progress.some(p => p.lesson_id === lesson.id && p.status === 'completed');
+      {/* Lesson nodes — vertical track */}
+      <ol className="relative pl-2 md:pl-6">
+        {/* vertical track line */}
+        <span className="absolute left-[27px] md:left-[31px] top-3 bottom-3 w-[2px] bg-border" aria-hidden />
+        {module.lessons.map((lesson, i) => {
+          const isCompleted = completedIds.has(lesson.id);
+          const isCurrent = lesson.id === nextLessonId;
+          const isLocked = !isCompleted && !isCurrent;
           return (
-            <Link
-              to={`/lessons/${lesson.id}`}
+            <LessonNode
               key={lesson.id}
-              className={`p-4 md:p-5 rounded-xl md:rounded-2xl border transition-all flex items-center justify-between group relative overflow-hidden min-h-[60px] ${
-                isCompleted
-                ? 'bg-accent-success/5 border-accent-success/15 hover:border-accent-success/30'
-                : 'bg-card border-border hover:border-accent-primary/30 hover:shadow-glow-primary'
-              }`}
-            >
-              <div className="flex items-center gap-4 relative z-10 min-w-0">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all shrink-0 ${
-                  isCompleted
-                  ? 'bg-accent-success text-white shadow-glow-success'
-                  : 'bg-surface-1 text-muted-foreground group-hover:bg-accent-primary group-hover:text-white group-hover:shadow-glow-primary'
-                }`}>
-                  {isCompleted ? <Star size={18} fill="currentColor" /> : <BookOpen size={18} />}
-                </div>
-                <div className="min-w-0">
-                  <h4 className="font-bold text-sm mb-0.5 truncate">{lesson.title}</h4>
-                  <p className={`text-[10px] font-bold uppercase tracking-wider ${isCompleted ? 'text-accent-success' : 'text-muted-foreground'}`}>
-                    {isCompleted ? t('lesson_done') : `+${lesson.xp_reward} XP`}
-                  </p>
-                </div>
-              </div>
-              <ArrowRight size={16} className="text-accent-primary opacity-0 group-hover:opacity-100 transition-all translate-x-2 group-hover:translate-x-0 shrink-0" />
-            </Link>
+              lesson={lesson}
+              order={i + 1}
+              isCompleted={isCompleted}
+              isCurrent={isCurrent}
+              isLocked={isLocked}
+            />
           );
         })}
-      </div>
+      </ol>
     </motion.div>
+  );
+};
+
+interface LessonNodeProps {
+  lesson: Lesson;
+  order: number;
+  isCompleted: boolean;
+  isCurrent: boolean;
+  isLocked: boolean;
+}
+
+const LessonNode: React.FC<LessonNodeProps> = ({ lesson, order, isCompleted, isCurrent, isLocked }) => {
+  const { t } = useLanguage();
+
+  const dotColor = isCompleted
+    ? 'bg-accent-success text-white shadow-glow-success'
+    : isCurrent
+      ? 'bg-accent-primary text-white shadow-glow-primary'
+      : 'bg-surface-1 text-muted-foreground border-2 border-dashed border-border';
+
+  const cardColor = isCompleted
+    ? 'bg-accent-success/5 border-accent-success/15 hover:border-accent-success/30'
+    : isCurrent
+      ? 'bg-card border-accent-primary/40 hover:border-accent-primary/60 shadow-glow-primary'
+      : 'bg-card/60 border-border opacity-80';
+
+  const inner = (
+    <li className="relative pl-12 md:pl-14 pb-4 last:pb-0">
+      {/* node dot */}
+      <span
+        className={`absolute left-0 top-1.5 w-10 h-10 rounded-full flex items-center justify-center font-black text-xs ${dotColor}`}
+      >
+        {isCurrent && (
+          <motion.span
+            className="absolute inset-0 rounded-full bg-accent-primary/30"
+            animate={{ scale: [1, 1.35, 1], opacity: [0.6, 0, 0.6] }}
+            transition={{ duration: 1.6, repeat: Infinity, ease: 'easeOut' }}
+          />
+        )}
+        {isCompleted ? <CheckCircle2 size={18} /> : isLocked ? <Lock size={14} /> : order}
+      </span>
+
+      <div
+        className={`block p-4 md:p-4 rounded-xl border transition-all ${cardColor} min-h-[60px]`}
+      >
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <h4 className="font-bold text-sm mb-0.5 truncate">{lesson.title}</h4>
+            <p className={`text-[10px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
+              isCompleted ? 'text-accent-success' : isCurrent ? 'text-accent-primary' : 'text-muted-foreground'
+            }`}>
+              {isCompleted ? (<>{t('lesson_done')}</>) :
+               isCurrent ? (<><Sparkles size={11} /> {t('dash_continue')}</>) :
+               <>+{lesson.xp_reward} XP</>}
+            </p>
+          </div>
+          <ArrowRight size={16} className={isLocked ? 'text-muted-foreground/40' : 'text-accent-primary'} />
+        </div>
+      </div>
+    </li>
+  );
+
+  if (isLocked) return inner;
+
+  return (
+    <Link to={`/lessons/${lesson.id}`} className="block">
+      {inner}
+    </Link>
   );
 };

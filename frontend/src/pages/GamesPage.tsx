@@ -75,34 +75,22 @@ export const GamesPage: React.FC = () => {
     } catch { /* noop */ }
   };
 
-  const calculateLevel = (xp: number): number => {
-    if (xp < 100) return 1;
-    if (xp < 300) return 2;
-    if (xp < 600) return 3;
-    if (xp < 1000) return 4;
-    if (xp < 1500) return 5;
-    if (xp < 2100) return 6;
-    if (xp < 2800) return 7;
-    if (xp < 3600) return 8;
-    if (xp < 4500) return 9;
-    return 10;
-  };
-
   const addXPToProfile = async (amount: number, gameKey: string) => {
     if (!profile) return;
     if (getCompletedGames().has(gameKey)) return;
     markGameCompleted(gameKey);
-    const newXp = profile.xp + amount;
-    const newLevel = calculateLevel(newXp);
-    const { data: updatedProfile, error } = await supabase
-      .from('profiles')
-      .update({ xp: newXp, level: newLevel })
-      .eq('id', profile.id)
-      .select()
-      .single();
+
+    // Direct UPDATEs to xp/level/streak from `authenticated` are silently
+    // reverted by the profiles_protect_columns trigger. The award_xp RPC
+    // (SECURITY DEFINER) is the only sanctioned path.
+    const { data: updatedProfile, error } = await supabase.rpc('award_xp', {
+      p_amount: amount,
+      p_reason: `game:${gameKey}`,
+    });
 
     if (!error && updatedProfile) {
-      setProfile(updatedProfile);
+      const next = Array.isArray(updatedProfile) ? updatedProfile[0] : updatedProfile;
+      if (next) setProfile(next);
     }
   };
 
