@@ -10,6 +10,7 @@ import { ModeToggle } from '@/components/ModeToggle';
 import { TranslationKey } from '@/i18n/translations';
 import { isStaff } from '@/features/admin/permissions';
 import { getLevelProgress, isMaxLevel } from '@/lib/progress/levels';
+import { Avatar } from '@/components/avatar/Avatar';
 
 const baseMenuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNode; path: string }[] = [
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
@@ -79,21 +80,34 @@ export const Sidebar: React.FC = () => {
           <ThemeToggle />
         </div>
 
-        {/* Level progress */}
-        <div className="hidden md:block px-3 py-3 bg-surface-1 border border-border/50 rounded-xl">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('sidebar_level')} {level}</span>
-            <span className="text-[10px] font-bold text-accent-primary">{xp} XP</span>
+        {/* User chip — avatar + name + XP. Mirrors the profile avatar
+            in real time via the Zustand store. */}
+        <Link
+          to="/profile"
+          className="hidden md:flex items-center gap-2.5 px-2.5 py-2 bg-surface-1 border border-border/50 rounded-xl hover:border-accent-primary/30 transition-colors"
+        >
+          <Avatar src={profile?.avatar_url} name={profile?.full_name} sizeClass="w-9 h-9" />
+          <div className="min-w-0 flex-1">
+            <p className="text-xs font-bold truncate">{profile?.full_name || profile?.username || t('profile_default_name')}</p>
+            <div className="flex items-center justify-between mt-1">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{t('sidebar_level')} {level}</span>
+              <span className="text-[10px] font-bold text-accent-primary">{xp} XP</span>
+            </div>
+            <div className="mt-1 w-full h-1 bg-border rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-accent-primary to-indigo-400 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${xpPercent}%` }}
+                transition={{ duration: 0.6 }}
+              />
+            </div>
           </div>
-          <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-gradient-to-r from-accent-primary to-indigo-400 rounded-full"
-              initial={{ width: 0 }}
-              animate={{ width: `${xpPercent}%` }}
-              transition={{ duration: 0.6 }}
-            />
-          </div>
-        </div>
+        </Link>
+
+        {/* Collapsed: show only avatar to keep the sidebar narrow on md */}
+        <Link to="/profile" className="flex md:hidden items-center justify-center">
+          <Avatar src={profile?.avatar_url} name={profile?.full_name} sizeClass="w-9 h-9" />
+        </Link>
 
         {/* Logout */}
         <button

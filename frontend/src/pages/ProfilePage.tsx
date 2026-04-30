@@ -1,3 +1,20 @@
+/**
+ * Profile page.
+ *
+ * Layout (mobile-first, then 2-col grid on desktop):
+ *  1. Hero with avatar/name + Level + XP progress.
+ *  2. Primary action row: "Edit profile" + "Admin panel" (staff) — lives
+ *     right next to the hero so the most-used CTA is never buried.
+ *  3. Account info card (id/email/role/status/plan/joined) — surfaced
+ *     above the stats grid on purpose (the old layout shoved this to
+ *     the bottom-right column which the user called out).
+ *  4. Stats grid.
+ *  5. Two-column main content: next lesson / current path / activity /
+ *     weak topics on the left; streak / settings / achievements on
+ *     the right.
+ *  6. Mobile toggles + destructive logout last.
+ */
+
 import React, { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
@@ -66,7 +83,7 @@ export const ProfilePage: React.FC = () => {
     <MainLayout>
       <div className="p-4 md:p-8 lg:p-10 max-w-6xl mx-auto space-y-5 md:space-y-8 pb-4 md:pb-12">
 
-        {/* ═══════ HERO + STATS ═══════ */}
+        {/* 1. HERO */}
         <FadeIn>
           <ProfileHero
             level={level} xp={xp}
@@ -76,11 +93,37 @@ export const ProfilePage: React.FC = () => {
           />
         </FadeIn>
 
-        <FadeIn delay={0.05}>
+        {/* 2. Primary actions right next to the hero (highly visible) */}
+        <FadeIn delay={0.03}>
+          <div className="flex flex-col sm:flex-row gap-2.5">
+            <button
+              onClick={() => setEditOpen(true)}
+              className="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-xl bg-accent-primary text-white font-bold text-sm active:opacity-90 md:hover:opacity-90 transition-all min-h-[48px] shadow-glow-primary"
+            >
+              <Edit3 size={18} /> {t('profile_edit')}
+            </button>
+            {isStaff(profile) && (
+              <button
+                onClick={() => navigate('/admin')}
+                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-surface-2 border border-border text-foreground font-bold text-sm active:bg-card-hover md:hover:bg-card-hover transition-all min-h-[48px]"
+              >
+                <Shield size={18} /> {t('profile_admin_panel')}
+              </button>
+            )}
+          </div>
+        </FadeIn>
+
+        {/* 3. Account info — surfaced right below hero, not buried */}
+        <FadeIn delay={0.06}>
+          <AccountInfoCard subscription={subscription} />
+        </FadeIn>
+
+        {/* 4. Stats grid */}
+        <FadeIn delay={0.09}>
           <ProfileStats level={level} streak={streak} completedCount={completedCount} xp={xp} />
         </FadeIn>
 
-        {/* ═══════ MAIN GRID ═══════ */}
+        {/* 5. MAIN GRID */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
 
           {/* ── LEFT COLUMN (2/3) ── */}
@@ -219,7 +262,7 @@ export const ProfilePage: React.FC = () => {
           {/* ── RIGHT COLUMN (1/3) ── */}
           <div className="space-y-6">
 
-            {/* Streak & Motivation */}
+            {/* Streak card */}
             <FadeIn delay={0.1}>
               <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
                 <div className="flex items-center gap-3">
@@ -304,12 +347,7 @@ export const ProfilePage: React.FC = () => {
               </section>
             </FadeIn>
 
-            {/* Account info */}
-            <FadeIn delay={0.22}>
-              <AccountInfoCard subscription={subscription} />
-            </FadeIn>
-
-            {/* Mobile toggles (hidden on desktop where sidebar has them) */}
+            {/* Mobile-only toggles (sidebar already has them on desktop) */}
             <FadeIn delay={0.24}>
               <div className="flex md:hidden gap-2 px-1">
                 <LanguageToggle />
@@ -318,30 +356,14 @@ export const ProfilePage: React.FC = () => {
               </div>
             </FadeIn>
 
-            {/* Actions */}
+            {/* 6. Destructive action last */}
             <FadeIn delay={0.26}>
-              <div className="space-y-2.5">
-                <button
-                  onClick={() => setEditOpen(true)}
-                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/20 text-accent-primary font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
-                >
-                  <Edit3 size={18} /> {t('profile_edit')}
-                </button>
-                {isStaff(profile) && (
-                  <button
-                    onClick={() => navigate('/admin')}
-                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-surface-2 border border-border text-foreground font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
-                  >
-                    <Shield size={18} /> {t('profile_admin_panel')}
-                  </button>
-                )}
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-danger/5 border border-accent-danger/20 text-accent-danger font-bold text-sm active:bg-accent-danger active:text-white md:hover:bg-accent-danger md:hover:text-white transition-all min-h-[48px]"
-                >
-                  <LogOut size={18} /> {t('profile_logout')}
-                </button>
-              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-2 p-4 rounded-xl bg-accent-danger/5 border border-accent-danger/20 text-accent-danger font-bold text-sm active:bg-accent-danger active:text-white md:hover:bg-accent-danger md:hover:text-white transition-all min-h-[48px]"
+              >
+                <LogOut size={18} /> {t('profile_logout')}
+              </button>
             </FadeIn>
           </div>
         </div>

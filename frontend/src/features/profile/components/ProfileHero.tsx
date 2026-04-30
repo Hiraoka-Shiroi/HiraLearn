@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Calendar } from 'lucide-react';
+import { TrendingUp, Calendar, Camera } from 'lucide-react';
 import { Avatar } from '@/components/avatar/Avatar';
+import { AvatarPickerModal } from '@/components/avatar/AvatarPickerModal';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useLanguage } from '@/i18n/useLanguage';
+import { uploadAvatar } from '@/lib/avatar/uploadAvatar';
 import type { Subscription } from '@/types/database';
 
 interface ProfileHeroProps {
@@ -19,8 +21,21 @@ interface ProfileHeroProps {
 export const ProfileHero: React.FC<ProfileHeroProps> = ({
   level, xp, xpInLevel, xpNeeded, xpPercent, subscription, daysSinceJoin,
 }) => {
-  const { profile } = useAuthStore();
+  const { user, profile, setProfile } = useAuthStore();
   const { t } = useLanguage();
+  const [pickerOpen, setPickerOpen] = useState(false);
+
+  const handleAvatarCropped = async (blob: Blob) => {
+    if (!user) return;
+    const next = await uploadAvatar({
+      userId: user.id,
+      blob,
+      previousAvatarUrl: profile?.avatar_url ?? null,
+    });
+    // `setProfile` is reactively consumed by <Avatar> in sidebar, dashboard
+    // and this hero — so the new URL pops everywhere without a reload.
+    setProfile(next);
+  };
 
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-surface-2 border border-border p-6 md:p-10">
@@ -37,7 +52,16 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             sizeClass="w-28 h-28 md:w-32 md:h-32"
             className="relative"
           />
-          <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl bg-accent-primary text-white flex items-center justify-center text-sm font-black shadow-glow-primary">
+          {/* One-tap avatar swap without opening the full edit modal. */}
+          <button
+            type="button"
+            onClick={() => setPickerOpen(true)}
+            aria-label={t('avatar_change')}
+            className="absolute -bottom-1 -left-1 w-10 h-10 rounded-xl bg-surface-2 border border-border text-foreground flex items-center justify-center hover:bg-accent-primary hover:text-white hover:border-accent-primary transition-all shadow-md"
+          >
+            <Camera size={16} />
+          </button>
+          <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl bg-accent-primary text-white flex items-center justify-center text-sm font-black shadow-glow-primary pointer-events-none">
             {level}
           </div>
         </div>
@@ -85,6 +109,13 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
           </div>
         </div>
       </div>
+
+      <AvatarPickerModal
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onCropped={handleAvatarCropped}
+        title={profile?.full_name ?? profile?.username ?? undefined}
+      />
     </div>
   );
 };
