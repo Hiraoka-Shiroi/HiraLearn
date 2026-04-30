@@ -75,9 +75,9 @@ export const CoursesPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="p-6 md:p-10 max-w-5xl mx-auto">
-        <header className="mb-12">
-          <h1 className="text-4xl font-black mb-2 tracking-tight">{t('courses_title')}</h1>
+      <div className="p-4 md:p-10 max-w-5xl mx-auto">
+        <header className="mb-6 md:mb-12">
+          <h1 className="text-2xl md:text-4xl font-black mb-2 tracking-tight">{t('courses_title')}</h1>
           <p className="text-muted-foreground font-medium">{t('courses_subtitle')}</p>
         </header>
 
@@ -86,23 +86,23 @@ export const CoursesPage: React.FC = () => {
              <div className="w-10 h-10 border-4 border-accent-primary border-t-transparent rounded-full animate-spin" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
             {courses.map((course) => (
               <motion.div
                 key={course.id}
                 whileHover={{ y: -8 }}
-                className="bg-card border border-border rounded-[2.5rem] p-8 md:p-10 flex flex-col hover:border-accent-primary transition-all group relative overflow-hidden"
+                className="bg-card border border-border rounded-2xl md:rounded-[2.5rem] p-5 md:p-10 flex flex-col active:border-accent-primary md:hover:border-accent-primary transition-all group relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-8 text-accent-primary/5 group-hover:scale-110 transition-transform duration-700">
                    {getCourseIcon(course.slug)}
                 </div>
 
-                <div className="w-16 h-16 bg-accent-primary/10 rounded-2xl flex items-center justify-center text-accent-primary mb-8 border border-accent-primary/20">
+                <div className="w-12 h-12 md:w-16 md:h-16 bg-accent-primary/10 rounded-xl md:rounded-2xl flex items-center justify-center text-accent-primary mb-5 md:mb-8 border border-accent-primary/20">
                   {getCourseIcon(course.slug)}
                 </div>
 
-                <h3 className="text-2xl font-black mb-3">{course.title}</h3>
-                <p className="text-muted-foreground text-sm mb-8 leading-relaxed">
+                <h3 className="text-xl md:text-2xl font-black mb-2 md:mb-3">{course.title}</h3>
+                <p className="text-muted-foreground text-sm mb-5 md:mb-8 leading-relaxed">
                   {course.description || t('courses_default_desc')}
                 </p>
 
@@ -138,7 +138,7 @@ export const CoursesPage: React.FC = () => {
                      )}
                      <button
                        onClick={() => navigate(`/dashboard?course=${course.slug}`)}
-                       className="bg-accent-primary text-white p-3 rounded-2xl hover:scale-110 transition-all shadow-lg shadow-accent-primary/20"
+                       className="bg-accent-primary text-white p-3 rounded-xl md:rounded-2xl active:scale-95 md:hover:scale-110 transition-all shadow-lg shadow-accent-primary/20 min-w-[44px] min-h-[44px] flex items-center justify-center"
                      >
                        <ArrowRight size={20} />
                      </button>
@@ -148,8 +148,8 @@ export const CoursesPage: React.FC = () => {
             ))}
 
             {/* Coming Soon Course */}
-            <div className="bg-card/50 border-2 border-dashed border-border rounded-[2.5rem] p-10 flex flex-col items-center justify-center text-center opacity-60">
-               <div className="w-16 h-16 bg-border rounded-2xl flex items-center justify-center text-muted-foreground mb-6">
+            <div className="bg-card/50 border-2 border-dashed border-border rounded-2xl md:rounded-[2.5rem] p-6 md:p-10 flex flex-col items-center justify-center text-center opacity-60">
+               <div className="w-12 h-12 md:w-16 md:h-16 bg-border rounded-xl md:rounded-2xl flex items-center justify-center text-muted-foreground mb-4 md:mb-6">
                  <Terminal size={32} />
                </div>
                <h3 className="text-xl font-bold mb-2">Advanced React</h3>

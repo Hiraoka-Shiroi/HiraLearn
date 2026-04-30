@@ -59,20 +59,20 @@ export const Dashboard: React.FC = () => {
     <MainLayout>
       <div className="p-4 md:p-8 lg:p-10 max-w-6xl mx-auto">
         {/* Header / Stats */}
-        <header className="mb-10 bg-gradient-to-br from-card via-card to-surface-2 p-6 md:p-8 rounded-3xl border border-border relative overflow-hidden">
+        <header className="mb-6 md:mb-10 bg-gradient-to-br from-card via-card to-surface-2 p-5 md:p-8 rounded-2xl md:rounded-3xl border border-border relative overflow-hidden">
           <div className="absolute top-0 right-0 w-56 h-56 bg-accent-primary/[0.05] rounded-full blur-[60px] -translate-y-1/3 translate-x-1/4" />
 
           <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-5 min-w-0">
+            <div className="flex items-center gap-4 md:gap-5 min-w-0">
               {profile?.avatar_url ? (
-                <img src={profile.avatar_url} alt="" className="w-16 h-16 rounded-2xl border-2 border-accent-primary/20 object-cover shrink-0" />
+                <img src={profile.avatar_url} alt="" className="w-12 h-12 md:w-16 md:h-16 rounded-xl md:rounded-2xl border-2 border-accent-primary/20 object-cover shrink-0" />
               ) : (
-                <div className="w-16 h-16 shrink-0 bg-gradient-to-br from-accent-primary/15 to-accent-primary/5 rounded-2xl flex items-center justify-center text-accent-primary border border-accent-primary/20">
-                  <span className="text-2xl font-black">{profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
+                <div className="w-12 h-12 md:w-16 md:h-16 shrink-0 bg-gradient-to-br from-accent-primary/15 to-accent-primary/5 rounded-xl md:rounded-2xl flex items-center justify-center text-accent-primary border border-accent-primary/20">
+                  <span className="text-xl md:text-2xl font-black">{profile?.full_name?.charAt(0)?.toUpperCase() || 'U'}</span>
                 </div>
               )}
               <div className="min-w-0">
-                <h1 className="text-2xl md:text-3xl font-bold mb-1 truncate">{profile?.full_name || t('profile_default_name')}</h1>
+                <h1 className="text-xl md:text-3xl font-bold mb-1 truncate">{profile?.full_name || t('profile_default_name')}</h1>
                 <div className="flex items-center gap-2">
                   <span className="px-2.5 py-0.5 bg-accent-primary text-white text-[10px] font-bold rounded-lg uppercase tracking-wider shrink-0">Lvl {profile?.level || 1}</span>
                   <p className="text-muted-foreground text-sm font-medium shrink-0">{profile?.xp || 0} XP</p>
@@ -80,7 +80,7 @@ export const Dashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-6 shrink-0">
+            <div className="flex gap-4 md:gap-6 shrink-0">
               <div className="text-center">
                 <div className="flex items-center gap-1.5 text-accent-warning font-black text-xl">
                   <Flame size={20} className="text-orange-400" /> {profile?.streak ?? 0}
@@ -99,14 +99,14 @@ export const Dashboard: React.FC = () => {
 
         {/* Course Map */}
         <section>
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center justify-between mb-5 md:mb-8">
             <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2.5">
               <BookOpen className="text-accent-primary" size={24} /> {t('dash_your_learning')}
             </h2>
             <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{activeCourse?.title ?? t('dash_html_path')}</span>
           </div>
 
-          <div className="space-y-12 relative">
+          <div className="space-y-8 md:space-y-12 relative">
             <div className="absolute left-9 top-10 bottom-10 w-px bg-border hidden md:block" />
 
             {modules.map((module, idx) => (
@@ -139,24 +139,24 @@ const ModuleSection: React.FC<{ module: Module, index: number, progress: UserPro
       viewport={{ once: true }}
       className="relative z-10"
     >
-      <div className="flex items-center gap-6 mb-8">
-        <div className="w-[72px] h-[72px] shrink-0 bg-card border-2 border-accent-primary/30 rounded-2xl flex items-center justify-center text-accent-primary font-black text-xl shadow-glow-primary">
+      <div className="flex items-center gap-4 md:gap-6 mb-5 md:mb-8">
+        <div className="w-14 h-14 md:w-[72px] md:h-[72px] shrink-0 bg-card border-2 border-accent-primary/30 rounded-xl md:rounded-2xl flex items-center justify-center text-accent-primary font-black text-lg md:text-xl shadow-glow-primary">
           {index + 1}
         </div>
         <div>
-          <h3 className="text-xl font-black mb-0.5">{module.title}</h3>
+          <h3 className="text-lg md:text-xl font-black mb-0.5">{module.title}</h3>
           <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{lessons.length} {t('dashboard_lessons')}</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-0 md:ml-24">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4 ml-0 md:ml-24">
         {lessons.map((lesson) => {
           const isCompleted = progress.some(p => p.lesson_id === lesson.id && p.status === 'completed');
           return (
             <Link
               to={`/lessons/${lesson.id}`}
               key={lesson.id}
-              className={`p-5 rounded-2xl border transition-all flex items-center justify-between group relative overflow-hidden ${
+              className={`p-4 md:p-5 rounded-xl md:rounded-2xl border transition-all flex items-center justify-between group relative overflow-hidden min-h-[60px] ${
                 isCompleted
                 ? 'bg-accent-success/5 border-accent-success/15 hover:border-accent-success/30'
                 : 'bg-card border-border hover:border-accent-primary/30 hover:shadow-glow-primary'

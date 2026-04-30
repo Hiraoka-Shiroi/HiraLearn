@@ -44,9 +44,9 @@ export const AdminDashboardPage = () => {
   ];
 
   return (
-    <div className="p-8 md:p-12 space-y-8">
+    <div className="p-4 md:p-12 space-y-6 md:space-y-8">
       <header>
-        <h1 className="text-3xl font-black mb-2">Dashboard</h1>
+        <h1 className="text-2xl md:text-3xl font-black mb-2">Dashboard</h1>
         <p className="text-muted-foreground">Сводка состояния приложения</p>
       </header>
 

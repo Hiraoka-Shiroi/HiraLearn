@@ -13,6 +13,9 @@ import { MainLayout } from '@/components/layout/MainLayout';
 import { useLanguage } from '@/i18n/useLanguage';
 import { TranslationKey } from '@/i18n/translations';
 import { billingService } from '@/features/billing/billingService';
+import { LanguageToggle } from '@/components/LanguageToggle';
+import { ThemeToggle } from '@/components/ThemeToggle';
+import { ModeToggle } from '@/components/ModeToggle';
 import type { Subscription, Course, Module, Lesson, UserProgress } from '@/types/database';
 
 /* ── XP thresholds (mirrors services.ts) ─────────────────────── */
@@ -185,7 +188,7 @@ export const ProfilePage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="p-4 md:p-8 lg:p-10 max-w-6xl mx-auto space-y-6 md:space-y-8 pb-12">
+      <div className="p-4 md:p-8 lg:p-10 max-w-6xl mx-auto space-y-5 md:space-y-8 pb-4 md:pb-12">
 
         {/* ═══════ HERO PROFILE CARD ═══════ */}
         <FadeIn>
@@ -497,20 +500,29 @@ export const ProfilePage: React.FC = () => {
               </section>
             </FadeIn>
 
+            {/* Mobile toggles (hidden on desktop where sidebar has them) */}
+            <FadeIn delay={0.22}>
+              <div className="flex md:hidden gap-2 px-1">
+                <LanguageToggle />
+                <ModeToggle />
+                <ThemeToggle />
+              </div>
+            </FadeIn>
+
             {/* Actions */}
             <FadeIn delay={0.25}>
               <div className="space-y-2.5">
                 {profile?.role === 'admin' && (
                   <button
                     onClick={() => navigate('/admin')}
-                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/20 text-accent-primary font-bold text-sm hover:bg-accent-primary hover:text-white transition-all"
+                    className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-primary/5 border border-accent-primary/20 text-accent-primary font-bold text-sm active:bg-accent-primary active:text-white md:hover:bg-accent-primary md:hover:text-white transition-all min-h-[48px]"
                   >
                     <Shield size={18} /> {t('profile_admin_panel')}
                   </button>
                 )}
                 <button
                   onClick={handleLogout}
-                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-danger/5 border border-accent-danger/20 text-accent-danger font-bold text-sm hover:bg-accent-danger hover:text-white transition-all"
+                  className="w-full flex items-center gap-3 p-4 rounded-xl bg-accent-danger/5 border border-accent-danger/20 text-accent-danger font-bold text-sm active:bg-accent-danger active:text-white md:hover:bg-accent-danger md:hover:text-white transition-all min-h-[48px]"
                 >
                   <LogOut size={18} /> {t('profile_logout')}
                 </button>
@@ -536,7 +548,7 @@ const StatMini: React.FC<{ icon: React.ReactNode; value: string; label: string; 
 );
 
 const SettingRow: React.FC<{ icon: React.ReactNode; label: string; value: string; color: string; onClick: () => void }> = ({ icon, label, value, color, onClick }) => (
-  <div onClick={onClick} className="p-4 flex items-center gap-3 hover:bg-card-hover transition-colors cursor-pointer group">
+  <div onClick={onClick} className="p-4 flex items-center gap-3 active:bg-card-hover md:hover:bg-card-hover transition-colors cursor-pointer group min-h-[52px]">
     <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${color}`}>
       {icon}
     </div>
@@ -544,7 +556,7 @@ const SettingRow: React.FC<{ icon: React.ReactNode; label: string; value: string
       <p className="text-xs text-muted-foreground font-medium">{label}</p>
       <p className="text-sm font-bold truncate capitalize">{value}</p>
     </div>
-    <ChevronRight size={16} className="text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
+    <ChevronRight size={16} className="text-muted-foreground md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0" />
   </div>
 );
 

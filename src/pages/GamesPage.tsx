@@ -139,20 +139,20 @@ export const GamesPage: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="p-6 md:p-10 max-w-5xl mx-auto">
-        <header className="mb-12 flex items-center justify-between">
+      <div className="p-4 md:p-10 max-w-5xl mx-auto">
+        <header className="mb-6 md:mb-12 flex items-center justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold mb-2">{t('games_arcade')}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold mb-1 md:mb-2">{t('games_arcade')}</h1>
             <p className="text-muted-foreground text-sm">{t('games_arcade_subtitle')}</p>
           </div>
-          <div className="bg-card border border-border rounded-2xl px-4 py-2 flex items-center gap-3">
+          <div className="bg-card border border-border rounded-xl md:rounded-2xl px-3 py-2 flex items-center gap-2 md:gap-3 shrink-0">
              <Trophy className="text-accent-warning" size={20} />
              <span className="font-bold">{profile?.xp} XP</span>
           </div>
         </header>
 
         {!activeGame ? (
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 md:gap-8">
             {games.map((game) => (
               <motion.button
                 key={game.id}
@@ -162,16 +162,16 @@ export const GamesPage: React.FC = () => {
                   void trackEvent('game_start', { game_id: game.id });
                   if (game.id === 'bug-hunter') setUserCode(BUG_HUNTER_CHALLENGES[0].buggyCode);
                 }}
-                className="p-8 bg-card border border-border rounded-[2.5rem] text-left hover:border-accent-primary transition-all group relative overflow-hidden"
+                className="p-5 md:p-8 bg-card border border-border rounded-2xl md:rounded-[2.5rem] text-left active:border-accent-primary md:hover:border-accent-primary transition-all group relative overflow-hidden"
               >
                 <div className="absolute top-0 right-0 p-8 opacity-5">
                    {React.cloneElement(game.icon as React.ReactElement, { size: 120 })}
                 </div>
-                <div className="w-14 h-14 bg-background border border-border rounded-2xl flex items-center justify-center mb-6 group-hover:bg-accent-primary/10 transition-colors">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-background border border-border rounded-xl md:rounded-2xl flex items-center justify-center mb-4 md:mb-6 group-hover:bg-accent-primary/10 transition-colors">
                   {game.icon}
                 </div>
-                <h3 className="text-xl font-bold mb-2">{t(game.titleKey)}</h3>
-                <p className="text-muted-foreground text-sm mb-6">{t(game.descKey)}</p>
+                <h3 className="text-lg md:text-xl font-bold mb-2">{t(game.titleKey)}</h3>
+                <p className="text-muted-foreground text-sm mb-4 md:mb-6">{t(game.descKey)}</p>
                 <div className="flex items-center text-xs font-bold text-accent-success uppercase tracking-widest">
                   <ShieldCheck size={14} className="mr-2" />
                   {t('games_reward')}: {game.xp} XP
@@ -196,25 +196,25 @@ export const GamesPage: React.FC = () => {
 
             {activeGame === 'bug-hunter' && (
               <div className="space-y-6">
-                <div className="bg-card border border-border rounded-[2.5rem] p-8 md:p-12">
-                  <h2 className="text-2xl font-bold mb-4 flex items-center gap-3">
+                <div className="bg-card border border-border rounded-2xl md:rounded-[2.5rem] p-5 md:p-12">
+                  <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 flex items-center gap-3">
                     <Bug className="text-accent-danger" /> Bug Hunter
                   </h2>
-                  <p className="text-muted-foreground mb-8">{t(BUG_HUNTER_CHALLENGES[bugIndex].descKey)}</p>
+                  <p className="text-muted-foreground mb-5 md:mb-8">{t(BUG_HUNTER_CHALLENGES[bugIndex].descKey)}</p>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-5 md:mb-8">
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-2">{t('games_editor')}</label>
                       <textarea
                         value={userCode}
                         onChange={(e) => setUserCode(e.target.value)}
-                        className="w-full h-48 bg-background border border-border rounded-2xl p-4 font-mono text-sm focus:outline-none focus:border-accent-primary transition-all"
+                        className="w-full h-40 md:h-48 bg-background border border-border rounded-xl md:rounded-2xl p-3 md:p-4 font-mono text-sm focus:outline-none focus:border-accent-primary transition-all"
                         spellCheck={false}
                       />
                     </div>
                     <div className="space-y-2">
                       <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest ml-2">{t('games_bug_label')}</label>
-                      <pre className="w-full h-48 bg-accent-danger/5 border border-accent-danger/20 rounded-2xl p-4 font-mono text-sm text-accent-danger/70 overflow-auto">
+                      <pre className="w-full h-40 md:h-48 bg-accent-danger/5 border border-accent-danger/20 rounded-xl md:rounded-2xl p-3 md:p-4 font-mono text-sm text-accent-danger/70 overflow-auto">
                         {BUG_HUNTER_CHALLENGES[bugIndex].buggyCode}
                       </pre>
                     </div>
@@ -224,7 +224,7 @@ export const GamesPage: React.FC = () => {
                     <button
                       onClick={handleBugCheck}
                       disabled={bhResult === 'success'}
-                      className="w-full md:w-auto bg-accent-primary text-white px-10 py-4 rounded-2xl font-bold hover:scale-105 transition-all disabled:opacity-50"
+                      className="w-full md:w-auto bg-accent-primary text-white px-8 md:px-10 py-4 rounded-xl md:rounded-2xl font-bold active:scale-95 md:hover:scale-105 transition-all disabled:opacity-50 min-h-[48px]"
                     >
                       {t('games_check_code')}
                     </button>
@@ -248,13 +248,13 @@ export const GamesPage: React.FC = () => {
 
             {activeGame === 'tag-builder' && (
               <div className="space-y-6">
-                <div className="bg-card border border-border rounded-[2.5rem] p-8 md:p-12 text-center">
-                  <h2 className="text-2xl font-bold mb-4 flex items-center justify-center gap-3">
+                <div className="bg-card border border-border rounded-2xl md:rounded-[2.5rem] p-5 md:p-12 text-center">
+                  <h2 className="text-xl md:text-2xl font-bold mb-3 md:mb-4 flex items-center justify-center gap-3">
                     <Zap className="text-accent-primary" /> Tag Builder
                   </h2>
-                  <p className="text-muted-foreground mb-8">{t('games_assemble_struct').replace('{title}', t(TAG_BUILDER_CHALLENGES[tbIndex].titleKey))}</p>
+                  <p className="text-muted-foreground mb-5 md:mb-8">{t('games_assemble_struct').replace('{title}', t(TAG_BUILDER_CHALLENGES[tbIndex].titleKey))}</p>
 
-                  <div className="min-h-[120px] bg-background border-2 border-dashed border-border rounded-3xl p-6 mb-10 flex flex-wrap gap-3 justify-center items-center">
+                  <div className="min-h-[100px] md:min-h-[120px] bg-background border-2 border-dashed border-border rounded-2xl md:rounded-3xl p-4 md:p-6 mb-6 md:mb-10 flex flex-wrap gap-2 md:gap-3 justify-center items-center">
                     {selectedTags.length === 0 && <span className="text-muted-foreground text-sm uppercase tracking-widest">{t('games_pick_blocks')}</span>}
                     {selectedTags.map((tag, i) => (
                       <motion.div
@@ -267,13 +267,13 @@ export const GamesPage: React.FC = () => {
                     ))}
                   </div>
 
-                  <div className="flex flex-wrap gap-3 justify-center mb-12">
+                  <div className="flex flex-wrap gap-2 md:gap-3 justify-center mb-8 md:mb-12">
                     {TAG_BUILDER_CHALLENGES[tbIndex].blocks.map((tag, i) => (
                       <button
                         key={i}
                         disabled={tbResult === 'success'}
                         onClick={() => handleTagClick(tag)}
-                        className="bg-card border border-border px-6 py-3 rounded-2xl text-sm font-mono font-bold hover:border-accent-primary hover:text-accent-primary transition-all active:scale-95 disabled:opacity-50"
+                        className="bg-card border border-border px-4 md:px-6 py-3 rounded-xl md:rounded-2xl text-sm font-mono font-bold active:border-accent-primary active:text-accent-primary md:hover:border-accent-primary md:hover:text-accent-primary transition-all active:scale-95 disabled:opacity-50 min-h-[44px]"
                       >
                         {tag}
                       </button>
@@ -291,7 +291,7 @@ export const GamesPage: React.FC = () => {
                     <button
                       onClick={checkTags}
                       disabled={tbResult === 'success'}
-                      className="bg-foreground text-background px-10 py-4 rounded-2xl font-bold hover:scale-105 transition-all disabled:opacity-50"
+                      className="bg-foreground text-background px-8 md:px-10 py-4 rounded-xl md:rounded-2xl font-bold active:scale-95 md:hover:scale-105 transition-all disabled:opacity-50 min-h-[48px]"
                     >
                       {t('games_assemble')}
                     </button>
