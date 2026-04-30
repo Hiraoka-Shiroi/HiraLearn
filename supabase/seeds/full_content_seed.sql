@@ -13,8 +13,14 @@
 --   * Re-creates fresh modules / lessons / tasks
 --
 -- WHAT IT DOES NOT TOUCH:
---   profiles, auth.users, user_progress, subscriptions, payments,
+--   profiles, auth.users, subscriptions, payments,
 --   error_logs, page_metrics, admin_logs.
+--
+-- WHAT IT DOES TOUCH (only on RE-RUN):
+--   user_progress rows that reference lessons inside the 11 seed courses
+--   are deleted before the modules cascade — otherwise the cascade would
+--   hit a FK violation (user_progress.lesson_id has no ON DELETE CASCADE).
+--   First run is a no-op for user_progress.
 --
 -- PREREQUISITES:
 --   The schema migrations must already be applied:
@@ -46,7 +52,27 @@ ON CONFLICT (slug) DO UPDATE SET
   is_published  = EXCLUDED.is_published;
 
 -- -----------------------------------------------------------------------------
--- STEP 2 — Wipe modules (and via CASCADE: lessons + tasks) for the 11 seed courses
+-- STEP 2a — Clean user_progress rows that reference seed lessons.
+--           Required because user_progress.lesson_id has no ON DELETE CASCADE,
+--           so the modules cascade below would otherwise FK-fail on re-run
+--           after any user has completed a lesson. NO-OP on the very first run.
+-- -----------------------------------------------------------------------------
+DELETE FROM public.user_progress
+WHERE lesson_id IN (
+  SELECT l.id
+  FROM public.lessons l
+  JOIN public.modules m ON l.module_id = m.id
+  WHERE m.course_id IN (
+    SELECT id FROM public.courses WHERE slug IN (
+      'html-basics','css-basics','responsive-layout','javascript-basics','dom-events',
+      'react-basics','typescript-basics','git-github','api-basics',
+      'supabase-firebase-basics','frontend-projects'
+    )
+  )
+);
+
+-- -----------------------------------------------------------------------------
+-- STEP 2b — Wipe modules (and via CASCADE: lessons + tasks) for the 11 seed courses
 -- -----------------------------------------------------------------------------
 DELETE FROM public.modules
 WHERE course_id IN (
@@ -518,7 +544,7 @@ INSERT INTO public.tasks (lesson_id, title, description, starter_code, validatio
 VALUES (l_id, 'Достань имя',
 'Используя деструктуризацию, достаньте поле name из объекта user.',
 $st$const user = { name: "Bob", age: 30 };
-// const { name } = user;$st$,
+// ваш код здесь$st$,
 '{"requiredText":["const { name }","= user"]}'::jsonb,
 '["Фигурные скобки слева от знака =", "Имя поля = имя переменной", "Используйте const"]'::jsonb,
 100, 1);
@@ -596,7 +622,7 @@ INSERT INTO public.tasks (lesson_id, title, description, starter_code, validatio
 VALUES (l_id, 'Без перезагрузки',
 'В обработчике submit вызовите e.preventDefault().',
 $st$form.addEventListener("submit", (e) => {
-  // e.preventDefault();
+  // ваш код здесь
 });$st$,
 '{"requiredText":["e.preventDefault()"]}'::jsonb,
 '["preventDefault — метод Event", "Вызывается на объекте события", "Без аргументов"]'::jsonb,
@@ -1005,9 +1031,9 @@ INSERT INTO public.tasks (lesson_id, title, description, starter_code, validatio
 VALUES (l_id, 'Регистрация',
 'Вызовите supabase.auth.signUp с email и password.',
 $st$async function register(email, password) {
-  // await supabase.auth.signUp(...)
+  // ваш код здесь
 }$st$,
-'{"requiredText":["supabase.auth.signUp","email","password"]}'::jsonb,
+'{"requiredText":["supabase.auth.signUp"]}'::jsonb,
 '["Метод signUp на auth", "Принимает объект с email/password", "await т.к. возвращает Promise"]'::jsonb,
 100, 1);
 
