@@ -3,13 +3,19 @@
 ## Overview
 HiraLearn is a structured coding education SPA (React 18 + TypeScript + Vite + Tailwind CSS + Supabase + Zustand). It uses hash-based routing (`/#/` URLs) and Supabase for auth/database.
 
+## Repo layout (post-restructure)
+- `frontend/` — Vite + React app (everything UI/build/lint).
+- `backend/` — Supabase migrations, edge functions, seeds.
+- Root `supabase` is a symlink → `backend/` so the Supabase CLI keeps working without flags.
+- Root `package.json` proxies `dev`/`build`/`lint`/`typecheck` to `frontend/`.
+
 ## Local Dev Setup
 ```bash
 cd /home/ubuntu/repos/HiraLearn
-npm install
-npm run dev  # Vite on localhost:5173
+npm install --prefix frontend          # or simply: npm run install:frontend
+npm run dev                            # ≡ npm run dev --prefix frontend (Vite on localhost:5173)
 ```
-Requires `.env` file with Supabase credentials. If no `.env` exists, you can extract Supabase URL and key from the deployed bundle:
+Requires `frontend/.env` file with Supabase credentials. If no `.env` exists, you can extract Supabase URL and key from the deployed bundle:
 ```bash
 # Extract Supabase URL from deployed site
 curl -s "https://<deployed-url>/index.html" | grep -oP 'https://[a-z0-9]+\.supabase\.co' | head -1
@@ -19,10 +25,10 @@ curl -s "https://<deployed-url>/index.html" | grep -oP 'eyJ[A-Za-z0-9_/+=\-]+\.e
 
 ## Build & Deploy for Testing
 ```bash
-npm run build  # Outputs to dist/
-# Then use Devin's deploy tool with command="frontend" dir="dist/"
+npm run build                 # ≡ npm run build --prefix frontend; outputs to frontend/dist/
+# Then use Devin's deploy tool with command="frontend" dir="frontend/dist/"
 ```
-The build uses `vite-plugin-singlefile` so everything is inlined into `dist/index.html`.
+The build uses `vite-plugin-singlefile` so everything is inlined into `frontend/dist/index.html`.
 
 ## Devin Secrets Needed
 - `VITE_SUPABASE_URL` — Supabase project URL (e.g. `https://pckydjhjvunvgekppqqd.supabase.co`)
@@ -49,7 +55,7 @@ curl -s "https://<SUPABASE_URL>/rest/v1/profiles?select=id,full_name,level,xp,st
 ```
 
 ## Supabase Schema Notes
-The actual database schema may differ from the TypeScript types in `src/types/database.ts`. Always verify with direct API queries:
+The actual database schema may differ from the TypeScript types in `frontend/src/types/database.ts`. Always verify with direct API queries:
 ```bash
 curl -s "${SUPABASE_URL}/rest/v1/<table>?select=*&limit=1" \
   -H "apikey: ${SUPABASE_KEY}" \

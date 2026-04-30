@@ -24,8 +24,8 @@
 --
 -- PREREQUISITES:
 --   The schema migrations must already be applied:
---     supabase/migrations/20260425_init_schema.sql
---     supabase/migrations/20260426_admin_monitoring.sql
+--     backend/migrations/20260425_init_schema.sql
+--     backend/migrations/20260426_admin_monitoring.sql
 -- =============================================================================
 
 BEGIN;
@@ -1176,8 +1176,8 @@ COMMIT;
 --
 -- ЕСЛИ КУРСЫ НЕ ПОЯВИЛИСЬ:
 --   * Проверьте, что выполнились ОБЕ миграции
---     (supabase/migrations/20260425_init_schema.sql,
---      supabase/migrations/20260426_admin_monitoring.sql)
+--     (backend/migrations/20260425_init_schema.sql,
+--      backend/migrations/20260426_admin_monitoring.sql)
 --   * В Supabase Dashboard → Table editor → courses должно быть 11 строк
 --   * Если 0 строк — проверьте логи SQL Editor (вкладка "Output")
 --   * Если строки есть, но на сайте нет — перезагрузите страницу с очисткой кэша

@@ -2,13 +2,41 @@
 
 Structured path from zero to production-ready frontend projects with AI-guided scaffolding.
 
+## Repo layout
+
+```
+HiraLearn/
+├── frontend/         # Vite + React + TypeScript app (всё по фронту)
+│   ├── src/
+│   ├── public/
+│   ├── index.html
+│   ├── vite.config.ts / vite.config.web.ts
+│   ├── tsconfig*.json
+│   ├── tailwind.config.ts / postcss.config.js
+│   ├── .eslintrc.cjs
+│   ├── patch-build.js
+│   ├── .env.example
+│   └── package.json   (фронтэндные зависимости)
+├── backend/          # Supabase: миграции, edge функции, seeds
+│   ├── migrations/
+│   ├── functions/
+│   └── seeds/
+├── supabase → backend/   # симлинк, чтобы Supabase CLI находил проект
+├── netlify.toml      # билдит из frontend/
+└── package.json      # root: прокси-скрипты к frontend/ и supabase CLI
+```
+
+NB: `supabase` в корне — это символическая ссылка на `backend/`. Сделана для того, чтобы `supabase` CLI без флагов (`supabase db push`, `supabase functions deploy ...`) продолжал работать. На Windows git может потребовать `git config core.symlinks true` и реклон — или можно заменить симлинк на флаг `--workdir backend`.
+
 ## Quick Start
 
 ```bash
-npm install
-cp .env.example .env  # fill in your keys
-npm run dev
+npm install --prefix frontend
+cp frontend/.env.example frontend/.env  # fill in your keys
+npm run dev          # эквивалентно: npm run dev --prefix frontend
 ```
+
+Рутовый `package.json` содержит удобные прокси-скрипты: `npm run dev`, `npm run build`, `npm run build:web`, `npm run lint`, `npm run typecheck` все делегируют в `frontend/`. Для Supabase: `npm run db:push`, `npm run db:reset`, `npm run db:diff`.
 
 ## Push Notifications Setup
 
@@ -90,7 +118,7 @@ Admin Panel (/admin/push)
 supabase.functions.invoke('send-push', { body: payload })
     |
     v
-Edge Function (supabase/functions/send-push/index.ts)
+Edge Function (backend/functions/send-push/index.ts)
     |-- Verifies JWT + admin role via admin_resolve_push_audience RPC
     |-- Fetches matching push tokens from push_tokens table
     |-- Sends via FCM HTTP v1 API (service-account signed JWT)
