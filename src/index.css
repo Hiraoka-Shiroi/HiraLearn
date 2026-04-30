@@ -95,8 +95,10 @@ body {
 }
 
 /* Bottom navigation safe area */
-.pb-safe-nav {
-  padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+@layer utilities {
+  .pb-safe-nav {
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 /* Custom scrollbar */

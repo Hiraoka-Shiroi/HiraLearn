@@ -15,7 +15,7 @@ export const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
         <Sidebar />
       </div>
 
-      <main className="flex-1 overflow-y-auto custom-scrollbar relative pb-20 md:pb-0">
+      <main className="flex-1 overflow-y-auto custom-scrollbar relative pb-safe-nav md:pb-0">
         <div className="absolute top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none">
           <div className="absolute top-[-15%] right-[-5%] w-[45%] h-[45%] bg-accent-primary/[0.04] rounded-full blur-[100px]" />
           <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-success/[0.03] rounded-full blur-[100px]" />
