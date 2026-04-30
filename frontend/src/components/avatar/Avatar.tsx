@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 
 interface AvatarProps {
   src?: string | null;
@@ -25,6 +25,13 @@ export const Avatar: React.FC<AvatarProps> = ({
 }) => {
   const [loaded, setLoaded] = useState(false);
   const [errored, setErrored] = useState(false);
+
+  // Reset loading/error state whenever the image source changes so a fresh
+  // upload re-attempts to load even if a previous URL had errored out.
+  useEffect(() => {
+    setLoaded(false);
+    setErrored(false);
+  }, [src]);
 
   const initials = useMemo(() => {
     if (!name) return 'U';
