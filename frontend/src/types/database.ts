@@ -53,6 +53,8 @@ export type Lesson = {
   xp_reward: number;
   is_published: boolean;
   created_at: string;
+  title_en?: string | null;
+  theory_en?: string | null;
 };
 
 export type Task = {

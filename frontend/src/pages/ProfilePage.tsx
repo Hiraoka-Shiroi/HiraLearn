@@ -19,7 +19,7 @@ import React, { useState } from 'react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
 import {
-  User, Award, LogOut, ChevronRight, Flame, Clock, BookOpen, TrendingUp,
+  User, Award, LogOut, ChevronRight, Clock, BookOpen, TrendingUp,
   Star, Lock, ArrowRight, Sparkles, Brain, Edit3, Shield, Target,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -29,6 +29,7 @@ import { LanguageToggle } from '@/components/LanguageToggle';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { ModeToggle } from '@/components/ModeToggle';
 import { isStaff } from '@/features/admin/permissions';
+import { WeekStreak } from '@/features/dashboard/WeekStreak';
 
 import { useProfileData } from '@/features/profile/hooks/useProfileData';
 import { ProfileHero } from '@/features/profile/components/ProfileHero';
@@ -93,21 +94,21 @@ export const ProfilePage: React.FC = () => {
           />
         </FadeIn>
 
-        {/* 2. Primary actions right next to the hero (highly visible) */}
+        {/* 2. Compact action row next to the hero */}
         <FadeIn delay={0.03}>
-          <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex flex-wrap gap-2.5">
             <button
               onClick={() => setEditOpen(true)}
-              className="flex-1 flex items-center justify-center gap-2 p-3.5 rounded-xl bg-accent-primary text-white font-bold text-sm active:opacity-90 md:hover:opacity-90 transition-all min-h-[48px] shadow-glow-primary"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-accent-primary text-white font-bold text-sm active:opacity-90 md:hover:opacity-90 transition-all"
             >
-              <Edit3 size={18} /> {t('profile_edit')}
+              <Edit3 size={16} /> {t('profile_edit')}
             </button>
             {isStaff(profile) && (
               <button
                 onClick={() => navigate('/admin')}
-                className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-4 py-3.5 rounded-xl bg-surface-2 border border-border text-foreground font-bold text-sm active:bg-card-hover md:hover:bg-card-hover transition-all min-h-[48px]"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-surface-2 border border-border text-foreground font-bold text-sm active:bg-card-hover md:hover:bg-card-hover transition-all"
               >
-                <Shield size={18} /> {t('profile_admin_panel')}
+                <Shield size={16} /> {t('profile_admin_panel')}
               </button>
             )}
           </div>
@@ -262,22 +263,9 @@ export const ProfilePage: React.FC = () => {
           {/* ── RIGHT COLUMN (1/3) ── */}
           <div className="space-y-6">
 
-            {/* Streak card */}
+            {/* 7-day streak strip (motivational) */}
             <FadeIn delay={0.1}>
-              <div className="rounded-2xl bg-card border border-border p-5 space-y-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                    <Flame size={20} className="text-orange-400" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-black">{streak}</p>
-                    <p className="text-xs text-muted-foreground font-medium">{t('profile_streak_label')}</p>
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
-                  {streak > 0 ? t('profile_streak_keep') : t('profile_streak_start')}
-                </p>
-              </div>
+              <WeekStreak streak={streak} />
             </FadeIn>
 
             {/* Learning settings */}
