@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Gamepad2, User, LogOut, Shield } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Gamepad2, Trophy, User, LogOut, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { motion } from 'framer-motion';
 import { useLanguage } from '@/i18n/useLanguage';
@@ -16,6 +16,7 @@ const baseMenuItems: { id: string; labelKey: TranslationKey; icon: React.ReactNo
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={20} />, path: '/dashboard' },
   { id: 'courses', labelKey: 'sidebar_courses', icon: <BookOpen size={20} />, path: '/courses' },
   { id: 'games', labelKey: 'sidebar_arcade', icon: <Gamepad2 size={20} />, path: '/games' },
+{ id: 'leaderboard', labelKey: 'sidebar_leaderboard', icon: <Trophy size={20} />, path: '/leaderboard' },
   { id: 'profile', labelKey: 'sidebar_profile', icon: <User size={20} />, path: '/profile' },
 ];
 

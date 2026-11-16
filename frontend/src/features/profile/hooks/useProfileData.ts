@@ -10,7 +10,7 @@ import {
   getNextLevelXp,
   isMaxLevel,
 } from '@/lib/progress/levels';
-import { Zap, Target, Trophy } from 'lucide-react';
+import { Zap, Target, Trophy, Flame, BookOpen, Crown } from 'lucide-react';
 import React from 'react';
 
 export interface Achievement {
@@ -20,6 +20,12 @@ export interface Achievement {
   icon: React.ReactNode;
   unlocked: boolean;
   color: string;
+  /** Доля прогресса 0..1 (для закрытых ачивок) */
+  progress?: number;
+  /** Текущее значение (для прогресс-бара) */
+  current?: number;
+  /** Целевое значение */
+  target?: number;
 }
 
 export interface RecentActivityItem extends UserProgress {
@@ -158,11 +164,17 @@ export function useProfileData() {
     return Math.floor((Date.now() - new Date(profile.created_at).getTime()) / 86400000);
   }, [profile?.created_at]);
 
-  const achievements: Achievement[] = useMemo(() => [
-    { id: 'first_step', titleKey: 'ach_first_step', descKey: 'ach_first_step_desc', icon: React.createElement(Zap, { size: 22 }), unlocked: completedCount >= 1, color: 'text-accent-warning' },
-    { id: 'ninja', titleKey: 'ach_ninja', descKey: 'ach_ninja_desc', icon: React.createElement(Target, { size: 22 }), unlocked: completedCount >= 5, color: 'text-accent-primary' },
-    { id: 'streak', titleKey: 'ach_streak', descKey: 'ach_streak_desc', icon: React.createElement(Trophy, { size: 22 }), unlocked: streak >= 3, color: 'text-accent-success' },
-  ], [completedCount, streak]);
+  const achievements: Achievement[] = useMemo(() => {
+    const p = (cur: number, tgt: number) => Math.min(Math.max(cur / tgt, 0), 1);
+    return [
+      { id: 'first_step', titleKey: 'ach_first_step', descKey: 'ach_first_step_desc', icon: React.createElement(Zap, { size: 22 }), unlocked: completedCount >= 1, color: 'text-accent-warning', current: Math.min(completedCount, 1), target: 1, progress: p(completedCount, 1) },
+      { id: 'ninja', titleKey: 'ach_ninja', descKey: 'ach_ninja_desc', icon: React.createElement(Target, { size: 22 }), unlocked: completedCount >= 5, color: 'text-accent-primary', current: Math.min(completedCount, 5), target: 5, progress: p(completedCount, 5) },
+      { id: 'bookworm', titleKey: 'ach_bookworm', descKey: 'ach_bookworm_desc', icon: React.createElement(BookOpen, { size: 22 }), unlocked: completedCount >= 10, color: 'text-accent-success', current: Math.min(completedCount, 10), target: 10, progress: p(completedCount, 10) },
+      { id: 'streak', titleKey: 'ach_streak', descKey: 'ach_streak_desc', icon: React.createElement(Trophy, { size: 22 }), unlocked: streak >= 3, color: 'text-accent-success', current: Math.min(streak, 3), target: 3, progress: p(streak, 3) },
+      { id: 'marathon', titleKey: 'ach_marathon', descKey: 'ach_marathon_desc', icon: React.createElement(Flame, { size: 22 }), unlocked: streak >= 7, color: 'text-orange-400', current: Math.min(streak, 7), target: 7, progress: p(streak, 7) },
+      { id: 'master', titleKey: 'ach_master', descKey: 'ach_master_desc', icon: React.createElement(Crown, { size: 22 }), unlocked: level >= 5, color: 'text-accent-primary', current: Math.min(level, 5), target: 5, progress: p(level, 5) },
+    ];
+  }, [completedCount, streak, level]);
 
   return {
     loading,

@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { checkHTML, ValidationResult } from '@/lib/validators/htmlChecker';
 import { trackEvent } from '@/lib/firebase/analytics';
+import { fireLessonComplete, fireLevelUp } from '@/lib/celebrate';
 import { useLanguage } from '@/i18n/useLanguage';
 
 interface CompletionFeedback {
@@ -81,6 +82,7 @@ export const LessonPage: React.FC = () => {
         leveledUp,
         newLevel: nextProfile.level ?? 1,
       });
+      if (leveledUp) fireLevelUp(); else fireLessonComplete();
     } catch (error) {
       console.error('Error completing lesson:', error);
     } finally {

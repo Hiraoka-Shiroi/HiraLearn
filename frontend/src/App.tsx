@@ -24,6 +24,7 @@ import { ProfilePage } from '@/pages/ProfilePage'
 import { AdminLessonsPage } from '@/pages/AdminLessonsPage'
 import { AdminModulesPage } from '@/pages/AdminModulesPage'
 import { GamesPage } from '@/pages/GamesPage'
+import { LeaderboardPage } from '@/pages/LeaderboardPage'
 import { CoursesPage } from '@/pages/CoursesPage'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -180,6 +181,15 @@ function App() {
               element={
                 <ProtectedRoute>
                   <GamesPage />
+                </ProtectedRoute>
+              }
+            />
+
+            <Route
+              path="/leaderboard"
+              element={
+                <ProtectedRoute>
+                  <LeaderboardPage />
                 </ProtectedRoute>
               }
             />

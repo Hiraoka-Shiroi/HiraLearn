@@ -337,6 +337,14 @@ export const ProfilePage: React.FC = () => {
                       <div className="min-w-0">
                         <p className={`text-sm font-bold ${ach.unlocked ? '' : 'text-muted-foreground'}`}>{t(ach.titleKey)}</p>
                         <p className="text-[11px] text-muted-foreground truncate">{t(ach.descKey)}</p>
+                        {!ach.unlocked && typeof ach.target === 'number' && (
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-border rounded-full overflow-hidden">
+                              <div className="h-full bg-accent-primary rounded-full" style={{ width: `${Math.round((ach.progress ?? 0) * 100)}%` }} />
+                            </div>
+                            <span className="text-[10px] font-bold text-muted-foreground shrink-0">{ach.current ?? 0}/{ach.target}</span>
+                          </div>
+                        )}
                       </div>
                       {ach.unlocked && (
                         <Star size={14} className="text-accent-warning ml-auto shrink-0" fill="currentColor" />
