@@ -13,6 +13,17 @@ export default defineConfig({
   build: {
     target: 'es2015',
     minify: 'terser',
+    rollupOptions: {
+      output: {
+        // Вендоры в отдельные кешируемые чанки: при обновлении кода сайта
+        // браузер не перекачивает react/supabase/motion заново.
+        manualChunks: {
+          react: ['react', 'react-dom', 'react-router-dom'],
+          supabase: ['@supabase/supabase-js'],
+          motion: ['framer-motion'],
+        },
+      },
+    },
     terserOptions: {
       compress: {
         drop_console: true,

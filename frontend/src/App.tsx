@@ -14,32 +14,39 @@
  * checks `profile.role`.
  */
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { LandingPage } from '@/pages/LandingPage'
-import { Dashboard } from '@/pages/Dashboard'
-import { LessonPage } from '@/pages/LessonPage'
-import { AuthPage } from '@/pages/AuthPage'
-import { PricingPage } from '@/pages/PricingPage'
-import { OnboardingPage } from '@/pages/OnboardingPage'
-import { ProfilePage } from '@/pages/ProfilePage'
-import { AdminLessonsPage } from '@/pages/AdminLessonsPage'
-import { AdminModulesPage } from '@/pages/AdminModulesPage'
-import { GamesPage } from '@/pages/GamesPage'
-import { LeaderboardPage } from '@/pages/LeaderboardPage'
-import { CoursesPage } from '@/pages/CoursesPage'
+import { lazy, Suspense, useEffect, type ComponentType } from 'react'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
-import {
-  AdminLayout,
-  AdminGate,
-  AdminDashboardPage,
-  AdminUsersPage,
-  AdminRolesPage,
-  AdminSubscriptionsPage,
-  AdminPushPage,
-  AdminLogsPage,
-  AdminSettingsPage,
-} from '@/features/admin'
-import { useEffect } from 'react'
+
+// Route-level code splitting: каждая страница — отдельный чанк.
+// Админка, игры, уроки не грузятся в initial bundle — первая загрузка быстрее.
+const LandingPage = lazy(() => import('@/pages/LandingPage').then(m => ({ default: m.LandingPage })))
+const Dashboard = lazy(() => import('@/pages/Dashboard').then(m => ({ default: m.Dashboard })))
+const LessonPage = lazy(() => import('@/pages/LessonPage').then(m => ({ default: m.LessonPage })))
+const AuthPage = lazy(() => import('@/pages/AuthPage').then(m => ({ default: m.AuthPage })))
+const PricingPage = lazy(() => import('@/pages/PricingPage').then(m => ({ default: m.PricingPage })))
+const OnboardingPage = lazy(() => import('@/pages/OnboardingPage').then(m => ({ default: m.OnboardingPage })))
+const ProfilePage = lazy(() => import('@/pages/ProfilePage').then(m => ({ default: m.ProfilePage })))
+const AdminLessonsPage = lazy(() => import('@/pages/AdminLessonsPage').then(m => ({ default: m.AdminLessonsPage })))
+const AdminModulesPage = lazy(() => import('@/pages/AdminModulesPage').then(m => ({ default: m.AdminModulesPage })))
+const GamesPage = lazy(() => import('@/pages/GamesPage').then(m => ({ default: m.GamesPage })))
+const LeaderboardPage = lazy(() => import('@/pages/LeaderboardPage').then(m => ({ default: m.LeaderboardPage })))
+const CoursesPage = lazy(() => import('@/pages/CoursesPage').then(m => ({ default: m.CoursesPage })))
+const adminChunk = (name: string) =>
+  lazy(() =>
+    import('@/features/admin').then(m => ({
+      default: (m as unknown as Record<string, ComponentType<any>>)[name],
+    })),
+  )
+const AdminLayout = adminChunk('AdminLayout')
+const AdminGate = adminChunk('AdminGate')
+const AdminDashboardPage = adminChunk('AdminDashboardPage')
+const AdminUsersPage = adminChunk('AdminUsersPage')
+const AdminRolesPage = adminChunk('AdminRolesPage')
+const AdminSubscriptionsPage = adminChunk('AdminSubscriptionsPage')
+const AdminPushPage = adminChunk('AdminPushPage')
+const AdminLogsPage = adminChunk('AdminLogsPage')
+const AdminSettingsPage = adminChunk('AdminSettingsPage')
 import { useAuthStore } from '@/store/useAuthStore'
 import { supabase } from '@/lib/supabase/client'
 import { useThemeStore } from '@/store/useThemeStore'
@@ -135,7 +142,7 @@ function App() {
     <ErrorBoundary>
       <Router>
         <div className="min-h-screen bg-background text-foreground font-sans">
-          <Routes>
+          <Suspense fallback={<div className="min-h-screen bg-background flex items-center justify-center"><div className="w-8 h-8 border-[3px] border-accent-primary border-t-transparent rounded-full animate-spin" /></div>}><Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<AuthPage />} />
             <Route path="/register" element={<AuthPage />} />
@@ -267,7 +274,7 @@ function App() {
 
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
+          </Routes></Suspense>
         </div>
       </Router>
     </ErrorBoundary>
