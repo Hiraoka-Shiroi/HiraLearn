@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, BookOpen, Gamepad2, User, Shield } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Gamepad2, Trophy, User, Shield } from 'lucide-react';
 import { useAuthStore } from '@/store/useAuthStore';
 import { useLanguage } from '@/i18n/useLanguage';
 import { isStaff } from '@/features/admin/permissions';
@@ -17,6 +17,7 @@ const baseItems: NavItem[] = [
   { id: 'dashboard', labelKey: 'sidebar_path', icon: <LayoutDashboard size={22} />, path: '/dashboard' },
   { id: 'courses', labelKey: 'sidebar_courses', icon: <BookOpen size={22} />, path: '/courses' },
   { id: 'games', labelKey: 'sidebar_arcade', icon: <Gamepad2 size={22} />, path: '/games' },
+  { id: 'leaderboard', labelKey: 'sidebar_leaderboard', icon: <Trophy size={22} />, path: '/leaderboard' },
   { id: 'profile', labelKey: 'sidebar_profile', icon: <User size={22} />, path: '/profile' },
 ];
 
