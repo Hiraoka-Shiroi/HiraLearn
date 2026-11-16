@@ -2,6 +2,9 @@
  * Supabase data-access services.
  *
  * `contentCardService` — read-only queries for courses / modules / lessons / tasks.
+ *                       Результаты автоматически локализуются (см. contentLocale.ts):
+ *                       если язык = en и колонка `*_en` заполнена — показывается она,
+ *                       иначе оригинал (русский). Компоненты об этом не знают.
  * `progressService`    — user progress & lesson completion (via `complete_lesson` RPC).
  * `profileService`     — safe profile field updates (via `update_own_profile` RPC).
  *
@@ -9,13 +12,17 @@
  * cannot tamper with XP, level, streak, or role. See also the
  * `profiles_protect_columns` trigger in the 20260430 migration.
  */
-
 import { supabase } from './client';
 import { Course, Module, Lesson, Task, UserProgress, Profile } from '@/types/database';
+import {
+  localizeCourse,
+  localizeModule,
+  localizeLesson,
+  localizeTask,
+} from '@/i18n/contentLocale';
 
 // TODO: migrate completeLesson flow to a single Supabase RPC that also
 //       validates task answers server-side (currently validation is client-only).
-
 export const contentCardService = {
   async getCourses() {
     // Try to order by the new `order_index` column first; fall back to
@@ -27,7 +34,6 @@ export const contentCardService = {
       .eq('is_published', true)
       .order('order_index', { ascending: true })
       .order('created_at', { ascending: true });
-
     if (error && /column .*order_index/i.test(error.message)) {
       const fallback = await supabase
         .from('courses')
@@ -37,9 +43,8 @@ export const contentCardService = {
       data = fallback.data;
       error = fallback.error;
     }
-
     if (error) throw error;
-    return (data ?? []) as Course[];
+    return ((data ?? []) as unknown as Record<string, unknown>[]).map(localizeCourse) as Course[];
   },
 
   async getModules(courseId: string) {
@@ -50,7 +55,7 @@ export const contentCardService = {
       .eq('is_published', true)
       .order('order_index');
     if (error) throw error;
-    return data as Module[];
+    return ((data ?? []) as unknown as Record<string, unknown>[]).map(localizeModule) as Module[];
   },
 
   async getLessons(moduleId: string) {
@@ -61,7 +66,7 @@ export const contentCardService = {
       .eq('is_published', true)
       .order('order_index');
     if (error) throw error;
-    return data as Lesson[];
+    return ((data ?? []) as unknown as Record<string, unknown>[]).map(localizeLesson) as Lesson[];
   },
 
   async getLessonWithTasks(lessonId: string) {
@@ -70,10 +75,14 @@ export const contentCardService = {
       .select('*, tasks(*)')
       .eq('id', lessonId)
       .single();
-
     if (lessonError) throw lessonError;
-    return lesson as unknown as Lesson & { tasks: Task[] };
-  }
+    const row = lesson as unknown as Record<string, unknown> & { tasks?: Record<string, unknown>[] };
+    const localized = localizeLesson(row);
+    if (Array.isArray(localized.tasks)) {
+      localized.tasks = localized.tasks.map(localizeTask);
+    }
+    return localized as unknown as Lesson & { tasks: Task[] };
+  },
 };
 
 export interface CompleteLessonResult {
@@ -107,17 +116,14 @@ export const progressService = {
   async completeLesson(lessonId: string, currentProfile: Profile | null): Promise<CompleteLessonResult> {
     const { data, error } = await supabase.rpc('complete_lesson', { p_lesson_id: lessonId });
     if (error) throw error;
-
     // RPC returns the profile row; supabase-js wraps a single-record
     // RETURNS public.profiles into an object (not an array).
     const profile = (Array.isArray(data) ? data[0] : data) as Profile;
     if (!profile) throw new Error('complete_lesson returned no profile');
-
     const previousXp = currentProfile?.xp ?? 0;
     const previousLevel = currentProfile?.level ?? 1;
     const xpAwarded = Math.max(0, (profile.xp ?? 0) - previousXp);
     const leveledUp = (profile.level ?? 1) > previousLevel;
-
     return { profile, xpAwarded, leveledUp, previousLevel };
   },
 };
@@ -144,7 +150,6 @@ export const profileService = {
       p_explanation_style: input.explanation_style ?? null,
     });
     if (error) throw error;
-
     const profile = (Array.isArray(data) ? data[0] : data) as Profile;
     if (!profile) throw new Error('update_own_profile returned no profile');
     return profile;
