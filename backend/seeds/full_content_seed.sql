@@ -51,7 +51,7 @@ INSERT INTO public.courses (title, slug, description, level, is_published, order
   ('Responsive Layout',          'responsive-layout',        'Адаптивная вёрстка: media queries, mobile-first, CSS Grid и Flexbox для разных экранов.',        'intermediate',  true,  3),
   ('JavaScript Basics',          'javascript-basics',        'Синтаксис JS: переменные, типы, функции, массивы, объекты, async/await.',                        'beginner',      true,  4),
   ('DOM & Events',               'dom-events',               'Работа с DOM, события, формы, делегирование. Делаем страницы интерактивными.',                   'intermediate',  true,  5),
-  ('React Basics',               'react-basics',             'Компоненты, JSX, props, useState, useEffect, списки, формы в React 18.',                         'intermediate',  true,  6),
+  ('React Basics',               'react-basics',             'Компоненты, JSX, props, useState, useEffect, списки, формы, хуки (useRef/useMemo/useCallback), работа с API, роутинг и стилизация в React 18.',                         'intermediate',  true,  6),
   ('TypeScript Basics',          'typescript-basics',        'Типы, интерфейсы, дженерики, типизация props/state в React.',                                    'intermediate',  true,  7),
   ('Git & GitHub',               'git-github',               'Системы контроля версий: коммиты, ветки, merge, conflict, pull request.',                        'beginner',      true,  8),
   ('API Basics',                 'api-basics',               'HTTP, REST, fetch, async/await, обработка ошибок, JSON, заголовки.',                             'intermediate',  true,  9),
