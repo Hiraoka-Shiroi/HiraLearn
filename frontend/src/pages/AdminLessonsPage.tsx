@@ -8,6 +8,8 @@ import { Lesson } from '@/types/database';
 
 interface LessonWithModule extends Lesson {
   modules: { title: string } | null;
+  title_en?: string | null;
+  theory_en?: string | null;
 }
 
 interface LessonFormData {
@@ -19,6 +21,8 @@ interface LessonFormData {
   order_index: number;
   xp_reward: number;
   is_published: boolean;
+  title_en: string;
+  theory_en: string;
 }
 
 const emptyForm: LessonFormData = {
@@ -30,6 +34,8 @@ const emptyForm: LessonFormData = {
   order_index: 0,
   xp_reward: 50,
   is_published: false,
+  title_en: '',
+  theory_en: '',
 };
 
 export const AdminLessonsPage = () => {
@@ -124,6 +130,8 @@ export const AdminLessonsPage = () => {
       order_index: lesson.order_index,
       xp_reward: lesson.xp_reward,
       is_published: lesson.is_published,
+      title_en: lesson.title_en || '',
+      theory_en: lesson.theory_en || '',
     });
     setShowForm(true);
   };
@@ -140,6 +148,8 @@ export const AdminLessonsPage = () => {
       order_index: form.order_index,
       xp_reward: form.xp_reward,
       is_published: form.is_published,
+      title_en: form.title_en || null,
+      theory_en: form.theory_en || null,
     };
 
     if (editingId) {
@@ -250,6 +260,29 @@ export const AdminLessonsPage = () => {
                     value={form.theory}
                     onChange={(e) => setForm({ ...form, theory: e.target.value })}
                     rows={4}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
+                    {t('admin_lesson_col_title')} (EN)
+                  </label>
+                  <input
+                    value={form.title_en}
+                    onChange={(e) => setForm({ ...form, title_en: e.target.value })}
+                    placeholder="English title (optional)"
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-widest text-muted mb-2">
+                    {t('lesson_theory')} (EN)
+                  </label>
+                  <textarea
+                    value={form.theory_en}
+                    onChange={(e) => setForm({ ...form, theory_en: e.target.value })}
+                    rows={3}
+                    placeholder="English theory (optional)"
                     className="w-full bg-background border border-border rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-accent-primary resize-none"
                   />
                 </div>
