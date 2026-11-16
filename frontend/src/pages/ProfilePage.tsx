@@ -114,14 +114,12 @@ export const ProfilePage: React.FC = () => {
           </div>
         </FadeIn>
 
-        {/* 3. Account info — surfaced right below hero, not buried */}
+        {/* 3. Animated stats grid (level ring / streak flame / lessons / XP) */}
         <FadeIn delay={0.06}>
-          <AccountInfoCard subscription={subscription} />
-        </FadeIn>
-
-        {/* 4. Stats grid */}
-        <FadeIn delay={0.09}>
-          <ProfileStats level={level} streak={streak} completedCount={completedCount} xp={xp} />
+          <ProfileStats
+            level={level} streak={streak} completedCount={completedCount} xp={xp}
+            xpPercent={xpPercent} xpInLevel={xpInLevel} xpNeeded={xpNeeded}
+          />
         </FadeIn>
 
         {/* 5. MAIN GRID */}
@@ -298,6 +296,11 @@ export const ProfilePage: React.FC = () => {
                   />
                 </div>
               </section>
+            </FadeIn>
+
+            {/* Compact account details — collapsed by default, expands on tap */}
+            <FadeIn delay={0.18}>
+              <AccountInfoCard subscription={subscription} />
             </FadeIn>
 
             {/* Achievements */}

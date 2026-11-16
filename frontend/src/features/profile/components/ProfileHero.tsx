@@ -37,14 +37,48 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
     setProfile(next);
   };
 
+  const premium = subscription?.status === 'active';
+
   return (
     <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-card via-card to-surface-2 border border-border p-6 md:p-10">
-      <div className="absolute top-0 right-0 w-72 h-72 bg-accent-primary/[0.06] rounded-full blur-[80px] -translate-y-1/3 translate-x-1/4" />
-      <div className="absolute bottom-0 left-0 w-48 h-48 bg-accent-success/[0.04] rounded-full blur-[60px] translate-y-1/3 -translate-x-1/4" />
+      {/* Animated drifting orbs */}
+      <div className="absolute top-0 right-0 w-72 h-72 bg-accent-primary/[0.08] rounded-full blur-[80px] animate-orb-drift pointer-events-none" />
+      <div
+        className="absolute bottom-0 left-0 w-48 h-48 bg-accent-success/[0.05] rounded-full blur-[60px] animate-orb-drift pointer-events-none"
+        style={{ animationDelay: '-6s' }}
+      />
+      <div
+        className="absolute top-1/2 left-1/3 w-40 h-40 bg-fuchsia-500/[0.05] rounded-full blur-[70px] animate-orb-drift pointer-events-none"
+        style={{ animationDelay: '-3s' }}
+      />
+      {/* subtle grid sheen */}
+      <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{
+        backgroundImage: 'linear-gradient(rgb(var(--fg)) 1px, transparent 1px), linear-gradient(90deg, rgb(var(--fg)) 1px, transparent 1px)',
+        backgroundSize: '32px 32px',
+      }} />
 
       <div className="relative z-10 flex flex-col md:flex-row items-center gap-6 md:gap-10">
-        <div className="relative group">
-          <div className="absolute inset-0 rounded-full bg-accent-primary/20 blur-xl group-hover:bg-accent-primary/30 transition-all duration-500" />
+        {/* Avatar with rotating conic glow ring */}
+        <div className="relative group shrink-0">
+          {/* rotating conic arc — primary */}
+          <div
+            className="absolute -inset-1.5 rounded-full opacity-70 animate-spin-slow pointer-events-none"
+            style={{
+              background: 'conic-gradient(from 0deg, transparent 0%, var(--accent-primary) 18%, transparent 38%, transparent 62%, #a78bfa 82%, transparent 100%)',
+              filter: 'blur(6px)',
+            }}
+          />
+          {/* counter-rotating faint ring */}
+          <div
+            className="absolute -inset-3 rounded-full opacity-30 animate-spin-reverse pointer-events-none"
+            style={{
+              background: 'conic-gradient(from 180deg, transparent 0%, #22d3ee 15%, transparent 40%)',
+              filter: 'blur(8px)',
+            }}
+          />
+          {/* soft halo */}
+          <div className="absolute inset-0 rounded-full bg-accent-primary/25 blur-xl group-hover:bg-accent-primary/40 transition-all duration-500 animate-glow-pulse pointer-events-none" />
+
           <Avatar
             src={profile?.avatar_url}
             name={profile?.full_name}
@@ -57,19 +91,28 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             type="button"
             onClick={() => setPickerOpen(true)}
             aria-label={t('avatar_change')}
-            className="absolute -bottom-1 -left-1 w-10 h-10 rounded-xl bg-surface-2 border border-border text-foreground flex items-center justify-center hover:bg-accent-primary hover:text-white hover:border-accent-primary transition-all shadow-md"
+            className="absolute -bottom-1 -left-1 w-10 h-10 rounded-xl bg-surface-2 border border-border text-foreground flex items-center justify-center hover:bg-accent-primary hover:text-white hover:border-accent-primary transition-all shadow-md z-10"
           >
             <Camera size={16} />
           </button>
-          <div className="absolute -bottom-1 -right-1 w-10 h-10 rounded-xl bg-accent-primary text-white flex items-center justify-center text-sm font-black shadow-glow-primary pointer-events-none">
-            {level}
+          {/* Level badge with pulse */}
+          <div className="absolute -bottom-1 -right-1 z-10">
+            <span className="absolute inset-0 rounded-xl bg-accent-primary/50 animate-pulse-ring pointer-events-none" />
+            <div className="relative w-10 h-10 rounded-xl bg-accent-primary text-white flex items-center justify-center text-sm font-black shadow-glow-primary">
+              {level}
+            </div>
           </div>
         </div>
 
-        <div className="flex-1 text-center md:text-left min-w-0">
-          <h1 className="text-3xl md:text-4xl font-black tracking-tight mb-1 truncate">
+        <div className="flex-1 text-center md:text-left min-w-0 w-full">
+          <motion.h1
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className="text-3xl md:text-4xl font-black tracking-tight mb-1 truncate"
+          >
             {profile?.full_name || t('profile_default_name')}
-          </h1>
+          </motion.h1>
           {profile?.username && (
             <p className="text-muted-foreground text-sm mb-3">@{profile.username}</p>
           )}
@@ -78,11 +121,11 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
               <TrendingUp size={12} /> {t('profile_xp_level').replace('{level}', String(level)).replace('{xp}', String(xp))}
             </span>
             <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold border ${
-              subscription?.status === 'active'
-                ? 'bg-accent-success/10 text-accent-success border-accent-success/20'
+              premium
+                ? 'bg-gradient-to-r from-amber-400/15 to-yellow-300/10 text-amber-300 border-amber-400/30'
                 : 'bg-surface-2 text-muted-foreground border-border'
             }`}>
-              {subscription?.status === 'active'
+              {premium
                 ? (subscription.plan === 'lifetime' ? 'Lifetime' : subscription.plan)
                 : t('profile_free_plan')}
             </span>
@@ -93,18 +136,24 @@ export const ProfileHero: React.FC<ProfileHeroProps> = ({
             )}
           </div>
 
-          <div className="max-w-md">
+          {/* XP progress with animated fill + shine */}
+          <div className="max-w-md mx-auto md:mx-0">
             <div className="flex justify-between text-xs mb-1.5">
               <span className="text-muted-foreground font-medium">{t('profile_xp_to_next')}</span>
               <span className="font-bold text-accent-primary">{xpInLevel} / {xpNeeded} XP</span>
             </div>
-            <div className="h-2.5 bg-surface-1 rounded-full overflow-hidden border border-border/50">
+            <div className="relative h-2.5 bg-surface-1 rounded-full overflow-hidden border border-border/50">
               <motion.div
                 initial={{ width: 0 }}
                 animate={{ width: `${xpPercent}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="h-full rounded-full bg-gradient-to-r from-accent-primary to-blue-400"
-              />
+                transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+                className="relative h-full rounded-full bg-gradient-to-r from-accent-primary via-indigo-400 to-blue-400 overflow-hidden"
+              >
+                <div
+                  className="absolute inset-y-0 w-1/3 bg-white/50 blur-[3px] animate-bar-shine"
+                  style={{ transform: 'translateX(-100%)' }}
+                />
+              </motion.div>
             </div>
           </div>
         </div>
