@@ -29,7 +29,6 @@ export interface RecentActivityItem extends UserProgress {
 
 export function useProfileData() {
   const { profile, user } = useAuthStore();
-
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [progress, setProgress] = useState<UserProgress[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
@@ -38,46 +37,56 @@ export function useProfileData() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let cancelled = false;
     const load = async () => {
       try {
-        const promises: Promise<void>[] = [];
-
+        // Независимые запросы — запускаем сразу параллельно
+        const parallel: Promise<unknown>[] = [];
         if (user) {
-          promises.push(
+          parallel.push(
             billingService.getSubscription(user.id).then(setSubscription).catch(() => {}),
           );
         }
-
         if (profile) {
-          promises.push(
+          parallel.push(
             progressService.getUserProgress(profile.id).then(setProgress).catch(() => {}),
           );
         }
 
+        // Курсы
         const fetchedCourses = await contentCardService.getCourses().catch(() => [] as Course[]);
+        if (cancelled) return;
         setCourses(fetchedCourses);
 
-        const modulesArr: Module[] = [];
-        const lessonsArr: Lesson[] = [];
-        for (const course of fetchedCourses) {
-          const mods = await contentCardService.getModules(course.id).catch(() => [] as Module[]);
-          modulesArr.push(...mods);
-          for (const m of mods) {
-            const ls = await contentCardService.getLessons(m.id).catch(() => [] as Lesson[]);
-            lessonsArr.push(...ls);
-          }
-        }
+        // ВСЕ модули по всем курсам — ОДНОВРЕМЕННО (а не последовательно в цикле)
+        const modulesNested = await Promise.all(
+          fetchedCourses.map(c =>
+            contentCardService.getModules(c.id).catch(() => [] as Module[]),
+          ),
+        );
+        if (cancelled) return;
+        const modulesArr: Module[] = modulesNested.flat();
         setAllModules(modulesArr);
+
+        // ВСЕ уроки по всем модулям — ОДНОВРЕМЕННО
+        const lessonsNested = await Promise.all(
+          modulesArr.map(m =>
+            contentCardService.getLessons(m.id).catch(() => [] as Lesson[]),
+          ),
+        );
+        if (cancelled) return;
+        const lessonsArr: Lesson[] = lessonsNested.flat();
         setAllLessons(lessonsArr);
 
-        await Promise.all(promises);
+        await Promise.all(parallel);
       } catch {
         /* silent */
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     load();
+    return () => { cancelled = true; };
   }, [user, profile]);
 
   const level = profile?.level ?? 1;
